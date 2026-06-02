@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   AlertTriangle,
   ArrowRight,
@@ -44,9 +45,17 @@ export function Dashboard() {
           <h2 className="mt-1 text-2xl font-black tracking-tight text-[#10271B] md:text-3xl">Good morning, James</h2>
           <p className="mt-1 text-sm text-[#789083]">Here is today&apos;s performance across your business.</p>
         </div>
-        <button className="flex w-fit items-center gap-2 rounded-xl bg-[#12311F] px-4 py-3 text-xs font-bold text-white hover:bg-[#0E2418]">
-          Open sales register <ArrowRight size={15} />
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/customers" className="flex w-fit items-center gap-2 rounded-xl border border-[#DDEAE0] bg-white px-3.5 py-3 text-xs font-bold text-[#60766B] hover:bg-[#F8FBF8]">
+            Customers <UserRoundPlus size={15} />
+          </Link>
+          <Link href="/debtors" className="flex w-fit items-center gap-2 rounded-xl border border-[#D4A017]/35 bg-[#FFF9E8] px-3.5 py-3 text-xs font-bold text-[#8A670C] hover:bg-[#FFF2C9]">
+            Due list <HandCoins size={15} />
+          </Link>
+          <Link href="/sales" className="flex w-fit items-center gap-2 rounded-xl bg-[#12311F] px-4 py-3 text-xs font-bold text-white hover:bg-[#0E2418]">
+            Open sales register <ArrowRight size={15} />
+          </Link>
+        </div>
       </div>
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">

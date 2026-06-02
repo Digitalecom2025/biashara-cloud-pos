@@ -4,7 +4,7 @@ import { sidebarItems } from "@/lib/navigation";
 
 export function generateStaticParams() {
   return sidebarItems
-    .filter((item) => item.href !== "/" && item.href !== "/products")
+    .filter((item) => !["/", "/products", "/sales", "/customers", "/debtors"].includes(item.href))
     .map((item) => ({ section: item.href.slice(1) }));
 }
 
@@ -16,7 +16,7 @@ export default async function SectionPage({
   const { section } = await params;
   const item = sidebarItems.find((entry) => entry.href === `/${section}`);
 
-  if (!item || item.href === "/products") {
+  if (!item || ["/products", "/sales", "/customers", "/debtors"].includes(item.href)) {
     notFound();
   }
 
