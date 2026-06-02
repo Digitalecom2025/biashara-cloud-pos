@@ -1,0 +1,52 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { ArrowUpRight, Building2, ChevronDown, Mail, MoreHorizontal, Phone, Plus, ShoppingBag, Truck, Users, WalletCards } from "lucide-react";
+import { suppliers, type Supplier, type SupplierStatus } from "@/lib/purchasing-mock-data";
+
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat("en-KE", { style: "currency", currency: "KES", maximumFractionDigits: 0 }).format(value);
+}
+
+export function SuppliersPage() {
+  const [query, setQuery] = useState("");
+  const [status, setStatus] = useState("All statuses");
+  const [selectedId, setSelectedId] = useState("seed-oil");
+  const selected = suppliers.find((supplier) => supplier.id === selectedId) ?? suppliers[0];
+  const filteredSuppliers = useMemo(() => {
+    const normalized = query.trim().toLowerCase();
+    return suppliers.filter((supplier) => (status === "All statuses" || supplier.status === status) && (!normalized || `${supplier.name} ${supplier.phone} ${supplier.email} ${supplier.category}`.toLowerCase().includes(normalized)));
+  }, [query, status]);
+
+  return (
+    <div className="mx-auto max-w-[1700px]">
+      <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-end"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-[#16A34A]">Supply chain</p><h2 className="mt-1 text-2xl font-black tracking-tight text-[#10271B] md:text-3xl">Suppliers</h2><p className="mt-1 text-sm text-[#789083]">Manage vendors, purchasing activity and balances payable.</p></div><button className="flex w-fit items-center gap-2 rounded-xl bg-[#16A34A] px-4 py-3 text-xs font-black text-white shadow-lg shadow-[#16A34A]/15 hover:bg-[#12883E]"><Plus size={16} /> Add supplier</button></div>
+      <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_330px]">
+        <article className="overflow-hidden rounded-2xl border border-[#DDEAE0] bg-white shadow-sm shadow-[#12311F]/5">
+          <div className="flex flex-col gap-3 border-b border-[#E8F0EA] p-4 sm:flex-row"><label className="relative flex-1"><Truck className="absolute left-3 top-1/2 -translate-y-1/2 text-[#789083]" size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} aria-label="Search suppliers" placeholder="Search supplier, category or contact..." className="w-full rounded-xl border border-[#DDEAE0] bg-[#F8FBF8] py-2.5 pl-9 pr-3 text-xs outline-none placeholder:text-[#9AAEA3] focus:border-[#16A34A]" /></label><label className="relative"><select value={status} onChange={(event) => setStatus(event.target.value)} aria-label="Filter suppliers by status" className="w-full appearance-none rounded-xl border border-[#DDEAE0] bg-white py-2.5 pl-3 pr-9 text-xs font-bold text-[#60766B] outline-none focus:border-[#16A34A] sm:min-w-40"><option>All statuses</option><option>Clear</option><option>Owes</option><option>Inactive</option></select><ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#789083]" size={14} /></label></div>
+          <div className="hidden overflow-x-auto lg:block"><table className="w-full min-w-[1150px] border-collapse text-left"><thead><tr className="bg-[#F8FBF8] text-[10px] font-black uppercase tracking-[0.13em] text-[#789083]"><th className="px-4 py-3.5">Supplier</th><th className="px-3 py-3.5">Phone</th><th className="px-3 py-3.5">Email</th><th className="px-3 py-3.5">Category</th><th className="px-3 py-3.5">Total purchases</th><th className="px-3 py-3.5">Current balance</th><th className="px-3 py-3.5">Last purchase</th><th className="px-3 py-3.5">Status</th><th className="px-4 py-3.5 text-right">Actions</th></tr></thead><tbody>{filteredSuppliers.map((supplier) => <SupplierRow key={supplier.id} supplier={supplier} selected={selectedId === supplier.id} onSelect={() => setSelectedId(supplier.id)} />)}</tbody></table></div>
+          <div className="grid gap-3 p-3 lg:hidden">{filteredSuppliers.map((supplier) => <SupplierCard key={supplier.id} supplier={supplier} selected={selectedId === supplier.id} onSelect={() => setSelectedId(supplier.id)} />)}</div>
+          <footer className="border-t border-[#E8F0EA] p-4 text-xs text-[#789083]">Showing <b className="text-[#173324]">{filteredSuppliers.length}</b> of <b className="text-[#173324]">{suppliers.length}</b> suppliers</footer>
+        </article>
+        <SupplierProfile supplier={selected} />
+      </section>
+    </div>
+  );
+}
+
+function SupplierRow({ supplier, selected, onSelect }: { supplier: Supplier; selected: boolean; onSelect: () => void }) {
+  return <tr onClick={onSelect} className={`cursor-pointer border-t border-[#EEF3EF] text-xs text-[#60766B] hover:bg-[#FBFDFB] ${selected ? "bg-[#16A34A]/[0.035]" : ""}`}><td className="px-4 py-3"><div className="flex items-center gap-2.5"><SupplierAvatar supplier={supplier} /><p className="font-black text-[#173324]">{supplier.name}</p></div></td><td className="px-3 py-3 font-semibold">{supplier.phone}</td><td className="px-3 py-3">{supplier.email}</td><td className="px-3 py-3">{supplier.category}</td><td className="px-3 py-3 font-black text-[#173324]">{formatCurrency(supplier.totalPurchases)}</td><td className="px-3 py-3 font-bold text-[#EF4444]">{formatCurrency(supplier.currentBalance)}</td><td className="px-3 py-3">{supplier.lastPurchase}</td><td className="px-3 py-3"><SupplierStatusBadge status={supplier.status} /></td><td className="px-4 py-3 text-right"><button aria-label={`Actions for ${supplier.name}`} className="grid h-8 w-8 place-items-center rounded-lg text-[#789083] hover:bg-[#F5FAF6]"><MoreHorizontal size={16} /></button></td></tr>;
+}
+
+function SupplierCard({ supplier, selected, onSelect }: { supplier: Supplier; selected: boolean; onSelect: () => void }) {
+  return <button onClick={onSelect} className={`rounded-xl border p-3 text-left ${selected ? "border-[#16A34A]/60 bg-[#16A34A]/[0.035]" : "border-[#E8F0EA]"}`}><div className="flex items-start gap-3"><SupplierAvatar supplier={supplier} /><div className="min-w-0 flex-1"><p className="text-xs font-black text-[#173324]">{supplier.name}</p><p className="mt-1 truncate text-[10px] text-[#789083]">{supplier.category}</p></div><SupplierStatusBadge status={supplier.status} /></div><div className="mt-3 grid grid-cols-2 rounded-lg bg-[#F8FBF8] p-2.5 text-[10px]"><span><b className="block text-[#789083]">Purchases</b><strong className="mt-1 block text-[#173324]">{formatCurrency(supplier.totalPurchases)}</strong></span><span><b className="block text-[#789083]">Balance</b><strong className="mt-1 block text-[#EF4444]">{formatCurrency(supplier.currentBalance)}</strong></span></div></button>;
+}
+
+function SupplierAvatar({ supplier }: { supplier: Supplier }) { return <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#12311F] text-[10px] font-black text-[#F6FFF8]">{supplier.initials}</span>; }
+function SupplierStatusBadge({ status }: { status: SupplierStatus }) { const tone = status === "Clear" ? "bg-[#16A34A]/10 text-[#0F8C42]" : status === "Owes" ? "bg-[#D4A017]/12 text-[#9A7108]" : "bg-[#789083]/10 text-[#60766B]"; return <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-black ${tone}`}>{status}</span>; }
+
+function SupplierProfile({ supplier }: { supplier: Supplier }) {
+  return <aside className="overflow-hidden rounded-2xl border border-[#DDEAE0] bg-white shadow-sm shadow-[#12311F]/5 xl:sticky xl:top-[96px]"><div className="bg-[#12311F] p-5 text-white"><div className="flex items-start justify-between"><span className="grid h-14 w-14 place-items-center rounded-2xl bg-white/10 text-sm font-black text-[#22C55E]">{supplier.initials}</span><Truck size={19} className="text-[#B8C7BD]" /></div><h3 className="mt-4 text-lg font-black">{supplier.name}</h3><p className="mt-1 text-[11px] text-[#B8C7BD]">{supplier.category}</p></div><div className="space-y-3 p-4 text-xs"><p className="flex items-center gap-2 text-[#60766B]"><Phone size={14} className="text-[#16A34A]" /> {supplier.phone}</p><p className="flex items-center gap-2 text-[#60766B]"><Mail size={14} className="text-[#16A34A]" /> {supplier.email}</p><p className="flex items-center gap-2 text-[#60766B]"><Building2 size={14} className="text-[#16A34A]" /> {supplier.status} account</p></div><div className="grid grid-cols-2 gap-px bg-[#E8F0EA]"><ProfileStat icon={ShoppingBag} label="Purchases" value={formatCurrency(supplier.totalPurchases)} /><ProfileStat icon={WalletCards} label="Balance" value={formatCurrency(supplier.currentBalance)} danger={supplier.currentBalance > 0} /></div><div className="space-y-2 p-4"><button className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#16A34A] py-3 text-xs font-black text-white hover:bg-[#12883E]">View supplier profile <ArrowUpRight size={14} /></button><button className="w-full rounded-xl border border-[#DDEAE0] py-3 text-xs font-black text-[#60766B]">Supplier statement</button></div></aside>;
+}
+
+function ProfileStat({ icon: Icon, label, value, danger }: { icon: typeof Users; label: string; value: string; danger?: boolean }) { return <div className="bg-[#F8FBF8] p-3"><Icon size={14} className="text-[#16A34A]" /><p className="mt-2 text-[10px] font-bold uppercase tracking-wider text-[#789083]">{label}</p><p className={`mt-1 text-xs font-black ${danger ? "text-[#EF4444]" : "text-[#173324]"}`}>{value}</p></div>; }

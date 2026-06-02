@@ -12,7 +12,9 @@ import {
   PackageSearch,
   Smartphone,
   Store,
+  ShoppingBag,
   TrendingUp,
+  Truck,
   UserRoundPlus,
 } from "lucide-react";
 import { lowStockItems, recentActivity } from "@/lib/mock-data";
@@ -46,6 +48,12 @@ export function Dashboard() {
           <p className="mt-1 text-sm text-[#789083]">Here is today&apos;s performance across your business.</p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Link href="/purchases" className="flex w-fit items-center gap-2 rounded-xl border border-[#DDEAE0] bg-white px-3.5 py-3 text-xs font-bold text-[#60766B] hover:bg-[#F8FBF8]">
+            Purchases <ShoppingBag size={15} />
+          </Link>
+          <Link href="/suppliers" className="flex w-fit items-center gap-2 rounded-xl border border-[#DDEAE0] bg-white px-3.5 py-3 text-xs font-bold text-[#60766B] hover:bg-[#F8FBF8]">
+            Suppliers <Truck size={15} />
+          </Link>
           <Link href="/customers" className="flex w-fit items-center gap-2 rounded-xl border border-[#DDEAE0] bg-white px-3.5 py-3 text-xs font-bold text-[#60766B] hover:bg-[#F8FBF8]">
             Customers <UserRoundPlus size={15} />
           </Link>
