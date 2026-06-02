@@ -4,7 +4,7 @@ import { sidebarItems } from "@/lib/navigation";
 
 export function generateStaticParams() {
   return sidebarItems
-    .filter((item) => !["/", "/products", "/sales", "/customers", "/debtors", "/purchases", "/suppliers", "/warehouse", "/stock-adjustments", "/transfer", "/branches", "/hrm"].includes(item.href))
+    .filter((item) => !["/", "/products", "/sales", "/customers", "/debtors", "/purchases", "/suppliers", "/warehouse", "/stock-adjustments", "/transfer", "/branches", "/hrm", "/finance", "/payment-types", "/tax-settings"].includes(item.href))
     .map((item) => ({ section: item.href.slice(1) }));
 }
 
@@ -16,7 +16,7 @@ export default async function SectionPage({
   const { section } = await params;
   const item = sidebarItems.find((entry) => entry.href === `/${section}`);
 
-  if (!item || ["/products", "/sales", "/customers", "/debtors", "/purchases", "/suppliers", "/warehouse", "/stock-adjustments", "/transfer", "/branches", "/hrm"].includes(item.href)) {
+  if (!item || ["/products", "/sales", "/customers", "/debtors", "/purchases", "/suppliers", "/warehouse", "/stock-adjustments", "/transfer", "/branches", "/hrm", "/finance", "/payment-types", "/tax-settings"].includes(item.href)) {
     notFound();
   }
 
