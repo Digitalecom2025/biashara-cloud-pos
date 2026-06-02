@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+:root {
+  --dark-green: #07120d;
+  --deep-green: #0e2418;
+  --card-green: #12311f;
+  --primary-green: #16a34a;
+  --bright-green: #22c55e;
+  --gold-accent: #d4a017;
+  --white-text: #f6fff8;
+  --light-background: #f5faf6;
+  --muted-text: #b8c7bd;
+  --danger-red: #ef4444;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  background: var(--light-background);
+  color: #173324;
+  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+}
+
+button,
+a,
+input,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+a {
+  transition: background-color 160ms ease, border-color 160ms ease,
+    color 160ms ease, opacity 160ms ease, transform 160ms ease;
+}
+
+.sidebar-scroll::-webkit-scrollbar,
+.table-scroll::-webkit-scrollbar {
+  height: 5px;
+  width: 5px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background: rgba(184, 199, 189, 0.28);
+  border-radius: 999px;
+}
+
+.table-scroll::-webkit-scrollbar-thumb {
+  background: #cbded1;
+  border-radius: 999px;
+}
+
+.dashboard-grid {
+  background-image: linear-gradient(rgba(22, 163, 74, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(22, 163, 74, 0.06) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
