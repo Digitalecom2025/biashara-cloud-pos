@@ -2,6 +2,7 @@ export type SidebarItem = {
   label: string;
   href: string;
   icon: string;
+  platform?: boolean;
 };
 
 export const sidebarItems: SidebarItem[] = [
@@ -26,4 +27,5 @@ export const sidebarItems: SidebarItem[] = [
   { label: "SMS Marketing", href: "/sms-marketing", icon: "MessageSquareText" },
   { label: "Payment Types", href: "/payment-types", icon: "WalletCards" },
   { label: "Settings", href: "/settings", icon: "Settings" },
+  { label: "Super Admin", href: "/super-admin", icon: "ShieldCheck", platform: true },
 ];
