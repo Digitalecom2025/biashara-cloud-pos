@@ -26,6 +26,7 @@ model Business {
   customers      Customer[]
   suppliers      Supplier[]
   sales          Sale[]
+  purchases      Purchase[]
   payments       Payment[]
   expenses       Expense[]
   stockMovements StockMovement[]
@@ -104,6 +105,7 @@ model Product {
   business       Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
   branch         Branch?         @relation(fields: [branchId], references: [id], onDelete: SetNull)
   saleItems      SaleItem[]
+  purchaseItems  PurchaseItem[]
   stockMovements StockMovement[]
 
   @@unique([businessId, code])
@@ -144,9 +146,50 @@ model Supplier {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  business  Business   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  purchases Purchase[]
 
   @@index([businessId])
+}
+
+model Purchase {
+  id            String   @id @default(cuid())
+  businessId    String
+  supplierId    String
+  invoiceNumber String
+  purchaseDate  DateTime @default(now())
+  notes         String?
+  total         Decimal
+  paid          Decimal  @default(0)
+  due           Decimal  @default(0)
+  paymentMethod String
+  status        String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  business Business       @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  supplier Supplier       @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  items    PurchaseItem[]
+
+  @@unique([businessId, invoiceNumber])
+  @@index([businessId])
+  @@index([supplierId])
+}
+
+model PurchaseItem {
+  id        String   @id @default(cuid())
+  purchaseId String
+  productId  String
+  quantity   Int
+  unitPrice  Decimal
+  total      Decimal
+  createdAt  DateTime @default(now())
+
+  purchase Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([purchaseId])
+  @@index([productId])
 }
 
 model Sale {

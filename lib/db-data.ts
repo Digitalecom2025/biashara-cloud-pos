@@ -4,6 +4,7 @@ import { customers as mockCustomers, debtors as mockDebtors, type Customer, type
 import { products as mockProducts, type Product } from "@/lib/mock-data";
 import { platformBusinesses as mockPlatformBusinesses, type PlatformBusiness, type PlatformBusinessStatus } from "@/lib/platform-mock-data";
 import { recentSales as mockRecentSales, salesProducts as mockSalesProducts, type RecentSale, type SalesProduct } from "@/lib/sales-mock-data";
+import { purchases as mockPurchases, suppliers as mockSuppliers, type Purchase, type PurchaseStatus, type Supplier, type SupplierStatus } from "@/lib/purchasing-mock-data";
 
 const DEMO_BUSINESS_SLUG = "nairobi-cbd-store";
 
@@ -43,6 +44,12 @@ function customerStatus(value: string, debtBalance: number): CustomerStatus {
   if (value.toLowerCase() === "inactive") return "Inactive";
   if (value === "Overdue") return "Overdue";
   if (debtBalance > 0) return "Owes";
+  return "Clear";
+}
+
+function supplierStatus(value: string, balance: number): SupplierStatus {
+  if (value.toLowerCase() === "inactive") return "Inactive";
+  if (balance > 0 || value === "Owes") return "Owes";
   return "Clear";
 }
 
@@ -274,6 +281,76 @@ export async function getRecentSalesForPage(): Promise<RecentSale[]> {
   } catch (error) {
     console.warn("Falling back to mock recent sales", error);
     return mockRecentSales;
+  }
+}
+
+export function mapSupplierForPage(supplier: {
+  id: string;
+  name: string;
+  phone: string;
+  email: string | null;
+  category: string;
+  totalPurchases: unknown;
+  balance: unknown;
+  status: string;
+  updatedAt: Date;
+}): Supplier {
+  const balance = Number(supplier.balance);
+  return {
+    id: supplier.id,
+    initials: initials(supplier.name),
+    name: supplier.name,
+    phone: supplier.phone,
+    email: supplier.email ?? "",
+    category: supplier.category,
+    totalPurchases: Number(supplier.totalPurchases),
+    currentBalance: balance,
+    lastPurchase: formatDateTime(supplier.updatedAt),
+    status: supplierStatus(supplier.status, balance),
+  };
+}
+
+export async function getSuppliersForPage(): Promise<Supplier[]> {
+  try {
+    const businessId = await getDemoBusinessId();
+    if (!businessId) return mockSuppliers;
+    const dbSuppliers = await prisma.supplier.findMany({ where: { businessId, status: { notIn: ["inactive", "Inactive"] } }, orderBy: { name: "asc" } });
+    if (dbSuppliers.length === 0) return mockSuppliers;
+    return dbSuppliers.map(mapSupplierForPage);
+  } catch (error) {
+    console.warn("Falling back to mock suppliers", error);
+    return mockSuppliers;
+  }
+}
+
+export async function getPurchasesForPage(): Promise<Purchase[]> {
+  try {
+    const businessId = await getDemoBusinessId();
+    if (!businessId) return mockPurchases;
+    const purchases = await prisma.purchase.findMany({
+      where: { businessId },
+      include: { supplier: true, items: true },
+      orderBy: { purchaseDate: "desc" },
+      take: 50,
+    });
+    if (purchases.length === 0) return mockPurchases;
+    return purchases.map((purchase) => ({
+      id: purchase.id,
+      invoice: purchase.invoiceNumber,
+      supplierId: purchase.supplierId,
+      supplier: purchase.supplier.name,
+      description: purchase.notes ?? "Stock purchase",
+      date: formatDateTime(purchase.purchaseDate),
+      itemsCount: purchase.items.length,
+      totalAmount: Number(purchase.total),
+      paidAmount: Number(purchase.paid),
+      balanceDue: Number(purchase.due),
+      paymentMethod: purchase.paymentMethod,
+      status: purchase.status as PurchaseStatus,
+    }));
+  } catch (error) {
+    console.warn("Falling back to mock purchases", error);
+    return mockPurchases;
   }
 }
 
