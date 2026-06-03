@@ -8,6 +8,7 @@ import {
   ChevronDown,
   CircleDollarSign,
   CreditCard,
+  Eye,
   Minus,
   PackageSearch,
   Plus,
@@ -228,6 +229,38 @@ export function SalesRegister({
     }
   }
 
+  async function viewSale(sale: RecentSale) {
+    setError("");
+    if (!sale.id) {
+      showFeedback("Mock sale detail placeholder. Database sale details are available for saved sales.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/sales/${sale.id}`, { cache: "no-store" });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error ?? "Failed to load sale.");
+      const savedSale = payload.data;
+      setReceipt({
+        invoice: savedSale.invoice,
+        customer: savedSale.customer,
+        payment: savedSale.payment,
+        items: savedSale.items,
+        total: savedSale.total,
+        paid: savedSale.paid,
+        due: savedSale.due,
+        cashier: savedSale.cashier,
+        branch: savedSale.branch,
+        date: savedSale.date,
+      });
+    } catch (viewError) {
+      setError(viewError instanceof Error ? viewError.message : "Failed to load sale.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="mx-auto max-w-[1750px]">
       <div className="mb-5 flex flex-col justify-between gap-4 md:flex-row md:items-end">
@@ -399,7 +432,7 @@ export function SalesRegister({
           </button>
         </div>
         <div className="table-scroll overflow-x-auto">
-          <table className="w-full min-w-[1180px] border-collapse text-left">
+          <table className="w-full min-w-[1260px] border-collapse text-left">
             <thead>
               <tr className="bg-[#F8FBF8] text-[10px] font-black uppercase tracking-[0.13em] text-[#789083]">
                 <th className="px-4 py-3.5">Invoice</th>
@@ -412,6 +445,7 @@ export function SalesRegister({
                 <th className="px-3 py-3.5">Branch / till</th>
                 <th className="px-3 py-3.5">Date / time</th>
                 <th className="px-4 py-3.5">Status</th>
+                <th className="px-4 py-3.5 text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -427,6 +461,13 @@ export function SalesRegister({
                   <td className="px-3 py-3">{sale.branch ?? "Nairobi CBD Store"}</td>
                   <td className="px-3 py-3">{sale.date}</td>
                   <td className="px-4 py-3"><StatusBadge status={sale.status} /></td>
+                  <td className="px-4 py-3">
+                    <div className="flex justify-end">
+                      <button onClick={() => viewSale(sale)} aria-label={`View ${sale.invoice}`} className="flex items-center gap-1.5 rounded-lg border border-[#DDEAE0] px-2.5 py-2 text-[10px] font-black text-[#60766B] hover:bg-[#F8FBF8]">
+                        <Eye size={13} /> View
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
