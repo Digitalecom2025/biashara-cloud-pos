@@ -57,7 +57,7 @@ const defaultForm: ProductFormState = {
   rack: "",
   shelf: "",
   imageUrl: "",
-  status: "Active",
+  status: "active",
 };
 
 function formatCurrency(value: number) {
@@ -351,6 +351,7 @@ export function ProductList({ initialProducts = mockProducts }: { initialProduct
 
 function formFromProduct(product?: Product): ProductFormState {
   if (!product) return defaultForm;
+  const status = product.status?.toLowerCase() === "inactive" ? "inactive" : "active";
   return {
     name: product.name,
     description: product.description ?? "",
@@ -368,7 +369,7 @@ function formFromProduct(product?: Product): ProductFormState {
     rack: product.rack === "-" ? "" : product.rack,
     shelf: product.shelf === "-" ? "" : product.shelf,
     imageUrl: product.imageUrl ?? "",
-    status: product.status ?? "Active",
+    status,
   };
 }
 
@@ -419,8 +420,8 @@ function ProductDialog({ state, loading, error, onClose, onSave }: { state: Prod
             <label>
               <span className="text-[10px] font-black uppercase tracking-wider text-[#789083]">Status</span>
               <select value={values.status} onChange={(event) => update("status", event.target.value)} className="mt-2 w-full rounded-xl border border-[#DDEAE0] bg-white px-3 py-3 text-xs font-bold text-[#173324] outline-none focus:border-[#16A34A]">
-                <option>Active</option>
-                <option>Inactive</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
               </select>
             </label>
             <label className="md:col-span-2 xl:col-span-3">

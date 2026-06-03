@@ -74,6 +74,8 @@ export function productData(input: ProductInput): ProductValidationResult {
 
   if (errors.length > 0) return { errors };
 
+  const status = text(input.status).toLowerCase() === "inactive" ? "inactive" : "active";
+
   return {
     data: {
       name: text(input.name),
@@ -92,7 +94,7 @@ export function productData(input: ProductInput): ProductValidationResult {
       rack: optionalText(input.rack),
       shelf: optionalText(input.shelf),
       imageUrl: optionalText(input.imageUrl),
-      status: text(input.status) || "Active",
+      status,
     },
   };
 }

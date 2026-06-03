@@ -112,7 +112,7 @@ export async function getProductsForPage(): Promise<Product[]> {
   try {
     const businessId = await getDemoBusinessId();
     if (!businessId) return mockProducts;
-    const dbProducts = await prisma.product.findMany({ where: { businessId, status: { not: "Inactive" } }, orderBy: { name: "asc" } });
+    const dbProducts = await prisma.product.findMany({ where: { businessId, status: { notIn: ["Inactive", "inactive"] } }, orderBy: { name: "asc" } });
     if (dbProducts.length === 0) return mockProducts;
     return dbProducts.map(mapProductForPage);
   } catch (error) {

@@ -38,7 +38,7 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
   try {
     const product = await prisma.product.update({
       where: { id, businessId },
-      data: { status: "Inactive" },
+      data: { status: "inactive" },
     });
     return NextResponse.json({ data: mapProductForPage(product), message: "Product deactivated." });
   } catch (error) {
