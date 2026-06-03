@@ -2,14 +2,15 @@
 
 import { useMemo, useState } from "react";
 import { Building2, ChevronDown, CircleDollarSign, MapPin, MoreHorizontal, Phone, Plus, Search, ShoppingCart, Store, Users, WalletCards, X } from "lucide-react";
-import { branches, type Branch, type BranchStatus } from "@/lib/organization-mock-data";
+import { branches as mockBranches, type Branch, type BranchStatus } from "@/lib/organization-mock-data";
 
 function formatCurrency(value: number) { return new Intl.NumberFormat("en-KE", { style: "currency", currency: "KES", maximumFractionDigits: 0 }).format(value); }
 
-export function BranchesPage() {
+export function BranchesPage({ initialBranches = mockBranches }: { initialBranches?: Branch[] }) {
   const [query, setQuery] = useState(""); const [status, setStatus] = useState("All statuses"); const [selectedId, setSelectedId] = useState("cbd"); const [open, setOpen] = useState(false);
+  const branches = initialBranches.length > 0 ? initialBranches : mockBranches;
   const selected = branches.find((branch) => branch.id === selectedId) ?? branches[0];
-  const filtered = useMemo(() => { const n = query.trim().toLowerCase(); return branches.filter((branch) => (status === "All statuses" || branch.status === status) && (!n || `${branch.name} ${branch.location} ${branch.manager}`.toLowerCase().includes(n))); }, [query, status]);
+  const filtered = useMemo(() => { const n = query.trim().toLowerCase(); return branches.filter((branch) => (status === "All statuses" || branch.status === status) && (!n || `${branch.name} ${branch.location} ${branch.manager}`.toLowerCase().includes(n))); }, [branches, query, status]);
   const active = branches.filter((branch) => branch.status === "Active").length; const tills = branches.reduce((sum, branch) => sum + branch.tills, 0); const sales = branches.reduce((sum, branch) => sum + branch.salesToday, 0);
   return <div className="mx-auto max-w-[1700px]">
     <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-end"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-[#16A34A]">Business locations</p><h2 className="mt-1 text-2xl font-black text-[#10271B] md:text-3xl">Branches</h2><p className="mt-1 text-sm text-[#789083]">Manage outlets, tills, staff allocation and branch performance.</p></div><button onClick={() => setOpen(true)} className="flex w-fit items-center gap-2 rounded-xl bg-[#16A34A] px-4 py-3 text-xs font-black text-white shadow-lg shadow-[#16A34A]/15"><Plus size={16} />Add branch</button></div>

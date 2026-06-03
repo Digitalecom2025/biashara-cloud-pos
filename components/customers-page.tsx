@@ -15,16 +15,17 @@ import {
   Users,
   WalletCards,
 } from "lucide-react";
-import { customers, type Customer, type CustomerStatus } from "@/lib/customer-mock-data";
+import { customers as mockCustomers, type Customer, type CustomerStatus } from "@/lib/customer-mock-data";
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("en-KE", { style: "currency", currency: "KES", maximumFractionDigits: 0 }).format(value);
 }
 
-export function CustomersPage() {
+export function CustomersPage({ initialCustomers = mockCustomers }: { initialCustomers?: Customer[] }) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("All statuses");
-  const [selectedId, setSelectedId] = useState("karibu");
+  const customers = initialCustomers.length > 0 ? initialCustomers : mockCustomers;
+  const [selectedId, setSelectedId] = useState(customers[0]?.id ?? "karibu");
 
   const selected = customers.find((customer) => customer.id === selectedId) ?? customers[0];
   const filteredCustomers = useMemo(() => {
@@ -34,7 +35,7 @@ export function CustomersPage() {
       const matchesQuery = !normalized || `${customer.name} ${customer.phone} ${customer.email ?? ""}`.toLowerCase().includes(normalized);
       return matchesStatus && matchesQuery;
     });
-  }, [query, status]);
+  }, [query, status, customers]);
 
   return (
     <div className="mx-auto max-w-[1700px]">

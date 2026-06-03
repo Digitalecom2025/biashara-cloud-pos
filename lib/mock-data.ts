@@ -1,17 +1,24 @@
 export type Product = {
-  id: number;
+  id: string | number;
   emoji: string;
   tone: string;
   name: string;
+  description?: string;
   code: string;
+  sku?: string;
+  barcode?: string;
   category: string;
+  brand?: string;
   warehouse: string;
   unit: string;
   purchasePrice: number;
   salePrice: number;
   stock: number;
+  reorderLevel?: number;
   rack: string;
   shelf: string;
+  imageUrl?: string;
+  status?: string;
 };
 
 export const products: Product[] = [
