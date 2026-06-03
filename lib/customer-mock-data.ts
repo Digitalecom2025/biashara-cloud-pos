@@ -1,4 +1,4 @@
-export type CustomerStatus = "Clear" | "Owes" | "Overdue";
+export type CustomerStatus = "Active" | "Clear" | "Owes" | "Overdue" | "Inactive";
 export type CustomerType = "Walk-in" | "Retail" | "Wholesale" | "Company" | "Regular";
 
 export type Customer = {

@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { branches as mockBranches, staffUsers as mockStaffUsers, type Branch, type BranchStatus, type StaffStatus, type StaffUser } from "@/lib/organization-mock-data";
-import { customers as mockCustomers, type Customer, type CustomerStatus, type CustomerType } from "@/lib/customer-mock-data";
+import { customers as mockCustomers, debtors as mockDebtors, type Customer, type CustomerStatus, type CustomerType, type Debtor } from "@/lib/customer-mock-data";
 import { products as mockProducts, type Product } from "@/lib/mock-data";
 import { platformBusinesses as mockPlatformBusinesses, type PlatformBusiness, type PlatformBusinessStatus } from "@/lib/platform-mock-data";
 
@@ -38,6 +38,13 @@ function customerIndustries(type: string) {
   return industries[type] ?? "Customer account";
 }
 
+function customerStatus(value: string, debtBalance: number): CustomerStatus {
+  if (value.toLowerCase() === "inactive") return "Inactive";
+  if (value === "Overdue") return "Overdue";
+  if (debtBalance > 0) return "Owes";
+  return "Clear";
+}
+
 function formatDateTime(value?: Date | null) {
   if (!value) return "Not recorded";
   return new Intl.DateTimeFormat("en-GB", {
@@ -48,6 +55,21 @@ function formatDateTime(value?: Date | null) {
     minute: "2-digit",
     hour12: false,
   }).format(value);
+}
+
+function formatShortDate(value: Date) {
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(value);
+}
+
+function daysBetween(from: Date, to: Date) {
+  const day = 24 * 60 * 60 * 1000;
+  const start = Date.UTC(from.getFullYear(), from.getMonth(), from.getDate());
+  const end = Date.UTC(to.getFullYear(), to.getMonth(), to.getDate());
+  return Math.floor((start - end) / day);
 }
 
 function businessStatus(value: string): PlatformBusinessStatus {
@@ -121,28 +143,86 @@ export async function getProductsForPage(): Promise<Product[]> {
   }
 }
 
+export function mapCustomerForPage(customer: {
+  id: string;
+  name: string;
+  phone: string;
+  email: string | null;
+  customerType: string;
+  totalPurchases: unknown;
+  debtBalance: unknown;
+  status: string;
+  updatedAt: Date;
+}): Customer {
+  const debtBalance = Number(customer.debtBalance);
+  return {
+    id: customer.id,
+    initials: initials(customer.name),
+    name: customer.name,
+    phone: customer.phone,
+    email: customer.email ?? undefined,
+    type: customer.customerType as CustomerType,
+    industries: customerIndustries(customer.customerType),
+    totalPurchases: Number(customer.totalPurchases),
+    debtBalance,
+    lastPurchase: formatDateTime(customer.updatedAt),
+    status: customerStatus(customer.status, debtBalance),
+  };
+}
+
 export async function getCustomersForPage(): Promise<Customer[]> {
   try {
     const businessId = await getDemoBusinessId();
     if (!businessId) return mockCustomers;
-    const dbCustomers = await prisma.customer.findMany({ where: { businessId }, orderBy: { name: "asc" } });
+    const dbCustomers = await prisma.customer.findMany({ where: { businessId, status: { notIn: ["inactive", "Inactive"] } }, orderBy: { name: "asc" } });
     if (dbCustomers.length === 0) return mockCustomers;
-    return dbCustomers.map((customer) => ({
-      id: customer.id,
-      initials: initials(customer.name),
-      name: customer.name,
-      phone: customer.phone,
-      email: customer.email ?? undefined,
-      type: customer.customerType as CustomerType,
-      industries: customerIndustries(customer.customerType),
-      totalPurchases: Number(customer.totalPurchases),
-      debtBalance: Number(customer.debtBalance),
-      lastPurchase: formatDateTime(customer.updatedAt),
-      status: customer.status as CustomerStatus,
-    }));
+    return dbCustomers.map(mapCustomerForPage);
   } catch (error) {
     console.warn("Falling back to mock customers", error);
     return mockCustomers;
+  }
+}
+
+export async function getDebtorsForPage(): Promise<Debtor[]> {
+  try {
+    const businessId = await getDemoBusinessId();
+    if (!businessId) return mockDebtors;
+    const dbCustomers = await prisma.customer.findMany({
+      where: { businessId, debtBalance: { gt: 0 }, status: { notIn: ["inactive", "Inactive"] } },
+      include: {
+        payments: { orderBy: { createdAt: "desc" } },
+        sales: { orderBy: { createdAt: "desc" }, take: 1 },
+      },
+      orderBy: { updatedAt: "desc" },
+    });
+    if (dbCustomers.length === 0) return mockDebtors;
+
+    const today = new Date();
+    return dbCustomers.map((customer, index) => {
+      const balanceDue = Number(customer.debtBalance);
+      const paidAmount = customer.payments.reduce((sum, payment) => sum + Number(payment.amount), 0);
+      const dueDate = new Date(customer.updatedAt);
+      dueDate.setDate(dueDate.getDate() + 7);
+      const daysOverdue = daysBetween(today, dueDate);
+      const status: Debtor["status"] = customer.status === "Overdue" || daysOverdue > 0 ? "Overdue" : paidAmount > 0 ? "Partial" : "Due soon";
+
+      return {
+        id: customer.id,
+        customerId: customer.id,
+        customer: customer.name,
+        phone: customer.phone,
+        invoice: customer.sales[0]?.invoiceNumber ?? `BAL-${String(index + 1).padStart(4, "0")}`,
+        originalAmount: balanceDue + paidAmount,
+        paidAmount,
+        balanceDue,
+        dueDate: formatShortDate(dueDate),
+        daysOverdue,
+        status,
+      };
+    });
+  } catch (error) {
+    console.warn("Falling back to mock debtors", error);
+    return mockDebtors;
   }
 }
 
