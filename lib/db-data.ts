@@ -5,6 +5,18 @@ import { products as mockProducts, type Product } from "@/lib/mock-data";
 import { platformBusinesses as mockPlatformBusinesses, type PlatformBusiness, type PlatformBusinessStatus } from "@/lib/platform-mock-data";
 import { recentSales as mockRecentSales, salesProducts as mockSalesProducts, type RecentSale, type SalesProduct } from "@/lib/sales-mock-data";
 import { purchases as mockPurchases, suppliers as mockSuppliers, type Purchase, type PurchaseStatus, type Supplier, type SupplierStatus } from "@/lib/purchasing-mock-data";
+import {
+  stockAdjustments as mockStockAdjustments,
+  stockTransfers as mockStockTransfers,
+  warehouses as mockWarehouses,
+  warehouseProducts as mockWarehouseProducts,
+  type AdjustmentType,
+  type StockAdjustment,
+  type StockTransfer,
+  type TransferStatus,
+  type Warehouse,
+  type WarehouseProduct,
+} from "@/lib/inventory-mock-data";
 
 const DEMO_BUSINESS_SLUG = "nairobi-cbd-store";
 
@@ -51,6 +63,19 @@ function supplierStatus(value: string, balance: number): SupplierStatus {
   if (value.toLowerCase() === "inactive") return "Inactive";
   if (balance > 0 || value === "Owes") return "Owes";
   return "Clear";
+}
+
+function productStockStatus(stock: number, reorderLevel: number) {
+  if (stock <= 0) return "Out of stock" as const;
+  if (stock <= reorderLevel) return "Low stock" as const;
+  return "Healthy" as const;
+}
+
+function adjustmentType(type: string, quantity: number): AdjustmentType {
+  if (type === "damage") return "Damage";
+  if (type === "correction") return "Correction";
+  if (quantity < 0) return "Reduce";
+  return "Add";
 }
 
 function formatDateTime(value?: Date | null) {
@@ -351,6 +376,126 @@ export async function getPurchasesForPage(): Promise<Purchase[]> {
   } catch (error) {
     console.warn("Falling back to mock purchases", error);
     return mockPurchases;
+  }
+}
+
+export async function getWarehouseProductsForPage(): Promise<WarehouseProduct[]> {
+  try {
+    const products = await getProductsForPage();
+    return products.map((product) => ({
+      id: String(product.id),
+      emoji: product.emoji,
+      tone: product.tone,
+      name: product.name,
+      code: product.code,
+      category: product.category,
+      warehouse: product.warehouse,
+      branch: product.warehouse,
+      rack: product.rack || "-",
+      shelf: product.shelf || "-",
+      currentStock: product.stock,
+      reorderLevel: product.reorderLevel ?? 0,
+      status: productStockStatus(product.stock, product.reorderLevel ?? 0),
+      stockValue: product.stock * product.purchasePrice,
+    }));
+  } catch (error) {
+    console.warn("Falling back to mock warehouse products", error);
+    return mockWarehouseProducts;
+  }
+}
+
+export async function getWarehousesForPage(): Promise<Warehouse[]> {
+  try {
+    const products = await getWarehouseProductsForPage();
+    if (products.length === 0) return mockWarehouses;
+    return Array.from(new Set(products.map((product) => product.warehouse))).map((warehouseName, index) => {
+      const warehouseProducts = products.filter((product) => product.warehouse === warehouseName);
+      const lowStock = warehouseProducts.some((product) => product.status !== "Healthy");
+      return {
+        id: warehouseName.toLowerCase().replace(/[^a-z0-9]+/g, "-") || `warehouse-${index + 1}`,
+        name: warehouseName,
+        location: warehouseName,
+        branch: warehouseProducts[0]?.branch ?? warehouseName,
+        manager: "Inventory team",
+        productCount: warehouseProducts.length,
+        stockValue: warehouseProducts.reduce((sum, product) => sum + (product.stockValue ?? 0), 0),
+        status: lowStock ? "Low stock" : "Active",
+      };
+    });
+  } catch (error) {
+    console.warn("Falling back to mock warehouses", error);
+    return mockWarehouses;
+  }
+}
+
+export async function getStockAdjustmentsForPage(): Promise<StockAdjustment[]> {
+  try {
+    const businessId = await getDemoBusinessId();
+    if (!businessId) return mockStockAdjustments;
+    const movements = await prisma.stockMovement.findMany({
+      where: { businessId, type: { in: ["adjustment", "damage", "correction"] } },
+      include: { product: true },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+    });
+    if (movements.length === 0) return mockStockAdjustments;
+    return movements.map((movement) => ({
+      id: movement.reference ?? movement.id,
+      product: movement.product.name,
+      type: adjustmentType(movement.type, movement.quantity),
+      quantity: Math.abs(movement.quantity),
+      reason: movement.reason,
+      warehouse: movement.product.warehouse,
+      adjustedBy: movement.createdBy,
+      date: formatDateTime(movement.createdAt),
+      status: "Approved",
+    }));
+  } catch (error) {
+    console.warn("Falling back to mock stock adjustments", error);
+    return mockStockAdjustments;
+  }
+}
+
+export async function getTransfersForPage(): Promise<StockTransfer[]> {
+  try {
+    const businessId = await getDemoBusinessId();
+    if (!businessId) return mockStockTransfers;
+    const movements = await prisma.stockMovement.findMany({
+      where: { businessId, type: { in: ["transfer_in", "transfer_out"] } },
+      include: { product: true },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+    });
+    if (movements.length === 0) return mockStockTransfers;
+
+    const groups = new Map<string, typeof movements>();
+    for (const movement of movements) {
+      const key = movement.reference ?? movement.id;
+      groups.set(key, [...(groups.get(key) ?? []), movement]);
+    }
+
+    return Array.from(groups.entries()).map(([reference, group]) => {
+      const out = group.find((movement) => movement.type === "transfer_out");
+      const input = group.find((movement) => movement.type === "transfer_in");
+      const movement = out ?? input ?? group[0];
+      const reason = movement.reason;
+      const from = reason.match(/from (.*?) to /i)?.[1] ?? "Source location";
+      const to = reason.match(/ to (.*?)(?:\.|$)/i)?.[1] ?? "Destination location";
+      return {
+        id: reference,
+        product: movement.product.name,
+        quantity: Math.abs(out?.quantity ?? input?.quantity ?? movement.quantity),
+        from,
+        to,
+        requestedBy: movement.createdBy,
+        approvedBy: "System approved",
+        date: formatDateTime(movement.createdAt),
+        status: "Completed" as TransferStatus,
+      };
+    });
+  } catch (error) {
+    console.warn("Falling back to mock transfers", error);
+    return mockStockTransfers;
   }
 }
 

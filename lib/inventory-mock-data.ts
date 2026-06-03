@@ -20,13 +20,16 @@ export type WarehouseProduct = {
   emoji: string;
   tone: string;
   name: string;
+  code?: string;
   category: string;
   warehouse: string;
+  branch?: string;
   rack: string;
   shelf: string;
   currentStock: number;
   reorderLevel: number;
   status: ProductStockStatus;
+  stockValue?: number;
 };
 
 export type StockAdjustment = {
