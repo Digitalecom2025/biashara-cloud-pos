@@ -6,6 +6,7 @@ import { useState, type ReactNode } from "react";
 import {
   ArrowLeftRight,
   Bell,
+  BrainCircuit,
   CalendarCheck,
   ChartNoAxesCombined,
   ChevronDown,
@@ -22,7 +23,6 @@ import {
   ReceiptText,
   Search,
   Settings,
-  ShieldCheck,
   ShoppingBag,
   ShoppingCart,
   SlidersHorizontal,
@@ -38,6 +38,7 @@ import { sidebarItems } from "@/lib/navigation";
 
 const icons = {
   ArrowLeftRight,
+  BrainCircuit,
   CalendarCheck,
   ChartNoAxesCombined,
   ContactRound,
@@ -50,7 +51,6 @@ const icons = {
   Package,
   ReceiptText,
   Settings,
-  ShieldCheck,
   ShoppingBag,
   ShoppingCart,
   SlidersHorizontal,
@@ -124,12 +124,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                 onClick={() => setSidebarOpen(false)}
                 className={`mb-0.5 flex items-center gap-3 rounded-lg px-3 py-[9px] text-[12px] font-semibold ${
                   active
-                    ? item.platform
-                      ? "bg-[#D4A017] text-[#07120D] shadow-md shadow-[#D4A017]/15"
-                      : "bg-[#16A34A] text-white shadow-md shadow-[#16A34A]/15"
-                    : item.platform
-                      ? "mt-3 border border-[#D4A017]/25 bg-[#D4A017]/8 text-[#D4A017] hover:bg-[#D4A017]/15"
-                      : "text-[#B8C7BD] hover:bg-[#0E2418] hover:text-[#F6FFF8]"
+                    ? "bg-[#16A34A] text-white shadow-md shadow-[#16A34A]/15"
+                    : "text-[#B8C7BD] hover:bg-[#0E2418] hover:text-[#F6FFF8]"
                 }`}
               >
                 <Icon size={16} strokeWidth={active ? 2.4 : 1.8} />
@@ -164,7 +160,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </button>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#789083]">
-                Admin workspace
+                Business workspace
               </p>
               <h1 className="text-base font-black text-[#10271B] md:text-lg">{currentPage}</h1>
             </div>
