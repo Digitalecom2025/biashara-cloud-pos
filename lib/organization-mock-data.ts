@@ -23,6 +23,7 @@ export type StaffUser = {
   email: string;
   phone: string;
   role: string;
+  branchId?: string;
   branch: string;
   till: string;
   lastLogin: string;
@@ -57,7 +58,6 @@ export const permissions = [
 
 const all = permissions;
 export const roles = [
-  { name: "Business Administrator", users: 1, description: "Full business administration", permissions: all },
   { name: "Business Owner", users: 1, description: "Business-wide operational access", permissions: all },
   { name: "Branch Manager", users: 1, description: "Branch operations and staff oversight", permissions: all.filter((item) => !["Change settings", "Download backups"].includes(item)) },
   { name: "Cashier", users: 1, description: "Counter sales and customer service", permissions: ["View dashboard", "Make sales", "Manage customers", "Record debt payments"] },

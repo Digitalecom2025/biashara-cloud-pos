@@ -504,29 +504,46 @@ export async function getBranchesForPage(): Promise<Branch[]> {
     const businessId = await getDemoBusinessId();
     if (!businessId) return mockBranches;
     const dbBranches = await prisma.branch.findMany({
-      where: { businessId },
+      where: { businessId, status: { notIn: ["inactive", "Inactive"] } },
       include: { users: true, products: true, sales: true },
       orderBy: { name: "asc" },
     });
     if (dbBranches.length === 0) return mockBranches;
-    return dbBranches.map((branch) => ({
-      id: branch.id,
-      initials: initials(branch.name),
-      name: branch.name,
-      location: branch.location,
-      manager: branch.managerName,
-      phone: branch.phone,
-      tills: Math.max(1, Math.ceil(branch.users.length / 3)),
-      users: branch.users.length,
-      stockValue: branch.products.reduce((sum, product) => sum + Number(product.purchasePrice) * product.stock, 0),
-      salesToday: branch.sales.reduce((sum, sale) => sum + Number(sale.total), 0),
-      status: branch.status as BranchStatus,
-      focus: branch.name.includes("CBD") ? "General retail and supermarket sales" : "Distribution and supermarket stock",
-    }));
+    return dbBranches.map(mapBranchForPage);
   } catch (error) {
     console.warn("Falling back to mock branches", error);
     return mockBranches;
   }
+}
+
+export function mapBranchForPage(branch: {
+  id: string;
+  name: string;
+  location: string;
+  phone: string;
+  managerName: string;
+  status: string;
+  users?: unknown[];
+  products?: { purchasePrice: unknown; stock: number }[];
+  sales?: { total: unknown }[];
+}): Branch {
+  const users = branch.users ?? [];
+  const products = branch.products ?? [];
+  const sales = branch.sales ?? [];
+  return {
+    id: branch.id,
+    initials: initials(branch.name),
+    name: branch.name,
+    location: branch.location,
+    manager: branch.managerName,
+    phone: branch.phone,
+    tills: Math.max(1, Math.ceil(users.length / 3)),
+    users: users.length,
+    stockValue: products.reduce((sum, product) => sum + Number(product.purchasePrice) * product.stock, 0),
+    salesToday: sales.reduce((sum, sale) => sum + Number(sale.total), 0),
+    status: branch.status as BranchStatus,
+    focus: branch.name.includes("CBD") ? "General retail and supermarket sales" : "Distribution and supermarket stock",
+  };
 }
 
 export async function getUsersForPage(): Promise<StaffUser[]> {
@@ -534,27 +551,42 @@ export async function getUsersForPage(): Promise<StaffUser[]> {
     const businessId = await getDemoBusinessId();
     if (!businessId) return mockStaffUsers;
     const dbUsers = await prisma.user.findMany({
-      where: { businessId },
+      where: { businessId, status: { notIn: ["inactive", "Inactive"] } },
       include: { branch: true },
       orderBy: { name: "asc" },
     });
     if (dbUsers.length === 0) return mockStaffUsers;
-    return dbUsers.map((user) => ({
-      id: user.id,
-      initials: initials(user.name),
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
-      role: user.role,
-      branch: user.branch?.name ?? "All branches",
-      till: user.role === "Cashier" ? "Till CBD-01" : user.role === "Business Owner" ? "All tills" : "Not assigned",
-      lastLogin: formatDateTime(user.lastLoginAt),
-      status: user.status as StaffStatus,
-    }));
+    return dbUsers.map(mapUserForPage);
   } catch (error) {
     console.warn("Falling back to mock users", error);
     return mockStaffUsers;
   }
+}
+
+export function mapUserForPage(user: {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  role: string;
+  status: string;
+  lastLoginAt: Date | null;
+  branch?: { id: string; name: string } | null;
+  branchId?: string | null;
+}): StaffUser {
+  return {
+    id: user.id,
+    initials: initials(user.name),
+    name: user.name,
+    email: user.email,
+    phone: user.phone,
+    role: user.role,
+    branchId: user.branchId ?? undefined,
+    branch: user.branch?.name ?? "All branches",
+    till: user.role === "Cashier" ? "Till CBD-01" : user.role === "Business Owner" ? "All tills" : "Not assigned",
+    lastLogin: formatDateTime(user.lastLoginAt),
+    status: user.status as StaffStatus,
+  };
 }
 
 export async function getBusinessesForSuperAdmin(): Promise<PlatformBusiness[]> {
