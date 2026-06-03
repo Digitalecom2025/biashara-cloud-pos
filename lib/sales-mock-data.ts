@@ -1,5 +1,5 @@
 export type SalesProduct = {
-  id: number;
+  id: string | number;
   emoji: string;
   tone: string;
   name: string;
@@ -11,6 +11,7 @@ export type SalesProduct = {
 };
 
 export type RecentSale = {
+  id?: string;
   invoice: string;
   customer: string;
   payment: string;
@@ -18,6 +19,7 @@ export type RecentSale = {
   paid: number;
   due: number;
   cashier: string;
+  branch?: string;
   date: string;
   status: "Paid" | "Partial" | "Due";
 };

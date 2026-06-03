@@ -3,6 +3,7 @@ import { branches as mockBranches, staffUsers as mockStaffUsers, type Branch, ty
 import { customers as mockCustomers, debtors as mockDebtors, type Customer, type CustomerStatus, type CustomerType, type Debtor } from "@/lib/customer-mock-data";
 import { products as mockProducts, type Product } from "@/lib/mock-data";
 import { platformBusinesses as mockPlatformBusinesses, type PlatformBusiness, type PlatformBusinessStatus } from "@/lib/platform-mock-data";
+import { recentSales as mockRecentSales, salesProducts as mockSalesProducts, type RecentSale, type SalesProduct } from "@/lib/sales-mock-data";
 
 const DEMO_BUSINESS_SLUG = "nairobi-cbd-store";
 
@@ -143,6 +144,26 @@ export async function getProductsForPage(): Promise<Product[]> {
   }
 }
 
+export async function getSalesProductsForPage(): Promise<SalesProduct[]> {
+  try {
+    const products = await getProductsForPage();
+    return products.map((product) => ({
+      id: product.id,
+      emoji: product.emoji,
+      tone: product.tone,
+      name: product.name,
+      code: product.code,
+      category: product.category,
+      unit: product.unit,
+      price: product.salePrice,
+      stock: product.stock,
+    }));
+  } catch (error) {
+    console.warn("Falling back to mock sales products", error);
+    return mockSalesProducts;
+  }
+}
+
 export function mapCustomerForPage(customer: {
   id: string;
   name: string;
@@ -223,6 +244,36 @@ export async function getDebtorsForPage(): Promise<Debtor[]> {
   } catch (error) {
     console.warn("Falling back to mock debtors", error);
     return mockDebtors;
+  }
+}
+
+export async function getRecentSalesForPage(): Promise<RecentSale[]> {
+  try {
+    const businessId = await getDemoBusinessId();
+    if (!businessId) return mockRecentSales;
+    const sales = await prisma.sale.findMany({
+      where: { businessId },
+      include: { customer: true, cashier: true, branch: true },
+      orderBy: { createdAt: "desc" },
+      take: 20,
+    });
+    if (sales.length === 0) return mockRecentSales;
+    return sales.map((sale) => ({
+      id: sale.id,
+      invoice: sale.invoiceNumber,
+      customer: sale.customer?.name ?? "Walk-in Customer",
+      payment: sale.paymentMethod,
+      total: Number(sale.total),
+      paid: Number(sale.paid),
+      due: Number(sale.due),
+      cashier: sale.cashier.name,
+      branch: sale.branch.name,
+      date: formatDateTime(sale.createdAt),
+      status: Number(sale.due) === 0 ? "Paid" : Number(sale.paid) > 0 ? "Partial" : "Due",
+    }));
+  } catch (error) {
+    console.warn("Falling back to mock recent sales", error);
+    return mockRecentSales;
   }
 }
 
