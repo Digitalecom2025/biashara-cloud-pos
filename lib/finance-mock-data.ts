@@ -1,5 +1,5 @@
 export type LedgerStatus = "Completed" | "Pending" | "Failed";
-export type ExpenseStatus = "Approved" | "Pending" | "Rejected";
+export type ExpenseStatus = "Approved" | "Pending" | "Rejected" | "Cancelled";
 export type PaymentTypeStatus = "Active" | "Inactive";
 
 export type TillSummary = {
@@ -31,6 +31,7 @@ export type ExpenseRecord = {
   description: string;
   amount: number;
   paymentMethod: string;
+  branchId?: string;
   branch: string;
   recordedBy: string;
   date: string;
