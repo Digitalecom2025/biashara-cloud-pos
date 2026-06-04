@@ -25,6 +25,15 @@ export type DemoSession = {
 };
 
 const DEMO_SESSION_KEY = "biashara.demoSession";
+const LEGACY_DEMO_AUTH_KEYS = [
+  "demoLoggedIn",
+  "demoUserRole",
+  "demoUserName",
+  "demoUserEmail",
+  "demoUserTitle",
+  "demoUserBranch",
+  "demoUserTill",
+];
 
 const adminRoutes = sidebarItems.map((item) => item.href);
 
@@ -153,6 +162,11 @@ export function getDemoSession(): DemoSession | null {
 
 export function clearDemoSession() {
   window.localStorage.removeItem(DEMO_SESSION_KEY);
+  for (const key of LEGACY_DEMO_AUTH_KEYS) {
+    window.localStorage.removeItem(key);
+    window.sessionStorage.removeItem(key);
+  }
+  window.sessionStorage.removeItem(DEMO_SESSION_KEY);
 }
 
 export function accountForRole(role: DemoRole) {

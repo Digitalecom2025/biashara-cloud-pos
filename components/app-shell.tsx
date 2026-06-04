@@ -193,15 +193,23 @@ export function AppShell({ children }: { children: ReactNode }) {
         </nav>
 
         <div className="border-t border-white/8 p-4">
-          <div className="flex items-center gap-3 rounded-xl bg-[#0E2418] p-3">
+          <div className="rounded-xl bg-[#0E2418] p-3">
+            <div className="flex items-center gap-3">
             <span className="grid h-8 w-8 place-items-center rounded-lg bg-[#D4A017]/15 text-[#D4A017]">
               <Zap size={16} />
             </span>
             <div className="min-w-0">
-              <p className="text-[11px] font-bold text-[#F6FFF8]">Biashara Cloud</p>
+              <p className="truncate text-[11px] font-bold text-[#F6FFF8]">{session?.demoUserName ?? "Biashara Cloud"}</p>
+              <p className="truncate text-[10px] text-[#B8C7BD]">{session?.demoUserTitle ?? "Demo User"} - Active</p>
               <p className="truncate text-[10px] text-[#B8C7BD]">Business Plan · Active</p>
             </div>
           </div>
+        </div>
+        </div>
+        <div className="px-4 pb-4">
+          <button onClick={logout} className="flex w-full items-center justify-center gap-2 rounded-lg border border-[#D4A017]/30 bg-[#D4A017]/10 px-3 py-2.5 text-[11px] font-black text-[#D4A017] hover:bg-[#D4A017]/15">
+            <LogOut size={14} /> Logout
+          </button>
         </div>
       </aside>
 
@@ -269,8 +277,8 @@ export function AppShell({ children }: { children: ReactNode }) {
               </span>
             </div>
 
-            <button onClick={logout} aria-label="Logout" className="hidden h-10 w-10 place-items-center rounded-xl border border-[#DDEAE0] text-[#60766B] hover:bg-[#F5FAF6] sm:grid">
-              <LogOut size={17} />
+            <button onClick={logout} className="flex items-center gap-2 rounded-xl border border-[#D4A017]/35 bg-[#FFF9E8] px-2.5 py-2.5 text-[11px] font-black text-[#8A670C] hover:bg-[#FFF2C9] sm:px-3 sm:text-xs">
+              <LogOut size={15} /> Logout
             </button>
           </div>
         </header>
