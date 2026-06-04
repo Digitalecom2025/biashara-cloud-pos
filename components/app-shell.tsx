@@ -35,6 +35,7 @@ import {
   Zap,
 } from "lucide-react";
 import { sidebarItems } from "@/lib/navigation";
+import { PwaControls } from "@/components/pwa-controls";
 
 const icons = {
   ArrowLeftRight,
@@ -184,6 +185,8 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span className="hidden rounded-xl border border-[#16A34A]/20 bg-[#16A34A]/8 px-3 py-2.5 text-[10px] font-black uppercase tracking-wider text-[#0F8C42] 2xl:inline-flex">
               Demo Mode: Local business data
             </span>
+
+            <PwaControls />
 
             <button
               aria-label="Help"

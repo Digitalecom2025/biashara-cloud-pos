@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
-import { Building2, Check, ChevronRight, CloudDownload, CreditCard, Image as ImageIcon, Printer, Save, Settings2, ShieldCheck, SlidersHorizontal, Store, Users, Crown } from "lucide-react";
+import { Building2, Check, ChevronRight, CloudDownload, CreditCard, Image as ImageIcon, Printer, Save, Settings2, ShieldCheck, SlidersHorizontal, Smartphone, Store, Users, Crown } from "lucide-react";
 import { defaultSettings, industryModes } from "@/lib/settings-options";
 import { getIndustryOpsConfig } from "@/lib/industryops";
 
@@ -207,6 +207,15 @@ export function SettingsPage() {
           <Panel icon={CloudDownload} title="Backup and data" note="Backend export will be connected in a later phase.">
             <p className="rounded-xl bg-[#FFF9E8] p-3 text-[11px] leading-5 text-[#8A670C]">Backup/export will be implemented later. This button is intentionally a placeholder for now.</p>
             <button onClick={backupPlaceholder} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-[#DDEAE0] py-3 text-xs font-black text-[#60766B]"><CloudDownload size={15} />Download data archive</button>
+          </Panel>
+
+          <Panel icon={Smartphone} title="Mobile App Experience" note="Installable web app foundation for demos.">
+            <p className="rounded-xl bg-[#F8FBF8] p-3 text-[11px] leading-5 text-[#60766B]">
+              Biashara Cloud POS runs on desktop, tablet and phone. It can be installed like an app using PWA technology. Native Android/iPhone apps can be added later.
+            </p>
+            <p className="mt-3 rounded-xl bg-[#FFF9E8] p-3 text-[11px] leading-5 text-[#8A670C]">
+              Offline sales sync is the next Hybrid POS stage.
+            </p>
           </Panel>
         </div>
       </section>
