@@ -23,6 +23,7 @@ export const sidebarItems: SidebarItem[] = [
   { label: "HRM", href: "/hrm", icon: "ContactRound" },
   { label: "Reports", href: "/reports", icon: "ChartNoAxesCombined" },
   { label: "AI Assistant", href: "/ai-assistant", icon: "BrainCircuit" },
+  { label: "Sync Center", href: "/sync-center", icon: "RefreshCw" },
   { label: "Party Reports", href: "/party-reports", icon: "Files" },
   { label: "SMS Marketing", href: "/sms-marketing", icon: "MessageSquareText" },
   { label: "Payment Types", href: "/payment-types", icon: "WalletCards" },

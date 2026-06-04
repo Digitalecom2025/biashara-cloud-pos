@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Banknote,
   Building2,
@@ -23,6 +23,16 @@ import {
   X,
 } from "lucide-react";
 import { customers as mockCustomers, type Customer } from "@/lib/customer-mock-data";
+import {
+  getOfflineDeviceId,
+  getOfflineSalesSummary,
+  getSimulateOfflineMode,
+  makeLocalInvoiceNumber,
+  makeOfflineSaleId,
+  OFFLINE_MODE_EVENT,
+  OFFLINE_SALES_EVENT,
+  saveOfflineSale,
+} from "@/lib/offline-sales";
 import { recentSales as mockRecentSales, salesProducts as mockSalesProducts, type RecentSale, type SalesProduct } from "@/lib/sales-mock-data";
 
 type PaymentMethod = "Cash" | "M-Pesa" | "Bank" | "Credit / Debt";
@@ -39,7 +49,14 @@ type Receipt = {
   cashier: string;
   branch: string;
   date: string;
+  syncStatus?: "Synced" | "Pending Sync";
 };
+
+const DEMO_BUSINESS_ID = "demo-business";
+const DEMO_BRANCH_ID = "main-branch";
+const DEMO_CASHIER_ID = "james-mwangi";
+const DEMO_CASHIER_NAME = "James Mwangi";
+const DEMO_BRANCH_NAME = "Nairobi CBD Store";
 
 const paymentMethods = [
   { label: "Cash" as const, icon: Banknote },
@@ -90,7 +107,11 @@ export function SalesRegister({
   const [receipt, setReceipt] = useState<Receipt | null>(null);
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState("");
+  const [feedbackType, setFeedbackType] = useState<"success" | "warning">("success");
   const [error, setError] = useState("");
+  const [pendingOfflineSales, setPendingOfflineSales] = useState(0);
+  const [simulateOfflineMode, setSimulateOfflineModeState] = useState(false);
+  const [online, setOnline] = useState(true);
 
   const categories = ["All", ...Array.from(new Set(products.map((product) => product.category)))];
   const selectedCustomer = customers.find((customer) => customer.id === selectedCustomerId) ?? walkInCustomer;
@@ -110,8 +131,47 @@ export function SalesRegister({
   const tax = 0;
   const total = Math.max(0, subtotal + tax - (Number.isFinite(discountAmount) ? discountAmount : 0));
   const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const forceOfflineSale = simulateOfflineMode || !online;
 
-  function showFeedback(message: string) {
+  const refreshOfflineSummary = useCallback(async () => {
+    try {
+      const summary = await getOfflineSalesSummary();
+      setPendingOfflineSales(summary.pending);
+    } catch {
+      setPendingOfflineSales(0);
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleOnline = () => setOnline(true);
+    const handleOffline = () => setOnline(false);
+    const handleOfflineMode = () => setSimulateOfflineModeState(getSimulateOfflineMode());
+    const handleOfflineSales = () => {
+      void refreshOfflineSummary();
+    };
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    window.addEventListener(OFFLINE_MODE_EVENT, handleOfflineMode);
+    window.addEventListener(OFFLINE_SALES_EVENT, handleOfflineSales);
+
+    const timer = window.setTimeout(() => {
+      setOnline(navigator.onLine);
+      setSimulateOfflineModeState(getSimulateOfflineMode());
+      void refreshOfflineSummary();
+    }, 0);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+      window.removeEventListener(OFFLINE_MODE_EVENT, handleOfflineMode);
+      window.removeEventListener(OFFLINE_SALES_EVENT, handleOfflineSales);
+      window.clearTimeout(timer);
+    };
+  }, [refreshOfflineSummary]);
+
+  function showFeedback(message: string, type: "success" | "warning" = "success") {
+    setFeedbackType(type);
     setFeedback(message);
     window.setTimeout(() => setFeedback(""), 2600);
   }
@@ -181,6 +241,72 @@ export function SalesRegister({
     setCart((current) => current.filter((item) => item.id !== productId));
   }
 
+  async function saveCurrentSaleOffline(reason: string) {
+    const now = new Date().toISOString();
+    const localInvoiceNumber = makeLocalInvoiceNumber();
+    const isCreditSale = payment === "Credit / Debt";
+    const paid = isCreditSale ? 0 : total;
+    const due = isCreditSale ? total : 0;
+    const offlineItems = cart.map((item) => ({
+      productId: String(item.id),
+      productName: item.name,
+      quantity: item.quantity,
+      unitPrice: item.price,
+      total: item.price * item.quantity,
+    }));
+    const receiptItems = cart.map((item) => ({
+      id: item.id,
+      name: item.name,
+      code: item.code,
+      quantity: item.quantity,
+      unitPrice: item.price,
+      total: item.price * item.quantity,
+    }));
+
+    await saveOfflineSale({
+      localId: makeOfflineSaleId(),
+      businessId: DEMO_BUSINESS_ID,
+      branchId: DEMO_BRANCH_ID,
+      cashierId: DEMO_CASHIER_ID,
+      customerId: selectedCustomer?.name.toLowerCase().includes("walk-in") ? undefined : String(selectedCustomer?.id ?? ""),
+      customerName: selectedCustomer?.name ?? "Walk-in Customer",
+      localInvoiceNumber,
+      items: offlineItems,
+      subtotal,
+      tax,
+      discount: Number(discount || 0),
+      total,
+      paid,
+      due,
+      paymentMethod: payment,
+      saleType: isCreditSale ? "credit" : "normal",
+      status: "pending_sync",
+      createdAt: now,
+      updatedAt: now,
+      syncAttempts: 0,
+      lastError: reason,
+      deviceId: getOfflineDeviceId(),
+    });
+
+    setReceipt({
+      invoice: localInvoiceNumber,
+      customer: selectedCustomer?.name ?? "Walk-in Customer",
+      payment,
+      items: receiptItems,
+      total,
+      paid,
+      due,
+      cashier: DEMO_CASHIER_NAME,
+      branch: DEMO_BRANCH_NAME,
+      date: now,
+      syncStatus: "Pending Sync",
+    });
+    setCart([]);
+    setDiscount("0");
+    await refreshOfflineSummary();
+    showFeedback("Sale saved offline. It will sync when connection returns.", "warning");
+  }
+
   async function completeSale() {
     setError("");
     if (cart.length === 0) return setError("Cart cannot be empty.");
@@ -193,6 +319,11 @@ export function SalesRegister({
 
     setLoading(true);
     try {
+      if (forceOfflineSale) {
+        await saveCurrentSaleOffline(simulateOfflineMode ? "Demo offline mode enabled." : "Browser is offline.");
+        return;
+      }
+
       const response = await fetch("/api/sales", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -217,12 +348,22 @@ export function SalesRegister({
         cashier: savedSale.cashier,
         branch: savedSale.branch,
         date: savedSale.date,
+        syncStatus: "Synced",
       });
       setCart([]);
       setDiscount("0");
       await refreshRegisterData();
       showFeedback("Sale completed and saved to the database.");
     } catch (saleError) {
+      if (saleError instanceof TypeError || !navigator.onLine) {
+        try {
+          await saveCurrentSaleOffline("Sale API could not be reached.");
+          return;
+        } catch (offlineError) {
+          setError(offlineError instanceof Error ? offlineError.message : "Failed to save sale offline.");
+          return;
+        }
+      }
       setError(saleError instanceof Error ? saleError.message : "Failed to complete sale.");
     } finally {
       setLoading(false);
@@ -253,6 +394,7 @@ export function SalesRegister({
         cashier: savedSale.cashier,
         branch: savedSale.branch,
         date: savedSale.date,
+        syncStatus: "Synced",
       });
     } catch (viewError) {
       setError(viewError instanceof Error ? viewError.message : "Failed to load sale.");
@@ -272,11 +414,14 @@ export function SalesRegister({
         <div className="flex flex-wrap gap-2">
           <span className="rounded-xl border border-[#DDEAE0] bg-white px-3 py-2.5 text-xs font-bold text-[#60766B]">Branch: Nairobi CBD</span>
           <span className="rounded-xl border border-[#DDEAE0] bg-white px-3 py-2.5 text-xs font-bold text-[#60766B]">Till: Main Counter</span>
+          <span className="rounded-xl border border-[#D4A017]/35 bg-[#FFF9E8] px-3 py-2.5 text-xs font-black text-[#8A670C]">Pending offline sales: {pendingOfflineSales}</span>
+          {simulateOfflineMode && <span className="rounded-xl border border-[#D4A017]/35 bg-[#D4A017]/12 px-3 py-2.5 text-xs font-black text-[#8A670C]">Demo Offline Mode</span>}
+          {!online && <span className="rounded-xl border border-[#EF4444]/20 bg-[#EF4444]/10 px-3 py-2.5 text-xs font-black text-[#EF4444]">Browser Offline</span>}
         </div>
       </div>
 
       {(feedback || error) && (
-        <div className={`mb-4 rounded-xl px-4 py-3 text-xs font-bold ${error ? "border border-[#EF4444]/20 bg-[#EF4444]/10 text-[#EF4444]" : "border border-[#16A34A]/20 bg-[#16A34A]/10 text-[#0F8C42]"}`}>
+        <div className={`mb-4 rounded-xl px-4 py-3 text-xs font-bold ${error ? "border border-[#EF4444]/20 bg-[#EF4444]/10 text-[#EF4444]" : feedbackType === "warning" ? "border border-[#D4A017]/35 bg-[#FFF9E8] text-[#8A670C]" : "border border-[#16A34A]/20 bg-[#16A34A]/10 text-[#0F8C42]"}`}>
           {error || feedback}
         </div>
       )}
@@ -486,6 +631,7 @@ function StatusBadge({ status }: { status: "Paid" | "Partial" | "Due" }) {
 }
 
 function ReceiptModal({ receipt, onClose }: { receipt: Receipt; onClose: () => void }) {
+  const pendingSync = receipt.syncStatus === "Pending Sync";
   return (
     <div className="fixed inset-0 z-[70] grid place-items-center bg-[#07120D]/65 p-4">
       <article className="max-h-[92vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white shadow-2xl">
@@ -493,7 +639,7 @@ function ReceiptModal({ receipt, onClose }: { receipt: Receipt; onClose: () => v
           <div className="flex items-center gap-2">
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-[#16A34A]/10 text-[#16A34A]"><ReceiptText size={17} /></span>
             <div>
-              <h3 className="text-sm font-black text-[#173324]">Sale completed</h3>
+              <h3 className="text-sm font-black text-[#173324]">{pendingSync ? "Sale saved offline" : "Sale completed"}</h3>
               <p className="text-[10px] text-[#789083]">Receipt summary - {receipt.invoice}</p>
             </div>
           </div>
@@ -511,6 +657,7 @@ function ReceiptModal({ receipt, onClose }: { receipt: Receipt; onClose: () => v
             <p className="flex justify-between"><span>Cashier</span><b className="text-[#173324]">{receipt.cashier}</b></p>
             <p className="flex justify-between"><span>Date</span><b className="text-[#173324]">{formatReceiptDate(receipt.date)}</b></p>
             <p className="flex justify-between"><span>Payment</span><b className="text-[#173324]">{receipt.payment}</b></p>
+            <p className="flex justify-between"><span>Sync status</span><b className={pendingSync ? "text-[#8A670C]" : "text-[#0F8C42]"}>{receipt.syncStatus ?? "Synced"}</b></p>
           </div>
           <div className="space-y-2 py-3">
             {receipt.items.map((item) => (

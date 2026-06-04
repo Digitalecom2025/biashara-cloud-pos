@@ -10,6 +10,7 @@ import {
   CreditCard,
   HandCoins,
   PackageSearch,
+  RefreshCw,
   SlidersHorizontal,
   Smartphone,
   Store,
@@ -96,7 +97,7 @@ export async function Dashboard() {
         ))}
       </section>
 
-      <section className="mt-5 grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
+      <section className="mt-5 grid gap-5 xl:grid-cols-[1.15fr_0.85fr_0.85fr]">
         <article className="rounded-2xl border border-[#D4A017]/35 bg-[#FFF9E8] p-5 shadow-sm shadow-[#12311F]/5">
           <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
             <div>
@@ -134,6 +135,24 @@ export async function Dashboard() {
           <div className="mt-4 flex flex-wrap gap-2">
             {industry.sampleCategories.slice(0, 4).map((category) => <span key={category} className="rounded-full bg-[#F8FBF8] px-3 py-1.5 text-[10px] font-black text-[#60766B]">{category}</span>)}
           </div>
+        </article>
+
+        <article className="rounded-2xl border border-[#DDEAE0] bg-white p-5 shadow-sm shadow-[#12311F]/5">
+          <div className="flex items-start justify-between">
+            <div>
+              <h3 className="font-black text-[#173324]">Hybrid Sync Center</h3>
+              <p className="mt-0.5 text-xs text-[#789083]">Track offline sales saved on this device and sync them when connection returns.</p>
+            </div>
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#D4A017]/12 text-[#9A7108]">
+              <RefreshCw size={18} />
+            </span>
+          </div>
+          <p className="mt-4 text-xs leading-5 text-[#60766B]">
+            This is the first Hybrid POS stage: sales can be queued locally in the browser while full cloud sync is being prepared.
+          </p>
+          <Link href="/sync-center" className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#12311F] px-4 py-3 text-xs font-black text-white hover:bg-[#0E2418]">
+            Open Sync Center <ArrowRight size={14} />
+          </Link>
         </article>
       </section>
 
