@@ -196,7 +196,7 @@ export async function POST(request: Request) {
           UPDATE "Sale"
           SET "offlineSyncId" = ${offlineSyncId},
               "deviceId" = ${parsed.data.deviceId},
-              "syncedFromOffline" = ${1},
+              "syncedFromOffline" = ${true},
               "syncedAt" = ${new Date()}
           WHERE "id" = ${sale.id}
         `;

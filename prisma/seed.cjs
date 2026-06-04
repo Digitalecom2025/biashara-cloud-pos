@@ -4,25 +4,32 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 async function main() {
-  await prisma.saleItem.deleteMany();
-  await prisma.payment.deleteMany();
-  await prisma.sale.deleteMany();
-  await prisma.stockMovement.deleteMany();
-  await prisma.expense.deleteMany();
-  await prisma.auditLog.deleteMany();
-  await prisma.subscription.deleteMany();
-  await prisma.setting.deleteMany();
-  await prisma.supplier.deleteMany();
-  await prisma.customer.deleteMany();
-  await prisma.product.deleteMany();
-  await prisma.user.deleteMany();
-  await prisma.branch.deleteMany();
-  await prisma.business.deleteMany();
+  const demoSlug = "nairobi-cbd-store";
+  const existingDemoBusiness = await prisma.business.findUnique({ where: { slug: demoSlug } });
+
+  if (existingDemoBusiness) {
+    await prisma.saleItem.deleteMany({ where: { sale: { businessId: existingDemoBusiness.id } } });
+    await prisma.payment.deleteMany({ where: { businessId: existingDemoBusiness.id } });
+    await prisma.sale.deleteMany({ where: { businessId: existingDemoBusiness.id } });
+    await prisma.purchaseItem.deleteMany({ where: { purchase: { businessId: existingDemoBusiness.id } } });
+    await prisma.purchase.deleteMany({ where: { businessId: existingDemoBusiness.id } });
+    await prisma.stockMovement.deleteMany({ where: { businessId: existingDemoBusiness.id } });
+    await prisma.expense.deleteMany({ where: { businessId: existingDemoBusiness.id } });
+    await prisma.auditLog.deleteMany({ where: { businessId: existingDemoBusiness.id } });
+    await prisma.subscription.deleteMany({ where: { businessId: existingDemoBusiness.id } });
+    await prisma.setting.deleteMany({ where: { businessId: existingDemoBusiness.id } });
+    await prisma.supplier.deleteMany({ where: { businessId: existingDemoBusiness.id } });
+    await prisma.customer.deleteMany({ where: { businessId: existingDemoBusiness.id } });
+    await prisma.product.deleteMany({ where: { businessId: existingDemoBusiness.id } });
+    await prisma.user.deleteMany({ where: { businessId: existingDemoBusiness.id } });
+    await prisma.branch.deleteMany({ where: { businessId: existingDemoBusiness.id } });
+    await prisma.business.delete({ where: { id: existingDemoBusiness.id } });
+  }
 
   const business = await prisma.business.create({
     data: {
       name: "Nairobi CBD Store",
-      slug: "nairobi-cbd-store",
+      slug: demoSlug,
       phone: "0712 550 184",
       email: "admin@biashara.demo",
       location: "Tom Mboya Street, Nairobi",
