@@ -3,6 +3,10 @@ export type SaleInput = {
   paymentMethod?: unknown;
   discount?: unknown;
   items?: unknown;
+  localId?: unknown;
+  offlineSyncId?: unknown;
+  deviceId?: unknown;
+  localInvoiceNumber?: unknown;
 };
 
 export type SaleItemInput = {
@@ -20,6 +24,9 @@ type SaleValidationResult =
         paymentMethod: "Cash" | "M-Pesa" | "Bank" | "Credit / Debt";
         discount: number;
         items: SaleItemInput[];
+        offlineSyncId: string | null;
+        deviceId: string | null;
+        localInvoiceNumber: string | null;
       };
     };
 
@@ -67,6 +74,9 @@ export function saleData(input: SaleInput): SaleValidationResult {
       paymentMethod: paymentMethod as "Cash" | "M-Pesa" | "Bank" | "Credit / Debt",
       discount,
       items,
+      offlineSyncId: text(input.offlineSyncId) || text(input.localId) || null,
+      deviceId: text(input.deviceId) || null,
+      localInvoiceNumber: text(input.localInvoiceNumber) || null,
     },
   };
 }

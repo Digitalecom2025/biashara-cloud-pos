@@ -32,6 +32,14 @@ export type OfflineSaleRecord = {
   syncAttempts: number;
   lastError?: string;
   deviceId: string;
+  serverSaleId?: string;
+  syncedAt?: string;
+};
+
+export type OfflineSyncSummary = {
+  synced: number;
+  failed: number;
+  remainingPending: number;
 };
 
 const DB_NAME = "biashara-cloud-pos";
@@ -139,18 +147,82 @@ export async function getOfflineSalesSummary() {
   };
 }
 
-export async function updateOfflineSaleStatus(localId: string, status: OfflineSaleStatus, lastError?: string) {
+export async function updateOfflineSaleStatus(localId: string, status: OfflineSaleStatus, lastError?: string, extra?: Partial<OfflineSaleRecord>) {
   const sale = await storeRequest<OfflineSaleRecord | undefined>("readonly", (store) => store.get(localId));
   if (!sale) return undefined;
   const updated: OfflineSaleRecord = {
     ...sale,
+    ...extra,
     status,
     lastError,
-    syncAttempts: status === "syncing" || status === "failed" ? sale.syncAttempts + 1 : sale.syncAttempts,
+    syncAttempts: status === "syncing" ? sale.syncAttempts + 1 : sale.syncAttempts,
     updatedAt: new Date().toISOString(),
   };
   await saveOfflineSale(updated);
   return updated;
+}
+
+export async function syncPendingOfflineSales(): Promise<OfflineSyncSummary> {
+  if (typeof navigator !== "undefined" && !navigator.onLine) {
+    throw new Error("Cannot sync while the browser is offline.");
+  }
+
+  const allSales = await getOfflineSales();
+  const candidates = allSales.filter((sale) => sale.status === "pending_sync" || sale.status === "failed");
+  let synced = 0;
+  let failed = 0;
+
+  for (const sale of candidates) {
+    await updateOfflineSaleStatus(sale.localId, "syncing", undefined);
+
+    try {
+      const response = await fetch("/api/sales", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerId: sale.customerId,
+          paymentMethod: sale.paymentMethod,
+          discount: sale.discount,
+          localId: sale.localId,
+          offlineSyncId: sale.localId,
+          deviceId: sale.deviceId,
+          localInvoiceNumber: sale.localInvoiceNumber,
+          items: sale.items.map((item) => ({
+            productId: item.productId,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+          })),
+        }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error ?? "Sale sync failed.");
+
+      await updateOfflineSaleStatus(sale.localId, "synced", undefined, {
+        serverSaleId: payload.data?.id,
+        invoiceNumber: payload.data?.invoice,
+        syncedAt: new Date().toISOString(),
+      });
+      synced += 1;
+    } catch (syncError) {
+      await updateOfflineSaleStatus(sale.localId, "failed", syncError instanceof Error ? syncError.message : "Sale sync failed.");
+      failed += 1;
+    }
+  }
+
+  const remaining = await getOfflineSales();
+  return {
+    synced,
+    failed,
+    remainingPending: remaining.filter((sale) => sale.status === "pending_sync" || sale.status === "syncing" || sale.status === "failed").length,
+  };
+}
+
+export async function clearSyncedOfflineSales() {
+  const sales = await getOfflineSales();
+  const syncedSales = sales.filter((sale) => sale.status === "synced");
+  await Promise.all(syncedSales.map((sale) => deleteOfflineSale(sale.localId)));
+  window.dispatchEvent(new CustomEvent(OFFLINE_SALES_EVENT));
+  return syncedSales.length;
 }
 
 export async function deleteOfflineSale(localId: string) {

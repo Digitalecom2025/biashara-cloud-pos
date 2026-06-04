@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import {
   Banknote,
   Building2,
@@ -417,8 +418,15 @@ export function SalesRegister({
           <span className="rounded-xl border border-[#D4A017]/35 bg-[#FFF9E8] px-3 py-2.5 text-xs font-black text-[#8A670C]">Pending offline sales: {pendingOfflineSales}</span>
           {simulateOfflineMode && <span className="rounded-xl border border-[#D4A017]/35 bg-[#D4A017]/12 px-3 py-2.5 text-xs font-black text-[#8A670C]">Demo Offline Mode</span>}
           {!online && <span className="rounded-xl border border-[#EF4444]/20 bg-[#EF4444]/10 px-3 py-2.5 text-xs font-black text-[#EF4444]">Browser Offline</span>}
+          {pendingOfflineSales > 0 && <Link href="/sync-center" className="rounded-xl bg-[#12311F] px-3 py-2.5 text-xs font-black text-white hover:bg-[#0E2418]">Open Sync Center</Link>}
         </div>
       </div>
+
+      {pendingOfflineSales > 0 && online && !simulateOfflineMode && (
+        <div className="mb-4 rounded-xl border border-[#D4A017]/35 bg-[#FFF9E8] px-4 py-3 text-xs font-bold text-[#8A670C]">
+          Pending sales are ready to sync. Open Sync Center to send offline sales to the database.
+        </div>
+      )}
 
       {(feedback || error) && (
         <div className={`mb-4 rounded-xl px-4 py-3 text-xs font-bold ${error ? "border border-[#EF4444]/20 bg-[#EF4444]/10 text-[#EF4444]" : feedbackType === "warning" ? "border border-[#D4A017]/35 bg-[#FFF9E8] text-[#8A670C]" : "border border-[#16A34A]/20 bg-[#16A34A]/10 text-[#0F8C42]"}`}>

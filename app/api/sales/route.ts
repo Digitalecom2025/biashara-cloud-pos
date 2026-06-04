@@ -3,9 +3,50 @@ import { getDemoBusinessId, getRecentSalesForPage } from "@/lib/db-data";
 import { saleData, type SaleInput } from "@/lib/sale-validation";
 import { prisma } from "@/lib/prisma";
 
+type SaleResponseClient = {
+  sale: {
+    findUnique: typeof prisma.sale.findUnique;
+  };
+};
+
 function invoiceNumber() {
   const stamp = Date.now().toString().slice(-8);
   return `INV-${stamp}`;
+}
+
+async function formatSaleResponse(saleId: string, tx: SaleResponseClient) {
+  const saleWithDetails = await tx.sale.findUnique({
+    where: { id: saleId },
+    include: {
+      customer: true,
+      cashier: true,
+      branch: true,
+      items: { include: { product: true } },
+    },
+  });
+  if (!saleWithDetails) throw new Error("Sale could not be loaded after saving.");
+
+  return {
+    id: saleWithDetails.id,
+    invoice: saleWithDetails.invoiceNumber,
+    customer: saleWithDetails.customer?.name ?? "Walk-in Customer",
+    payment: saleWithDetails.paymentMethod,
+    total: Number(saleWithDetails.total),
+    paid: Number(saleWithDetails.paid),
+    due: Number(saleWithDetails.due),
+    cashier: saleWithDetails.cashier.name,
+    branch: saleWithDetails.branch.name,
+    date: saleWithDetails.createdAt.toISOString(),
+    status: Number(saleWithDetails.due) === 0 ? "Paid" : Number(saleWithDetails.paid) > 0 ? "Partial" : "Due",
+    items: saleWithDetails.items.map((item) => ({
+      id: item.productId,
+      name: item.product.name,
+      code: item.product.code,
+      quantity: item.quantity,
+      unitPrice: Number(item.unitPrice),
+      total: Number(item.total),
+    })),
+  };
 }
 
 export async function GET() {
@@ -23,6 +64,14 @@ export async function POST(request: Request) {
 
   try {
     const result = await prisma.$transaction(async (tx) => {
+      const offlineSyncId = parsed.data.offlineSyncId;
+      if (offlineSyncId) {
+        const existing = await tx.$queryRaw<Array<{ id: string }>>`SELECT "id" FROM "Sale" WHERE "offlineSyncId" = ${offlineSyncId} LIMIT 1`;
+        if (existing[0]?.id) {
+          return formatSaleResponse(existing[0].id, tx);
+        }
+      }
+
       const branch = await tx.branch.findFirst({ where: { businessId, name: "Nairobi CBD Store" } }) ?? await tx.branch.findFirst({ where: { businessId } });
       if (!branch) throw new Error("No branch found for this business.");
 
@@ -142,38 +191,18 @@ export async function POST(request: Request) {
         },
       });
 
-      const saleWithDetails = await tx.sale.findUnique({
-        where: { id: sale.id },
-        include: {
-          customer: true,
-          cashier: true,
-          branch: true,
-          items: { include: { product: true } },
-        },
-      });
-      if (!saleWithDetails) throw new Error("Sale could not be loaded after saving.");
+      if (offlineSyncId) {
+        await tx.$executeRaw`
+          UPDATE "Sale"
+          SET "offlineSyncId" = ${offlineSyncId},
+              "deviceId" = ${parsed.data.deviceId},
+              "syncedFromOffline" = ${1},
+              "syncedAt" = ${new Date()}
+          WHERE "id" = ${sale.id}
+        `;
+      }
 
-      return {
-        id: saleWithDetails.id,
-        invoice: saleWithDetails.invoiceNumber,
-        customer: saleWithDetails.customer?.name ?? "Walk-in Customer",
-        payment: saleWithDetails.paymentMethod,
-        total: Number(saleWithDetails.total),
-        paid: Number(saleWithDetails.paid),
-        due: Number(saleWithDetails.due),
-        cashier: saleWithDetails.cashier.name,
-        branch: saleWithDetails.branch.name,
-        date: saleWithDetails.createdAt.toISOString(),
-        status: Number(saleWithDetails.due) === 0 ? "Paid" : Number(saleWithDetails.paid) > 0 ? "Partial" : "Due",
-        items: saleWithDetails.items.map((item) => ({
-          id: item.productId,
-          name: item.product.name,
-          code: item.product.code,
-          quantity: item.quantity,
-          unitPrice: Number(item.unitPrice),
-          total: Number(item.total),
-        })),
-      };
+      return formatSaleResponse(sale.id, tx);
     });
 
     return NextResponse.json({ data: result, message: "Sale completed." }, { status: 201 });

@@ -208,6 +208,10 @@ model Sale {
   paymentMethod String
   status        String
   saleType      String
+  offlineSyncId String?  @unique
+  deviceId      String?
+  syncedFromOffline Boolean @default(false)
+  syncedAt      DateTime?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

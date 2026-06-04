@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -22,6 +22,8 @@ import {
   getSimulateOfflineMode,
   OFFLINE_MODE_EVENT,
   OFFLINE_SALES_EVENT,
+  clearSyncedOfflineSales,
+  syncPendingOfflineSales,
   type OfflineSaleRecord,
   setSimulateOfflineMode,
 } from "@/lib/offline-sales";
@@ -64,16 +66,20 @@ export function SyncCenterPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [feedback, setFeedback] = useState("");
+  const [syncing, setSyncing] = useState(false);
+  const [lastSyncResult, setLastSyncResult] = useState("");
+  const [lastSyncAttempt, setLastSyncAttempt] = useState("");
   const [selectedSale, setSelectedSale] = useState<OfflineSaleRecord | null>(null);
+  const syncInProgress = useRef(false);
 
   const summary = useMemo(() => {
     return {
       pending: sales.filter((sale) => sale.status === "pending_sync" || sale.status === "syncing").length,
       synced: sales.filter((sale) => sale.status === "synced").length,
       failed: sales.filter((sale) => sale.status === "failed").length,
-      lastSyncAttempt: sales.find((sale) => sale.syncAttempts > 0)?.updatedAt,
+      lastSyncAttempt: lastSyncAttempt || sales.find((sale) => sale.syncAttempts > 0)?.updatedAt,
     };
-  }, [sales]);
+  }, [lastSyncAttempt, sales]);
 
   const loadQueue = useCallback(async () => {
     setLoading(true);
@@ -118,16 +124,65 @@ export function SyncCenterPage() {
     };
   }, [loadQueue]);
 
-  function showFeedback(message: string) {
+  const showFeedback = useCallback((message: string) => {
     setFeedback(message);
     window.setTimeout(() => setFeedback(""), 2800);
-  }
+  }, []);
 
   function toggleDemoOffline(enabled: boolean) {
     setSimulateOfflineMode(enabled);
     setSimulateOffline(enabled);
     showFeedback(enabled ? "Demo Offline Mode enabled. Sales will be saved to this device." : "Demo Offline Mode disabled. Sales will use the online database again.");
   }
+
+  const runSync = useCallback(async (source: "manual" | "auto" = "manual") => {
+    if (syncInProgress.current) return;
+    if (!navigator.onLine) {
+      setError("Cannot sync while the browser is offline.");
+      return;
+    }
+    if (getSimulateOfflineMode()) {
+      if (source === "manual") setError("Turn off Demo Offline Mode before syncing to the database.");
+      return;
+    }
+
+    syncInProgress.current = true;
+    setSyncing(true);
+    setError("");
+    const attemptedAt = new Date().toISOString();
+    setLastSyncAttempt(attemptedAt);
+    try {
+      const result = await syncPendingOfflineSales();
+      const message = `${result.synced} sales synced, ${result.failed} failed.`;
+      setLastSyncResult(message);
+      showFeedback(message);
+      await loadQueue();
+    } catch (syncError) {
+      const message = syncError instanceof Error ? syncError.message : "Sync failed.";
+      setLastSyncResult(message);
+      setError(message);
+      await loadQueue();
+    } finally {
+      syncInProgress.current = false;
+      setSyncing(false);
+    }
+  }, [loadQueue, showFeedback]);
+
+  useEffect(() => {
+    const handleAutoSync = () => {
+      if (!getSimulateOfflineMode()) void runSync("auto");
+    };
+
+    window.addEventListener("online", handleAutoSync);
+    const timer = window.setTimeout(() => {
+      if (navigator.onLine && !getSimulateOfflineMode()) void runSync("auto");
+    }, 650);
+
+    return () => {
+      window.removeEventListener("online", handleAutoSync);
+      window.clearTimeout(timer);
+    };
+  }, [runSync]);
 
   async function deleteFailedSale(sale: OfflineSaleRecord) {
     if (sale.status !== "failed") {
@@ -138,6 +193,13 @@ export function SyncCenterPage() {
     await deleteOfflineSale(sale.localId);
     await loadQueue();
     showFeedback("Failed local sale deleted.");
+  }
+
+  async function clearSyncedSales() {
+    if (!window.confirm("Clear synced local sales from this device? Pending and failed sales will remain.")) return;
+    const cleared = await clearSyncedOfflineSales();
+    await loadQueue();
+    showFeedback(`${cleared} synced local sales cleared.`);
   }
 
   return (
@@ -168,9 +230,9 @@ export function SyncCenterPage() {
 
       <section className="mb-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         <SummaryCard label="Pending offline sales" value={summary.pending} note="Saved on this device" icon={Clock3} tone="gold" />
-        <SummaryCard label="Synced sales" value={summary.synced} note="Will update after sync engine" icon={CheckCircle2} tone="green" />
+        <SummaryCard label="Synced sales" value={summary.synced} note="Synced to cloud database" icon={CheckCircle2} tone="green" />
         <SummaryCard label="Failed sync" value={summary.failed} note="Needs manual review" icon={AlertTriangle} tone="red" />
-        <SummaryCard label="Last sync attempt" value={formatDateTime(summary.lastSyncAttempt)} note="No real sync yet" icon={RotateCcw} tone="neutral" />
+        <SummaryCard label="Last sync attempt" value={formatDateTime(summary.lastSyncAttempt)} note={lastSyncResult || "Waiting for first sync"} icon={RotateCcw} tone="neutral" />
         <SummaryCard label="Device queue" value={sales.length} note="Total local records" icon={Smartphone} tone="neutral" />
       </section>
 
@@ -202,9 +264,17 @@ export function SyncCenterPage() {
             <h3 className="font-black text-[#173324]">Offline sales queue</h3>
             <p className="mt-0.5 text-xs text-[#789083]">Local sales stored in this browser using IndexedDB.</p>
           </div>
-          <button onClick={() => showFeedback("Sync engine comes next. This MVP only stores the offline queue safely.")} className="rounded-xl bg-[#12311F] px-4 py-3 text-xs font-black text-white hover:bg-[#0E2418]">
-            Sync engine comes next
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button disabled={syncing || simulateOffline || !online} onClick={() => void runSync("manual")} className="rounded-xl bg-[#12311F] px-4 py-3 text-xs font-black text-white hover:bg-[#0E2418] disabled:cursor-not-allowed disabled:bg-[#CBD8CF]">
+              {syncing ? "Syncing..." : "Sync Now"}
+            </button>
+            <button disabled={syncing || simulateOffline || !online} onClick={() => void runSync("manual")} className="rounded-xl border border-[#DDEAE0] px-4 py-3 text-xs font-black text-[#60766B] hover:bg-[#F8FBF8] disabled:cursor-not-allowed disabled:bg-[#F5FAF6]">
+              Retry Failed
+            </button>
+            <button onClick={() => void clearSyncedSales()} className="rounded-xl border border-[#D4A017]/35 bg-[#FFF9E8] px-4 py-3 text-xs font-black text-[#8A670C] hover:bg-[#FFF2C9]">
+              Clear Synced
+            </button>
+          </div>
         </div>
 
         {loading ? (
@@ -249,7 +319,7 @@ export function SyncCenterPage() {
                         <button onClick={() => setSelectedSale(sale)} className="inline-flex items-center gap-1.5 rounded-lg border border-[#DDEAE0] px-2.5 py-2 text-[10px] font-black text-[#60766B] hover:bg-[#F8FBF8]">
                           <Eye size={13} /> View
                         </button>
-                        <button onClick={() => showFeedback("Retry sync placeholder. Real sync will be implemented in the next Hybrid POS stage.")} className="inline-flex items-center gap-1.5 rounded-lg border border-[#DDEAE0] px-2.5 py-2 text-[10px] font-black text-[#60766B] hover:bg-[#F8FBF8]">
+                        <button disabled={syncing || simulateOffline || !online || sale.status === "synced"} onClick={() => void runSync("manual")} className="inline-flex items-center gap-1.5 rounded-lg border border-[#DDEAE0] px-2.5 py-2 text-[10px] font-black text-[#60766B] hover:bg-[#F8FBF8] disabled:cursor-not-allowed disabled:bg-[#F5FAF6]">
                           <RotateCcw size={13} /> Retry
                         </button>
                         <button onClick={() => void deleteFailedSale(sale)} className="inline-flex items-center gap-1.5 rounded-lg border border-[#EF4444]/20 px-2.5 py-2 text-[10px] font-black text-[#EF4444] hover:bg-[#EF4444]/10">
