@@ -10,6 +10,7 @@ import {
   CreditCard,
   HandCoins,
   PackageSearch,
+  SlidersHorizontal,
   Smartphone,
   Store,
   ShoppingBag,
@@ -18,6 +19,8 @@ import {
   UserRoundPlus,
 } from "lucide-react";
 import { lowStockItems, recentActivity } from "@/lib/mock-data";
+import { getIndustryOpsConfig } from "@/lib/industryops";
+import { getCurrentBusiness } from "@/lib/settings-data";
 
 const stats = [
   { label: "Today sales", value: "KES 184,250", note: "+12.8% vs yesterday", icon: CircleDollarSign, accent: "text-[#16A34A]", tile: "bg-[#16A34A]/10" },
@@ -38,14 +41,25 @@ const activityIcons = {
 
 const chartPoints = "0,112 65,96 130,103 195,65 260,73 325,42 390,50 455,22 520,35 585,8";
 
-export function Dashboard() {
+async function currentIndustryMode() {
+  try {
+    const business = await getCurrentBusiness();
+    return business.industryMode;
+  } catch {
+    return "Retail";
+  }
+}
+
+export async function Dashboard() {
+  const industry = getIndustryOpsConfig(await currentIndustryMode());
+
   return (
     <div className="mx-auto max-w-[1600px]">
       <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#16A34A]">Tuesday, 02 June 2026</p>
           <h2 className="mt-1 text-2xl font-black tracking-tight text-[#10271B] md:text-3xl">Good morning, James</h2>
-          <p className="mt-1 text-sm text-[#789083]">Here is today&apos;s performance across your business.</p>
+          <p className="mt-1 text-sm text-[#789083]">Here is today&apos;s {industry.salesLabel.toLowerCase()} performance across your business.</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link href="/purchases" className="flex w-fit items-center gap-2 rounded-xl border border-[#DDEAE0] bg-white px-3.5 py-3 text-xs font-bold text-[#60766B] hover:bg-[#F8FBF8]">
@@ -80,6 +94,47 @@ export function Dashboard() {
             <p className="mt-2 text-[11px] text-[#789083]">{note}</p>
           </article>
         ))}
+      </section>
+
+      <section className="mt-5 grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
+        <article className="rounded-2xl border border-[#D4A017]/35 bg-[#FFF9E8] p-5 shadow-sm shadow-[#12311F]/5">
+          <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.17em] text-[#A57809]">IndustryOps Mode</p>
+              <h3 className="mt-1 text-xl font-black text-[#173324]">Current mode: {industry.dashboardTitle}</h3>
+              <p className="mt-2 max-w-3xl text-xs leading-5 text-[#8A670C]">{industry.demoFocus}</p>
+            </div>
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#D4A017]/18 text-[#A57809]">
+              <SlidersHorizontal size={20} />
+            </span>
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <IndustryList title="Key benefits" items={industry.demoBenefits} />
+            <IndustryList title="Recommended modules" items={industry.recommendedModules} />
+            <IndustryList title="Demo focus" items={[industry.productLabel, industry.salesLabel, industry.customerLabel, industry.stockLabel]} />
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Link href="/settings" className="rounded-xl bg-[#16A34A] px-4 py-3 text-xs font-black text-white">Change industry mode</Link>
+            {industry.label === "Supermarket" && <Link href="/supermarket-demo" className="rounded-xl border border-[#D4A017]/40 bg-white px-4 py-3 text-xs font-black text-[#8A670C]">Open Supermarket 4-Till Demo</Link>}
+            {industry.label !== "Supermarket" && <Link href="/supermarket-demo" className="rounded-xl border border-[#DDEAE0] bg-white px-4 py-3 text-xs font-black text-[#60766B]">View 4-Till supermarket demo</Link>}
+          </div>
+        </article>
+
+        <article className="rounded-2xl border border-[#DDEAE0] bg-white p-5 shadow-sm shadow-[#12311F]/5">
+          <div className="flex items-start justify-between">
+            <div>
+              <h3 className="font-black text-[#173324]">Demo Mode</h3>
+              <p className="mt-0.5 text-xs text-[#789083]">Local business data for presentation.</p>
+            </div>
+            <span className="rounded-full bg-[#16A34A]/10 px-3 py-1 text-[10px] font-black text-[#0F8C42]">Demo Mode</span>
+          </div>
+          <p className="mt-4 text-xs leading-5 text-[#60766B]">
+            Use this dashboard to present how Biashara adapts to {industry.label.toLowerCase()} operations while keeping the same reliable sales, stock, customers and reports foundation.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {industry.sampleCategories.slice(0, 4).map((category) => <span key={category} className="rounded-full bg-[#F8FBF8] px-3 py-1.5 text-[10px] font-black text-[#60766B]">{category}</span>)}
+          </div>
+        </article>
       </section>
 
       <section className="mt-5 grid gap-5 xl:grid-cols-[1.6fr_0.9fr]">
@@ -200,6 +255,17 @@ export function Dashboard() {
           </button>
         </article>
       </section>
+    </div>
+  );
+}
+
+function IndustryList({ title, items }: { title: string; items: string[] }) {
+  return (
+    <div className="rounded-xl border border-[#D4A017]/25 bg-white/70 p-3">
+      <p className="text-[10px] font-black uppercase tracking-wider text-[#8A670C]">{title}</p>
+      <div className="mt-2 space-y-1.5">
+        {items.slice(0, 4).map((item) => <p key={item} className="text-[11px] font-bold text-[#60766B]">- {item}</p>)}
+      </div>
     </div>
   );
 }

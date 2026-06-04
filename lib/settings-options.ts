@@ -1,19 +1,4 @@
-export const industryModes = [
-  "Retail",
-  "Supermarket",
-  "Restaurant / Small Hotel",
-  "Cosmetics / Skin Care",
-  "Hardware",
-  "Auto Spares",
-  "Salon / Barber",
-  "Pharmacy / Chemist",
-  "Laundry",
-  "Car Wash",
-  "Wines & Spirits",
-  "Butchery",
-  "Agrovet",
-  "Other",
-];
+export { industryOpsModes as industryModes } from "@/lib/industryops";
 
 export const defaultSettings = {
   businessLogoUrl: "",

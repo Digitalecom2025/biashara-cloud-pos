@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Building2, Check, ChevronRight, CloudDownload, CreditCard, Image as ImageIcon, Printer, Save, Settings2, ShieldCheck, SlidersHorizontal, Store, Users, Crown } from "lucide-react";
 import { defaultSettings, industryModes } from "@/lib/settings-options";
+import { getIndustryOpsConfig } from "@/lib/industryops";
 
 type SettingsForm = {
   name: string;
@@ -110,6 +111,8 @@ export function SettingsPage() {
     window.setTimeout(() => setFeedback(""), 2400);
   }
 
+  const industryPreview = getIndustryOpsConfig(form.industryMode);
+
   return (
     <div className="mx-auto max-w-[1650px]">
       <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-end">
@@ -143,6 +146,22 @@ export function SettingsPage() {
 
           <Panel icon={SlidersHorizontal} title="IndustryOps mode" note="Choose the workflow profile that best matches your operation.">
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{industryModes.map((item) => <button key={item} onClick={() => update({ industryMode: item })} className={`flex items-center justify-between rounded-xl border p-3 text-left text-xs font-black ${form.industryMode === item ? "border-[#16A34A] bg-[#16A34A]/8 text-[#0F8C42]" : "border-[#DDEAE0] text-[#60766B]"}`}>{item}{form.industryMode === item && <Check size={15} />}</button>)}</div>
+            <div className="mt-4 rounded-2xl border border-[#D4A017]/35 bg-[#FFF9E8] p-4">
+              <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-wider text-[#8A670C]">Mode preview</p>
+                  <h4 className="mt-1 text-sm font-black text-[#173324]">{industryPreview.dashboardTitle}</h4>
+                  <p className="mt-1 text-xs leading-5 text-[#8A670C]">{industryPreview.demoFocus}</p>
+                </div>
+                {industryPreview.label === "Supermarket" && <Link href="/supermarket-demo" className="shrink-0 rounded-xl bg-[#16A34A] px-4 py-3 text-xs font-black text-white">Open 4-Till Demo</Link>}
+              </div>
+              <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                <PreviewList title="What changes" items={[industryPreview.productLabel, industryPreview.salesLabel, industryPreview.customerLabel, industryPreview.stockLabel]} />
+                <PreviewList title="Recommended modules" items={industryPreview.recommendedModules} />
+                <PreviewList title="Sample categories" items={industryPreview.sampleCategories} />
+                <PreviewList title="Pain points solved" items={industryPreview.demoPainPoints} />
+              </div>
+            </div>
           </Panel>
 
           <Panel icon={Crown} title="Package / subscription" note="Current POS package and renewal controls.">
@@ -213,6 +232,17 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
 
 function Info({ label, value }: { label: string; value: string }) {
   return <div className="rounded-xl bg-[#F8FBF8] p-3"><p className="text-[10px] font-black uppercase tracking-wider text-[#789083]">{label}</p><p className="mt-1 text-sm font-black text-[#173324]">{value}</p></div>;
+}
+
+function PreviewList({ title, items }: { title: string; items: string[] }) {
+  return (
+    <div className="rounded-xl border border-[#D4A017]/25 bg-white/70 p-3">
+      <p className="text-[10px] font-black uppercase tracking-wider text-[#8A670C]">{title}</p>
+      <div className="mt-2 space-y-1.5">
+        {items.slice(0, 4).map((item) => <p key={item} className="text-[11px] font-bold text-[#60766B]">- {item}</p>)}
+      </div>
+    </div>
+  );
 }
 
 function Shortcut({ href, icon: Icon, title, note }: { href: string; icon: typeof Users; title: string; note: string }) {

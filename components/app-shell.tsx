@@ -181,6 +181,10 @@ export function AppShell({ children }: { children: ReactNode }) {
               <span>Setup 72%</span>
             </button>
 
+            <span className="hidden rounded-xl border border-[#16A34A]/20 bg-[#16A34A]/8 px-3 py-2.5 text-[10px] font-black uppercase tracking-wider text-[#0F8C42] 2xl:inline-flex">
+              Demo Mode: Local business data
+            </span>
+
             <button
               aria-label="Help"
               className="hidden h-10 w-10 place-items-center rounded-xl border border-[#DDEAE0] text-[#60766B] hover:bg-[#F5FAF6] md:grid"

@@ -1,6 +1,7 @@
 import { getDemoBusinessId } from "@/lib/db-data";
 import { prisma } from "@/lib/prisma";
 import { defaultSettings, industryModes } from "@/lib/settings-options";
+import { normalizeIndustryMode } from "@/lib/industryops";
 
 export type SettingsData = {
   business: {
@@ -33,10 +34,6 @@ export type SettingsData = {
 export { defaultSettings, industryModes };
 
 const settingKeys = Object.keys(defaultSettings);
-
-function normalizeIndustryMode(value: string) {
-  return industryModes.find((mode) => mode.toLowerCase() === value.toLowerCase()) ?? "Retail";
-}
 
 function bool(value: string | undefined, fallback: boolean) {
   if (value === undefined) return fallback;

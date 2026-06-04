@@ -1,5 +1,6 @@
 import type { SettingsData } from "@/lib/settings-data";
 import { defaultSettings, industryModes } from "@/lib/settings-options";
+import { normalizeIndustryMode } from "@/lib/industryops";
 
 export type SettingsInput = Partial<SettingsData["business"]> & Partial<SettingsData["settings"]>;
 
@@ -44,7 +45,7 @@ export function settingsData(input: SettingsInput): SettingsValidationResult {
   const email = text(input.email);
   const location = text(input.location);
   const rawIndustryMode = text(input.industryMode) || "Retail";
-  const industryMode = industryModes.find((mode) => mode.toLowerCase() === rawIndustryMode.toLowerCase()) ?? rawIndustryMode;
+  const industryMode = normalizeIndustryMode(rawIndustryMode);
   const lowStockAlertThreshold = numberValue(input.lowStockAlertThreshold, defaultSettings.lowStockAlertThreshold);
   const defaultCurrency = text(input.defaultCurrency) || "KES";
   const errors: string[] = [];
