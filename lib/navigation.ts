@@ -5,7 +5,7 @@ export type SidebarItem = {
 };
 
 export const sidebarItems: SidebarItem[] = [
-  { label: "Dashboard", href: "/", icon: "LayoutDashboard" },
+  { label: "Dashboard", href: "/dashboard", icon: "LayoutDashboard" },
   { label: "Sales", href: "/sales", icon: "ShoppingCart" },
   { label: "Purchases", href: "/purchases", icon: "ShoppingBag" },
   { label: "Products", href: "/products", icon: "Package" },

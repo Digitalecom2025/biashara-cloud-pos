@@ -58,7 +58,7 @@ export const demoAccounts: DemoAccount[] = [
     branch: "Nairobi CBD Store",
     till: "Till 1",
     access: ["Limited dashboard", "Sales/POS", "Customers", "Sync Center", "Limited reports"],
-    allowedRoutes: ["/", "/sales", "/customers", "/sync-center", "/reports"],
+    allowedRoutes: ["/dashboard", "/sales", "/customers", "/sync-center", "/reports"],
   },
   {
     role: "manager",
@@ -69,7 +69,7 @@ export const demoAccounts: DemoAccount[] = [
     branch: "Main Branch",
     till: "Branch office",
     access: ["Dashboard", "Sales", "Products and stock", "Customers and debtors", "Branch reports", "Sync Center"],
-    allowedRoutes: ["/", "/sales", "/products", "/warehouse", "/stock-adjustments", "/transfer", "/customers", "/debtors", "/branches", "/reports", "/sync-center", "/ai-assistant"],
+    allowedRoutes: ["/dashboard", "/sales", "/products", "/warehouse", "/stock-adjustments", "/transfer", "/customers", "/debtors", "/branches", "/reports", "/sync-center", "/ai-assistant"],
   },
   {
     role: "stock",
@@ -91,12 +91,12 @@ export const demoAccounts: DemoAccount[] = [
     branch: "Finance office",
     till: "Accounts desk",
     access: ["Finance", "Reports", "Party reports", "Payment types", "Tax settings", "Debtors", "Purchases and suppliers"],
-    allowedRoutes: ["/", "/finance", "/payment-types", "/tax-settings", "/reports", "/party-reports", "/customers", "/debtors", "/purchases", "/suppliers"],
+    allowedRoutes: ["/dashboard", "/finance", "/payment-types", "/tax-settings", "/reports", "/party-reports", "/customers", "/debtors", "/purchases", "/suppliers"],
   },
 ];
 
 export const protectedClientRoutes = [
-  "/",
+  "/dashboard",
   "/sales",
   "/products",
   "/customers",

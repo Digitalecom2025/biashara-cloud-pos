@@ -42,7 +42,7 @@ export function LoginPage() {
   function loginWithAccount(account: DemoAccount) {
     setLoading(true);
     saveDemoSession(createDemoSession(account));
-    window.setTimeout(() => router.replace("/"), 250);
+    window.setTimeout(() => router.replace("/dashboard"), 250);
   }
 
   function submitLogin(event: React.FormEvent<HTMLFormElement>) {
@@ -58,7 +58,7 @@ export function LoginPage() {
       return;
     }
     saveDemoSession(createDemoSession(account));
-    window.setTimeout(() => router.replace("/"), 250);
+    window.setTimeout(() => router.replace("/dashboard"), 250);
   }
 
   return (

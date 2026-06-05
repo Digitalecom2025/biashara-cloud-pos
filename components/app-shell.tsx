@@ -79,7 +79,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<DemoSession | null>(null);
   const [authReady, setAuthReady] = useState(false);
 
-  const bypassShell = pathname === "/login" || pathname.startsWith("/super-admin");
+  const bypassShell = pathname === "/" || pathname === "/login" || pathname.startsWith("/super-admin");
   const protectedRoute = isProtectedClientRoute(pathname);
 
   useEffect(() => {
@@ -141,7 +141,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         }`}
       >
         <div className="flex h-[76px] items-center justify-between border-b border-white/8 px-5">
-          <Link href="/" className="flex items-center gap-3" aria-label="Biashara Cloud POS">
+          <Link href="/dashboard" className="flex items-center gap-3" aria-label="Biashara Cloud POS dashboard">
             <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#16A34A] text-lg font-black text-white shadow-lg shadow-[#16A34A]/20">
               B
             </span>
@@ -304,7 +304,7 @@ function AccessRestricted({ currentPage, role }: { currentPage: string; role: st
           {role} cannot open {currentPage} in this presentation login. Use the Admin demo account to view every client-facing module.
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
-          <Link href="/" className="rounded-xl bg-[#12311F] px-4 py-3 text-xs font-black text-white hover:bg-[#0E2418]">Back to dashboard</Link>
+          <Link href="/dashboard" className="rounded-xl bg-[#12311F] px-4 py-3 text-xs font-black text-white hover:bg-[#0E2418]">Back to dashboard</Link>
           <Link href="/login" className="rounded-xl border border-[#DDEAE0] px-4 py-3 text-xs font-black text-[#60766B] hover:bg-[#F8FBF8]">Switch demo role</Link>
         </div>
       </article>
