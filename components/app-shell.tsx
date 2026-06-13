@@ -79,7 +79,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<DemoSession | null>(null);
   const [authReady, setAuthReady] = useState(false);
 
-  const bypassShell = pathname === "/" || pathname === "/login" || pathname.startsWith("/super-admin");
+  const bypassShell = pathname === "/" || pathname === "/login" || pathname === "/signup" || pathname.startsWith("/super-admin");
   const protectedRoute = isProtectedClientRoute(pathname);
 
   useEffect(() => {

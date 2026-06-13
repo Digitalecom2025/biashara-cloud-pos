@@ -113,6 +113,11 @@ function businessStatus(value: string): PlatformBusinessStatus {
   return "Active";
 }
 
+function trialDaysRemaining(value?: Date | null) {
+  if (!value) return undefined;
+  return Math.max(0, Math.ceil((value.getTime() - Date.now()) / (24 * 60 * 60 * 1000)));
+}
+
 export async function getDemoBusinessId() {
   const business = await prisma.business.findUnique({ where: { slug: DEMO_BUSINESS_SLUG }, select: { id: true } });
   return business?.id;
@@ -601,12 +606,18 @@ export async function getBusinessesForSuperAdmin(): Promise<PlatformBusiness[]> 
     });
     if (businesses.length === 0) return mockPlatformBusinesses;
     return businesses.map((business, index) => {
+      const trialFields = business as unknown as {
+        trialStartedAt?: Date | null;
+        trialEndsAt?: Date | null;
+        selectedPlan?: string | null;
+        contactPerson?: string | null;
+      };
       const owner = business.users.find((user) => user.role === "Business Owner") ?? business.users[0];
       const subscription = business.subscriptions[0];
       return {
         id: `BIZ-${String(index + 1).padStart(3, "0")}`,
         name: business.name,
-        owner: owner?.name ?? "Owner not assigned",
+        owner: trialFields.contactPerson ?? owner?.name ?? "Owner not assigned",
         phone: business.phone,
         email: business.email,
         industry: business.industryMode,
@@ -615,6 +626,12 @@ export async function getBusinessesForSuperAdmin(): Promise<PlatformBusiness[]> 
         users: business.users.length,
         status: businessStatus(business.status),
         renewal: subscription ? formatDateTime(subscription.renewalDate) : "Not set",
+        contactPerson: trialFields.contactPerson ?? owner?.name ?? "Owner not assigned",
+        businessType: business.industryMode,
+        trialStart: trialFields.trialStartedAt ? formatShortDate(trialFields.trialStartedAt) : undefined,
+        trialEnd: trialFields.trialEndsAt ? formatShortDate(trialFields.trialEndsAt) : undefined,
+        daysRemaining: trialDaysRemaining(trialFields.trialEndsAt),
+        selectedPlan: trialFields.selectedPlan ?? subscription?.packagePlan ?? business.packagePlan,
       };
     });
   } catch (error) {

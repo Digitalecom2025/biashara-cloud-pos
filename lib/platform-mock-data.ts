@@ -12,6 +12,12 @@ export type PlatformBusiness = {
   users: number;
   status: PlatformBusinessStatus;
   renewal: string;
+  contactPerson?: string;
+  businessType?: string;
+  trialStart?: string;
+  trialEnd?: string;
+  daysRemaining?: number;
+  selectedPlan?: string;
 };
 
 export const platformBusinesses: PlatformBusiness[] = [

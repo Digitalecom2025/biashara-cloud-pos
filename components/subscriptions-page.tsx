@@ -3,6 +3,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { Check, ChevronRight, Crown, Gauge, ReceiptText } from "lucide-react";
 import { packagePlans, planByName, type PlanConfig, type PlanName } from "@/lib/subscription-plans";
+import { getPackageAccess } from "@/lib/package-access";
+import { formatTrialEndDate, getTrialDaysRemaining, isTrialExpired } from "@/lib/trial";
+import { getTrialPreview, updateTrialPreview, type TrialPreviewSession } from "@/lib/trial-session";
 
 type UsageData = { label: string; used: number; limit: string; percent: number };
 type PaymentHistory = { id: string; date: string; plan: string; period: string; method: string; amount: number; status: string };
@@ -41,6 +44,7 @@ export function SubscriptionsPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [trialPreview, setTrialPreview] = useState<TrialPreviewSession | null>(null);
 
   const loadSubscription = useCallback(async () => {
     setLoading(true);
@@ -61,6 +65,7 @@ export function SubscriptionsPage() {
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
+      setTrialPreview(getTrialPreview());
       void loadSubscription();
     }, 0);
     return () => window.clearTimeout(timer);
@@ -72,6 +77,21 @@ export function SubscriptionsPage() {
     setError("");
     setFeedback("");
     try {
+      if (trialPreview) {
+        const response = await fetch("/api/trial-signups/package", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ businessId: trialPreview.businessId, packagePlan: plan.name }),
+        });
+        const json = (await response.json()) as { data?: { packagePlan: string; status: "active" }; error?: string; message?: string };
+        if (!response.ok || !json.data) throw new Error(json.error ?? "Package could not be selected.");
+        const next = updateTrialPreview({ selectedPlan: json.data.packagePlan, status: json.data.status });
+        setTrialPreview(next);
+        setSelectedPlan(plan.name);
+        setFeedback(json.message ?? "Package selected. Payment confirmation will be handled manually for now.");
+        return;
+      }
+
       const response = await fetch("/api/subscriptions/current", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -94,6 +114,9 @@ export function SubscriptionsPage() {
 
   const currentPlan = subscription?.plan ?? planByName(selectedPlan);
   const history = subscription?.paymentHistory ?? [];
+  const trialAccess = getPackageAccess(trialPreview?.status === "trial" ? "Trial" : trialPreview?.selectedPlan);
+  const trialExpired = trialPreview ? isTrialExpired(trialPreview.trialEndsAt) || trialPreview.status === "expired" : false;
+  const trialDaysRemaining = trialPreview ? getTrialDaysRemaining(trialPreview.trialEndsAt) : 0;
 
   return (
     <div className="mx-auto max-w-[1700px]">
@@ -106,6 +129,42 @@ export function SubscriptionsPage() {
         </div>
         {feedback && <p className="rounded-xl bg-[#16A34A]/10 px-4 py-3 text-xs font-black text-[#0F8C42]">{feedback}</p>}
       </div>
+
+      {trialPreview && (
+        <section className={`mb-5 rounded-2xl border p-5 shadow-sm shadow-[#12311F]/5 ${trialExpired ? "border-[#EF4444]/25 bg-[#FFF1F1]" : trialPreview.status === "active" ? "border-[#16A34A]/20 bg-[#16A34A]/[0.045]" : "border-[#D4A017]/35 bg-[#FFF9E8]"}`}>
+          <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.17em] text-[#A57809]">Trial account</p>
+              <h3 className="mt-1 text-xl font-black text-[#173324]">
+                {trialPreview.status === "active" ? `${trialPreview.selectedPlan} package selected` : trialExpired ? "14-day trial expired" : "14-day trial active"}
+              </h3>
+              <p className="mt-2 max-w-3xl text-xs leading-5 text-[#60766B]">
+                {trialPreview.status === "active"
+                  ? "Payment confirmation will be handled manually for now. Your selected package is saved against the trial business."
+                  : trialExpired
+                  ? "Choose a package to continue using Biashara POS. Trial data remains available."
+                  : `${trialDaysRemaining} day${trialDaysRemaining === 1 ? "" : "s"} remaining. Trial ends on ${formatTrialEndDate(trialPreview.trialEndsAt)}.`}
+              </p>
+            </div>
+            <span className="rounded-full bg-[#12311F] px-3 py-2 text-[10px] font-black uppercase tracking-wider text-[#D4A017]">
+              {trialPreview.businessName}
+            </span>
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-4">
+            <TrialLimit label="Users" value={`${trialAccess.users}`} />
+            <TrialLimit label="Branches" value={`${trialAccess.branches}`} />
+            <TrialLimit label="Products" value={`${trialAccess.products}`} />
+            <TrialLimit label="Offline sync" value={trialAccess.offlineSync} />
+          </div>
+          {trialAccess.lockedFeatures.length > 0 && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {trialAccess.lockedFeatures.map((feature) => (
+                <span key={feature} className="rounded-full border border-[#D4A017]/30 bg-white px-3 py-1.5 text-[10px] font-black text-[#8A670C]">{feature} locked</span>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
       <section className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
         <article className="overflow-hidden rounded-2xl bg-[#0E2418] p-5 text-[#F6FFF8] shadow-lg shadow-[#12311F]/10">
@@ -148,9 +207,10 @@ export function SubscriptionsPage() {
         <div><h3 className="font-black text-[#173324]">Choose a package</h3><p className="text-xs text-[#789083]">Select a package and save it. Payment billing is not implemented yet.</p></div>
         <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
           {packagePlans.map((plan) => {
-            const isCurrent = subscription?.packagePlan === plan.name;
+            const isCurrent = trialPreview?.status === "active" ? trialPreview.selectedPlan === plan.name || (trialPreview.selectedPlan === "Custom" && plan.name === "Custom / Enterprise") : subscription?.packagePlan === plan.name;
             const isSelected = selectedPlan === plan.name;
-            return <article key={plan.name} className={`relative rounded-2xl border bg-white p-4 ${isSelected ? "border-[#16A34A] shadow-md shadow-[#16A34A]/10" : "border-[#DDEAE0]"}`}>{isCurrent && <span className="absolute right-3 top-3 rounded-full bg-[#16A34A]/10 px-2 py-1 text-[9px] font-black uppercase tracking-wider text-[#0F8C42]">Current</span>}<h4 className="text-sm font-black text-[#173324]">{plan.name}</h4><p className="mt-3 text-lg font-black text-[#173324]">{plan.price === null ? "Quoted" : money(plan.price)}{plan.price !== null && <span className="text-[10px] text-[#789083]"> / month</span>}</p><p className="mt-2 min-h-10 text-[11px] leading-5 text-[#789083]">{plan.note}</p><div className="mt-3 space-y-2">{plan.limits.map((limit) => <p key={limit} className="flex gap-2 text-[10px] font-bold text-[#60766B]"><Check size={13} className="shrink-0 text-[#16A34A]" />{limit}</p>)}</div><button disabled={saving} onClick={() => { setSelectedPlan(plan.name); void savePlan(plan.name); }} className={`mt-4 flex w-full items-center justify-center gap-1 rounded-xl py-2.5 text-[11px] font-black ${isCurrent ? "bg-[#E8F0EA] text-[#60766B]" : "bg-[#16A34A] text-white"} disabled:opacity-60`}>{isCurrent ? "Current package" : plan.name === "Custom / Enterprise" ? "Select quoted plan" : "Choose plan"}<ChevronRight size={13} /></button></article>;
+            const chooseLabel = plan.name === "Custom / Enterprise" ? "Request Custom Quote" : `Choose ${plan.name}`;
+            return <article key={plan.name} className={`relative rounded-2xl border bg-white p-4 ${isSelected || isCurrent ? "border-[#16A34A] shadow-md shadow-[#16A34A]/10" : "border-[#DDEAE0]"}`}>{isCurrent && <span className="absolute right-3 top-3 rounded-full bg-[#16A34A]/10 px-2 py-1 text-[9px] font-black uppercase tracking-wider text-[#0F8C42]">Current</span>}<h4 className="text-sm font-black text-[#173324]">{plan.name}</h4><p className="mt-3 text-lg font-black text-[#173324]">{plan.price === null ? "Quoted" : money(plan.price)}{plan.price !== null && <span className="text-[10px] text-[#789083]"> / month</span>}</p><p className="mt-2 min-h-10 text-[11px] leading-5 text-[#789083]">{plan.note}</p><div className="mt-3 space-y-2">{plan.limits.map((limit) => <p key={limit} className="flex gap-2 text-[10px] font-bold text-[#60766B]"><Check size={13} className="shrink-0 text-[#16A34A]" />{limit}</p>)}</div><button disabled={saving || isCurrent} onClick={() => { setSelectedPlan(plan.name); void savePlan(plan.name); }} className={`mt-4 flex w-full items-center justify-center gap-1 rounded-xl py-2.5 text-[11px] font-black ${isCurrent ? "bg-[#E8F0EA] text-[#60766B]" : "bg-[#16A34A] text-white"} disabled:opacity-60`}>{isCurrent ? "Current package" : chooseLabel}<ChevronRight size={13} /></button></article>;
           })}
         </div>
       </section>
@@ -159,6 +219,15 @@ export function SubscriptionsPage() {
         <div className="flex items-center gap-3 border-b border-[#E8F0EA] p-4"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#16A34A]/10 text-[#16A34A]"><ReceiptText size={18} /></span><div><h3 className="font-black text-[#173324]">Payment history</h3><p className="text-xs text-[#789083]">Subscription renewal records. Billing remains placeholder-only.</p></div></div>
         <div className="overflow-x-auto"><table className="w-full min-w-[720px] text-left"><thead><tr className="bg-[#F8FBF8] text-[10px] font-black uppercase tracking-wider text-[#789083]">{["Payment ID", "Date", "Plan", "Billing period", "Method", "Amount", "Status"].map((h) => <th key={h} className="px-4 py-3.5">{h}</th>)}</tr></thead><tbody>{history.map((item) => <tr key={item.id} className="border-t border-[#EEF3EF] text-xs text-[#60766B]"><td className="px-4 py-3 font-black text-[#173324]">{item.id}</td><td className="px-4 py-3">{item.date}</td><td className="px-4 py-3">{item.plan}</td><td className="px-4 py-3">{item.period}</td><td className="px-4 py-3">{item.method}</td><td className="px-4 py-3 font-black text-[#173324]">{money(item.amount)}</td><td className="px-4 py-3"><span className="rounded-full bg-[#16A34A]/10 px-2.5 py-1 text-[10px] font-black text-[#0F8C42]">{item.status}</span></td></tr>)}</tbody></table></div>
       </section>
+    </div>
+  );
+}
+
+function TrialLimit({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-[#DDEAE0] bg-white/75 p-3">
+      <p className="text-[10px] font-black uppercase tracking-wider text-[#789083]">{label}</p>
+      <p className="mt-1 text-xs font-black text-[#173324]">{value}</p>
     </div>
   );
 }

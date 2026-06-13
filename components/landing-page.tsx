@@ -143,7 +143,7 @@ export function LandingPage() {
           </div>
           <div className="flex items-center gap-2">
             <Link href="/login" className="rounded-xl border border-[#DDEAE0] bg-white px-3 py-2.5 text-xs font-black text-[#60766B] hover:bg-[#F8FBF8]">Login</Link>
-            <a href="#request-demo" className="rounded-xl bg-[#16A34A] px-3 py-2.5 text-xs font-black text-white hover:bg-[#12883E]">Request Demo</a>
+            <Link href="/signup" className="rounded-xl bg-[#16A34A] px-3 py-2.5 text-xs font-black text-white hover:bg-[#12883E]">Start Trial</Link>
           </div>
         </nav>
       </header>
@@ -160,16 +160,19 @@ export function LandingPage() {
             <p className="mt-5 max-w-3xl text-base leading-8 text-[#B8C7BD] md:text-lg">
               Run your shop, restaurant, supermarket, cosmetics store, hardware, auto spares or retail business from one smart POS system - on desktop, tablet or phone.
             </p>
+            <p className="mt-4 max-w-2xl rounded-2xl border border-[#D4A017]/30 bg-[#D4A017]/10 px-4 py-3 text-sm font-bold text-[#F7D783]">
+              Try sales, stock, customers, debtors, reports and offline sync before choosing your package.
+            </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <a href="#request-demo" className="inline-flex items-center gap-2 rounded-2xl bg-[#16A34A] px-5 py-4 text-sm font-black text-white shadow-xl shadow-[#16A34A]/20 hover:bg-[#12883E]">
-                Request Demo <ArrowRight size={17} />
+              <Link href="/signup" className="inline-flex items-center gap-2 rounded-2xl bg-[#16A34A] px-5 py-4 text-sm font-black text-white shadow-xl shadow-[#16A34A]/20 hover:bg-[#12883E]">
+                Start Free 14-Day Trial <ArrowRight size={17} />
+              </Link>
+              <a href="#request-demo" className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/8 px-5 py-4 text-sm font-black text-white hover:bg-white/12">
+                Request Demo
               </a>
-              <Link href="/login" className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/8 px-5 py-4 text-sm font-black text-white hover:bg-white/12">
+              <Link href="/login" className="inline-flex items-center gap-2 rounded-2xl border border-[#D4A017]/45 bg-[#D4A017]/12 px-5 py-4 text-sm font-black text-[#F7D783] hover:bg-[#D4A017]/16">
                 Login to POS
               </Link>
-              <a href="#pricing" className="inline-flex items-center gap-2 rounded-2xl border border-[#D4A017]/45 bg-[#D4A017]/12 px-5 py-4 text-sm font-black text-[#F7D783] hover:bg-[#D4A017]/16">
-                View Packages
-              </a>
             </div>
             <div className="mt-8 grid gap-3 sm:grid-cols-2">
               {trustBullets.map((item) => (
@@ -253,14 +256,14 @@ export function LandingPage() {
       </section>
 
       <section className="mx-auto max-w-[1480px] px-4 py-16 md:px-7" id="pricing">
-        <SectionIntro eyebrow="Packages" title="Choose a Package That Fits Your Business" note="Start lean, then upgrade as your branches, users, stock and reports grow." />
+        <SectionIntro eyebrow="Packages" title="Choose a Package That Fits Your Business" note="Start with a 14-day free trial, then choose the package that fits your business." />
         <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
           {packages.map(([name, price, note]) => (
             <article key={name} className={`rounded-3xl border p-5 shadow-sm shadow-[#12311F]/5 ${name === "Business" ? "border-[#16A34A]/45 bg-[#16A34A]/[0.045]" : "border-[#DDEAE0] bg-white"}`}>
               <h3 className="text-lg font-black text-[#173324]">{name}</h3>
               <p className="mt-2 text-2xl font-black text-[#12311F]">{price}</p>
               <p className="mt-3 text-xs leading-5 text-[#789083]">{note}</p>
-              <a href="#request-demo" className="mt-5 inline-flex rounded-xl bg-[#12311F] px-4 py-3 text-xs font-black text-white hover:bg-[#0E2418]">Request Demo</a>
+              <Link href="/signup" className="mt-5 inline-flex rounded-xl bg-[#12311F] px-4 py-3 text-xs font-black text-white hover:bg-[#0E2418]">Start trial</Link>
             </article>
           ))}
         </div>
@@ -342,6 +345,7 @@ export function LandingPage() {
           </div>
           <div className="flex flex-wrap gap-3 text-xs font-black text-[#60766B]">
             <Link href="/login" className="hover:text-[#16A34A]">Login to POS</Link>
+            <Link href="/signup" className="hover:text-[#16A34A]">Start Free Trial</Link>
             <a href="#request-demo" className="hover:text-[#16A34A]">Request Demo</a>
             <a href="#pricing" className="hover:text-[#16A34A]">Packages</a>
             <a href="#request-demo" className="hover:text-[#16A34A]">Contact</a>

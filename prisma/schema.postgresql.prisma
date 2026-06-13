@@ -17,6 +17,12 @@ model Business {
   industryMode String
   packagePlan  String
   status       String
+  trialStartedAt DateTime?
+  trialEndsAt    DateTime?
+  selectedPlan   String?
+  onboardingStatus String?
+  signupSource   String?
+  contactPerson  String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -329,6 +335,7 @@ model Subscription {
   status      String
   startDate   DateTime
   renewalDate DateTime
+  trialEndsAt  DateTime?
   amount      Decimal
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -360,6 +367,7 @@ model DemoRequest {
   email        String?
   businessType String
   usersCount   Int?
+  preferredPackage String?
   message      String?
   status       String   @default("new")
   createdAt    DateTime @default(now())

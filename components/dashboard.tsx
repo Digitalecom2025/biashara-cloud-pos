@@ -22,6 +22,7 @@ import {
 import { lowStockItems, recentActivity } from "@/lib/mock-data";
 import { getIndustryOpsConfig } from "@/lib/industryops";
 import { getCurrentBusiness } from "@/lib/settings-data";
+import { TrialCountdownCard } from "@/components/trial-countdown-card";
 
 const stats = [
   { label: "Today sales", value: "KES 184,250", note: "+12.8% vs yesterday", icon: CircleDollarSign, accent: "text-[#16A34A]", tile: "bg-[#16A34A]/10" },
@@ -80,6 +81,8 @@ export async function Dashboard() {
           </Link>
         </div>
       </div>
+
+      <TrialCountdownCard />
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
         {stats.map(({ label, value, note, icon: Icon, accent, tile }) => (
