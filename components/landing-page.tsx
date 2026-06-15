@@ -72,6 +72,13 @@ const packages = [
   ["Custom / Enterprise", "Quoted", "For supermarkets, multi-branch businesses, offline sync, M-Pesa API, eTIMS, WhatsApp and custom workflows."],
 ];
 
+const freeTrialBullets = [
+  "No payment required",
+  "Test real business workflows",
+  "Choose Lite, Growth, Business, Premium or Custom later",
+  "Request help if you want guided setup",
+];
+
 const aiQuestions = [
   "What sold the most today?",
   "Which products are running low?",
@@ -81,6 +88,11 @@ const aiQuestions = [
 ];
 
 const businessTypes = ["Retail Shop", "Supermarket", "Restaurant / Small Hotel", "Cosmetics / Skin Care", "Hardware", "Auto Spares", "Salon / Barber", "Pharmacy / Chemist", "Agrovet", "Butchery", "Other"];
+
+function signupHref(packageName: string) {
+  const normalized = packageName === "Custom / Enterprise" ? "Custom" : packageName;
+  return `/signup?package=${encodeURIComponent(normalized)}`;
+}
 
 export function LandingPage() {
   const [form, setForm] = useState({
@@ -114,7 +126,7 @@ export function LandingPage() {
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error ?? "Failed to submit request.");
-      setFeedback(payload.message ?? "Thank you. We'll contact you shortly to schedule your POS demo.");
+      setFeedback(payload.message ?? "Thank you. We'll contact you shortly to schedule your guided POS demo.");
       setForm({ fullName: "", businessName: "", phone: "", email: "", businessType: "", usersCount: "", message: "" });
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Failed to submit request.");
@@ -124,7 +136,7 @@ export function LandingPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#F5FAF6] text-[#173324]">
+    <main className="min-h-screen scroll-smooth bg-[#F5FAF6] text-[#173324]">
       <header className="sticky top-0 z-50 border-b border-[#DDEAE0] bg-white/92 backdrop-blur">
         <nav className="mx-auto flex max-w-[1480px] items-center justify-between gap-4 px-4 py-4 md:px-7">
           <Link href="/" className="flex items-center gap-3">
@@ -138,12 +150,13 @@ export function LandingPage() {
             <a href="#features" className="hover:text-[#16A34A]">Features</a>
             <a href="#industries" className="hover:text-[#16A34A]">Industries</a>
             <a href="#pricing" className="hover:text-[#16A34A]">Pricing</a>
-            <a href="#hybrid" className="hover:text-[#16A34A]">Hybrid POS</a>
+            <a href="#free-trial" className="hover:text-[#16A34A]">Free Trial</a>
             <a href="#request-demo" className="hover:text-[#16A34A]">Request Demo</a>
+            <Link href="/login" className="hover:text-[#16A34A]">Login</Link>
           </div>
           <div className="flex items-center gap-2">
             <Link href="/login" className="rounded-xl border border-[#DDEAE0] bg-white px-3 py-2.5 text-xs font-black text-[#60766B] hover:bg-[#F8FBF8]">Login</Link>
-            <Link href="/signup" className="rounded-xl bg-[#16A34A] px-3 py-2.5 text-xs font-black text-white hover:bg-[#12883E]">Start Trial</Link>
+            <Link href="/signup" className="rounded-xl bg-[#16A34A] px-3 py-2.5 text-xs font-black text-white hover:bg-[#12883E]">Start Free Trial</Link>
           </div>
         </nav>
       </header>
@@ -155,25 +168,20 @@ export function LandingPage() {
           <div className="relative z-10">
             <p className="text-xs font-black uppercase tracking-[0.2em] text-[#22C55E]">Biashara Cloud POS by LeadsStacks</p>
             <h1 className="mt-4 max-w-4xl text-4xl font-black tracking-tight md:text-6xl">
-              Cloud POS for Kenyan Businesses That Need Sales, Stock, Debtors, Reports & Offline Sync
+              Affordable Hybrid POS for Kenyan Businesses
             </h1>
             <p className="mt-5 max-w-3xl text-base leading-8 text-[#B8C7BD] md:text-lg">
-              Run your shop, restaurant, supermarket, cosmetics store, hardware, auto spares or retail business from one smart POS system - on desktop, tablet or phone.
-            </p>
-            <p className="mt-4 max-w-2xl rounded-2xl border border-[#D4A017]/30 bg-[#D4A017]/10 px-4 py-3 text-sm font-bold text-[#F7D783]">
-              Try sales, stock, customers, debtors, reports and offline sync before choosing your package.
+              Manage sales, stock, customers, debts, cashiers, reports and offline sales sync from phone, tablet or computer.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link href="/signup" className="inline-flex items-center gap-2 rounded-2xl bg-[#16A34A] px-5 py-4 text-sm font-black text-white shadow-xl shadow-[#16A34A]/20 hover:bg-[#12883E]">
                 Start Free 14-Day Trial <ArrowRight size={17} />
               </Link>
-              <a href="#request-demo" className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/8 px-5 py-4 text-sm font-black text-white hover:bg-white/12">
-                Request Demo
+              <a href="#pricing" className="inline-flex items-center gap-2 rounded-2xl border border-[#D4A017]/45 bg-[#D4A017]/12 px-5 py-4 text-sm font-black text-[#F7D783] hover:bg-[#D4A017]/16">
+                View Packages
               </a>
-              <Link href="/login" className="inline-flex items-center gap-2 rounded-2xl border border-[#D4A017]/45 bg-[#D4A017]/12 px-5 py-4 text-sm font-black text-[#F7D783] hover:bg-[#D4A017]/16">
-                Login to POS
-              </Link>
             </div>
+            <p className="mt-4 text-sm font-bold text-[#F7D783]">No payment required. Try the system before choosing your package.</p>
             <div className="mt-8 grid gap-3 sm:grid-cols-2">
               {trustBullets.map((item) => (
                 <p key={item} className="flex items-center gap-2 text-sm font-semibold text-[#E8F7EC]">
@@ -183,6 +191,37 @@ export function LandingPage() {
             </div>
           </div>
           <HeroPreview />
+        </div>
+      </section>
+
+      <section className="bg-white py-16" id="free-trial">
+        <div className="mx-auto grid max-w-[1480px] gap-8 px-4 md:px-7 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-[#16A34A]">Free trial</p>
+            <h2 className="mt-2 max-w-3xl text-3xl font-black tracking-tight text-[#10271B] md:text-4xl">Start Free. Choose Later.</h2>
+            <p className="mt-4 max-w-3xl text-sm leading-7 text-[#789083]">
+              Try Biashara POS for 14 days and test sales, stock, customers, debtors, reports and offline sync before choosing the package that fits your business.
+            </p>
+            <Link href="/signup" className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-[#16A34A] px-5 py-4 text-sm font-black text-white shadow-lg shadow-[#16A34A]/15 hover:bg-[#12883E]">
+              Start Free 14-Day Trial <ArrowRight size={16} />
+            </Link>
+          </div>
+          <article className="rounded-3xl border border-[#DDEAE0] bg-[#F8FBF8] p-5 shadow-sm shadow-[#12311F]/5 md:p-6">
+            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-wider text-[#D4A017]">No payment required</p>
+                <h3 className="mt-1 text-xl font-black text-[#173324]">Trial access for real workflows</h3>
+              </div>
+              <span className="rounded-full bg-[#16A34A]/10 px-3 py-2 text-[10px] font-black uppercase tracking-wider text-[#0F8C42]">14 days free</span>
+            </div>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              {freeTrialBullets.map((item) => (
+                <p key={item} className="flex items-center gap-2 rounded-xl border border-[#E8F0EA] bg-white p-3 text-xs font-black text-[#60766B]">
+                  <CheckCircle2 size={15} className="shrink-0 text-[#16A34A]" /> {item}
+                </p>
+              ))}
+            </div>
+          </article>
         </div>
       </section>
 
@@ -256,19 +295,29 @@ export function LandingPage() {
       </section>
 
       <section className="mx-auto max-w-[1480px] px-4 py-16 md:px-7" id="pricing">
-        <SectionIntro eyebrow="Packages" title="Choose a Package That Fits Your Business" note="Start with a 14-day free trial, then choose the package that fits your business." />
+        <SectionIntro eyebrow="Packages" title="Choose a Package That Fits Your Business" note="Start with a free 14-day trial. If you already know what you need, choose a package and we will prepare your setup." />
         <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
           {packages.map(([name, price, note]) => (
             <article key={name} className={`rounded-3xl border p-5 shadow-sm shadow-[#12311F]/5 ${name === "Business" ? "border-[#16A34A]/45 bg-[#16A34A]/[0.045]" : "border-[#DDEAE0] bg-white"}`}>
               <h3 className="text-lg font-black text-[#173324]">{name}</h3>
               <p className="mt-2 text-2xl font-black text-[#12311F]">{price}</p>
               <p className="mt-3 text-xs leading-5 text-[#789083]">{note}</p>
-              <Link href="/signup" className="mt-5 inline-flex rounded-xl bg-[#12311F] px-4 py-3 text-xs font-black text-white hover:bg-[#0E2418]">Start trial</Link>
+              {name === "Custom / Enterprise" ? (
+                <div className="mt-5 grid gap-2">
+                  <Link href={signupHref(name)} className="inline-flex justify-center rounded-xl bg-[#12311F] px-4 py-3 text-xs font-black text-white hover:bg-[#0E2418]">Start Free Trial</Link>
+                  <a href="#request-demo" className="inline-flex justify-center rounded-xl border border-[#D4A017]/35 bg-[#FFF9E8] px-4 py-3 text-xs font-black text-[#8A670C] hover:bg-[#FFF2C9]">Request Custom Setup</a>
+                </div>
+              ) : (
+                <div className="mt-5 grid gap-2">
+                  <Link href={signupHref(name)} className="inline-flex justify-center rounded-xl bg-[#12311F] px-4 py-3 text-xs font-black text-white hover:bg-[#0E2418]">Start Free Trial</Link>
+                  <Link href={signupHref(name)} className="inline-flex justify-center rounded-xl border border-[#16A34A]/25 bg-[#16A34A]/[0.045] px-4 py-3 text-xs font-black text-[#0F8C42] hover:bg-[#16A34A]/10">Choose This Package</Link>
+                </div>
+              )}
             </article>
           ))}
         </div>
         <p className="mt-5 rounded-2xl border border-[#D4A017]/35 bg-[#FFF9E8] p-4 text-sm font-bold text-[#8A670C]">
-          Hybrid offline sync is available on Custom / Enterprise plans or selected advanced packages.
+          Not sure which package fits your business? Start the free trial and decide after testing. Hybrid offline sync is available on Custom / Enterprise plans or selected advanced packages.
         </p>
       </section>
 
@@ -300,11 +349,12 @@ export function LandingPage() {
 
       <section className="mx-auto grid max-w-[1480px] gap-8 px-4 py-16 md:px-7 lg:grid-cols-[0.9fr_1.1fr]" id="request-demo">
         <div>
-          <SectionIntro eyebrow="Request demo" title="Ready to See Biashara Cloud POS in Action?" note="Send your business details and the LeadsStacks team will contact you shortly to schedule your POS demo." />
+          <SectionIntro eyebrow="Guided assistance" title="Prefer a Guided Demo?" note="If you want help deciding the right package, request a guided demo and we will walk you through the best setup for your business." />
           <div className="mt-6 rounded-3xl border border-[#DDEAE0] bg-white p-5">
             <p className="text-sm font-black text-[#173324]">Contact</p>
             <p className="mt-2 text-sm text-[#789083]">WhatsApp/Phone: +254 700 000 000</p>
             <p className="mt-1 text-sm text-[#789083]">Email: hello@leadsstacks.com</p>
+            <Link href="/signup" className="mt-4 inline-flex rounded-xl bg-[#16A34A] px-4 py-3 text-xs font-black text-white hover:bg-[#12883E]">Start free trial instead</Link>
           </div>
         </div>
         <form onSubmit={submitDemoRequest} className="rounded-3xl border border-[#DDEAE0] bg-white p-5 shadow-xl shadow-[#12311F]/8 md:p-7">
@@ -332,7 +382,7 @@ export function LandingPage() {
             </label>
           </div>
           <button disabled={loading} className="mt-5 w-full rounded-xl bg-[#16A34A] py-4 text-sm font-black text-white shadow-lg shadow-[#16A34A]/15 hover:bg-[#12883E] disabled:cursor-not-allowed disabled:bg-[#CBD8CF]">
-            {loading ? "Submitting..." : "Request Demo"}
+            {loading ? "Submitting..." : "Request Guided Demo"}
           </button>
         </form>
       </section>
@@ -344,9 +394,9 @@ export function LandingPage() {
             <p className="mt-1 text-xs text-[#789083]">Copyright 2026 LeadsStacks. Demo environment - do not enter real business data.</p>
           </div>
           <div className="flex flex-wrap gap-3 text-xs font-black text-[#60766B]">
-            <Link href="/login" className="hover:text-[#16A34A]">Login to POS</Link>
+            <Link href="/login" className="hover:text-[#16A34A]">Login</Link>
             <Link href="/signup" className="hover:text-[#16A34A]">Start Free Trial</Link>
-            <a href="#request-demo" className="hover:text-[#16A34A]">Request Demo</a>
+            <a href="#request-demo" className="hover:text-[#16A34A]">Request Guided Demo</a>
             <a href="#pricing" className="hover:text-[#16A34A]">Packages</a>
             <a href="#request-demo" className="hover:text-[#16A34A]">Contact</a>
           </div>

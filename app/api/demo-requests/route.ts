@@ -55,6 +55,6 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     data: { id, status: "new" },
-    message: "Thank you. We'll contact you shortly to schedule your POS demo.",
+    message: "Thank you. We'll contact you shortly to schedule your guided POS demo.",
   }, { status: 201 });
 }

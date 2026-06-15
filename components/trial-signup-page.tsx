@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { ArrowRight, CheckCircle2, Clock3, LockKeyhole, ShieldCheck, Smartphone, type LucideIcon } from "lucide-react";
 import { saveTrialPreview } from "@/lib/trial-session";
 
@@ -55,11 +55,31 @@ const initialForm: TrialForm = {
   message: "",
 };
 
+function packageFromQuery() {
+  if (typeof window === "undefined") return null;
+  const value = new URLSearchParams(window.location.search).get("package");
+  if (!value) return null;
+  return preferredPackages.find((plan) => plan.toLowerCase() === value.trim().toLowerCase()) ?? null;
+}
+
 export function TrialSignupPage() {
   const [form, setForm] = useState<TrialForm>(initialForm);
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState("");
   const [error, setError] = useState("");
+  const [selectedPackageNotice, setSelectedPackageNotice] = useState("");
+  const [queryPackage, setQueryPackage] = useState<string | null>(null);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const selected = packageFromQuery();
+      if (!selected || selected === "Not sure yet") return;
+      setQueryPackage(selected);
+      setSelectedPackageNotice(`You selected the ${selected} package. You can still change it during or after your free trial.`);
+      setForm((current) => ({ ...current, preferredPackage: selected }));
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   function updateField(field: keyof TrialForm, value: string) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -97,7 +117,7 @@ export function TrialSignupPage() {
       });
 
       setFeedback(payload.message ?? "Your trial account has been created.");
-      setForm(initialForm);
+      setForm({ ...initialForm, preferredPackage: queryPackage ?? "Not sure yet" });
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "Trial account could not be created.");
     } finally {
@@ -152,6 +172,12 @@ export function TrialSignupPage() {
             <p className="mt-1 text-sm text-[#789083]">We use this to create a 14-day trial tenant and prepare onboarding.</p>
           </div>
 
+          {selectedPackageNotice && (
+            <div className="mb-4 rounded-xl border border-[#D4A017]/35 bg-[#FFF9E8] px-4 py-3 text-xs font-black text-[#8A670C]">
+              {selectedPackageNotice}
+            </div>
+          )}
+
           {(feedback || error) && (
             <div className={`mb-4 rounded-xl px-4 py-3 text-xs font-bold ${error ? "border border-[#EF4444]/20 bg-[#EF4444]/10 text-[#EF4444]" : "border border-[#16A34A]/20 bg-[#16A34A]/10 text-[#0F8C42]"}`}>
               {error || feedback}
@@ -195,7 +221,7 @@ export function TrialSignupPage() {
           </button>
           <p className="mt-4 flex items-start gap-2 text-xs leading-5 text-[#789083]">
             <CheckCircle2 className="mt-0.5 shrink-0 text-[#16A34A]" size={15} />
-            Demo login remains available for presentations. Production login and payment activation will be connected during deployment.
+            Trial setup is saved for onboarding. Production login and payment activation will be connected during deployment.
           </p>
         </form>
       </section>

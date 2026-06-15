@@ -26,8 +26,8 @@ const valuePoints = [
 
 export function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("admin@biasharapos.demo");
-  const [password, setPassword] = useState("demo123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [selectedRole, setSelectedRole] = useState<DemoAccount>(demoAccounts[0]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -53,7 +53,7 @@ export function LoginPage() {
     if (!account) {
       window.setTimeout(() => {
         setLoading(false);
-        setError("Invalid demo email or password. Use one of the demo accounts below.");
+        setError("Invalid email or password. For presentation access, open Internal Demo Access below.");
       }, 250);
       return;
     }
@@ -78,10 +78,10 @@ export function LoginPage() {
             </div>
 
             <div className="mt-12 max-w-2xl">
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-[#22C55E]">Demo environment</p>
-              <h1 className="mt-3 text-4xl font-black tracking-tight md:text-5xl">Login to Biashara Cloud POS</h1>
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-[#22C55E]">Account access</p>
+              <h1 className="mt-3 text-4xl font-black tracking-tight md:text-5xl">Login to Biashara POS</h1>
               <p className="mt-4 text-base leading-7 text-[#B8C7BD]">
-                Access your business dashboard, sales register, stock, reports and hybrid offline sync.
+                Access your trial account, active subscription or internal demo account.
               </p>
             </div>
 
@@ -106,9 +106,9 @@ export function LoginPage() {
           <div className="mx-auto max-w-xl rounded-[24px] border border-[#DDEAE0] bg-white p-5 shadow-xl shadow-[#12311F]/10 md:p-7">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-xs font-black uppercase tracking-[0.16em] text-[#16A34A]">Secure demo login</p>
+                <p className="text-xs font-black uppercase tracking-[0.16em] text-[#16A34A]">Secure login</p>
                 <h2 className="mt-1 text-2xl font-black tracking-tight">Welcome back</h2>
-                <p className="mt-1 text-sm text-[#789083]">This demo uses local sample business data for presentation.</p>
+                <p className="mt-1 text-sm text-[#789083]">Use your trial, subscription or internal demo account credentials.</p>
               </div>
               <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#12311F] text-[#22C55E]">
                 <ShieldCheck size={20} />
@@ -122,35 +122,30 @@ export function LoginPage() {
                 <span className="text-[10px] font-black uppercase tracking-wider text-[#789083]">Email</span>
                 <span className="relative mt-2 block">
                   <UserRound className="absolute left-3 top-1/2 -translate-y-1/2 text-[#789083]" size={16} />
-                  <input value={email} onChange={(event) => setEmail(event.target.value)} type="email" className="w-full rounded-xl border border-[#DDEAE0] bg-[#F8FBF8] py-3 pl-10 pr-3 text-sm font-semibold outline-none focus:border-[#16A34A]" placeholder="admin@biasharapos.demo" />
+                  <input value={email} onChange={(event) => setEmail(event.target.value)} type="email" className="w-full rounded-xl border border-[#DDEAE0] bg-[#F8FBF8] py-3 pl-10 pr-3 text-sm font-semibold outline-none focus:border-[#16A34A]" placeholder="you@business.co.ke" />
                 </span>
               </label>
               <label className="block">
                 <span className="text-[10px] font-black uppercase tracking-wider text-[#789083]">Password</span>
                 <span className="relative mt-2 block">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-[#789083]" size={16} />
-                  <input value={password} onChange={(event) => setPassword(event.target.value)} type="password" className="w-full rounded-xl border border-[#DDEAE0] bg-[#F8FBF8] py-3 pl-10 pr-3 text-sm font-semibold outline-none focus:border-[#16A34A]" placeholder="demo123" />
+                  <input value={password} onChange={(event) => setPassword(event.target.value)} type="password" className="w-full rounded-xl border border-[#DDEAE0] bg-[#F8FBF8] py-3 pl-10 pr-3 text-sm font-semibold outline-none focus:border-[#16A34A]" placeholder="Enter password" />
                 </span>
               </label>
 
-              <div className="grid gap-2 sm:grid-cols-2">
+              <div className="grid gap-2">
                 <button disabled={loading} className="flex items-center justify-center gap-2 rounded-xl bg-[#16A34A] py-3.5 text-xs font-black text-white shadow-lg shadow-[#16A34A]/15 hover:bg-[#12883E] disabled:cursor-not-allowed disabled:bg-[#CBD8CF]">
                   {loading ? "Logging in..." : "Login"} <ArrowRight size={15} />
-                </button>
-                <button type="button" disabled={loading} onClick={() => loginWithAccount(selectedRole)} className="rounded-xl border border-[#D4A017]/35 bg-[#FFF9E8] py-3.5 text-xs font-black text-[#8A670C] hover:bg-[#FFF2C9] disabled:cursor-not-allowed">
-                  Try Demo Account
                 </button>
               </div>
             </form>
 
-            <div className="mt-6">
-              <div className="flex items-center justify-between gap-3">
-                <h3 className="text-sm font-black">Quick Login</h3>
-                <span className="rounded-full bg-[#16A34A]/10 px-3 py-1 text-[10px] font-black text-[#0F8C42]">Password: demo123</span>
-              </div>
+            <details className="mt-6 rounded-2xl border border-[#D4A017]/35 bg-[#FFF9E8] p-4">
+              <summary className="cursor-pointer text-sm font-black text-[#8A670C]">Internal Demo Access</summary>
+              <p className="mt-2 text-xs leading-5 text-[#8A670C]">For internal presentations only. Use any listed email with password <b>demo123</b>. Double-click a role card to log in faster.</p>
               <div className="mt-3 grid gap-2 sm:grid-cols-2">
                 {demoAccounts.map((account) => (
-                  <button key={`quick-${account.email}`} type="button" disabled={loading} onClick={() => loginWithAccount(account)} className="rounded-xl border border-[#DDEAE0] bg-[#F8FBF8] px-3 py-2.5 text-[10px] font-black text-[#60766B] hover:border-[#16A34A]/40 hover:bg-[#16A34A]/[0.035] disabled:cursor-not-allowed">
+                  <button key={`quick-${account.email}`} type="button" disabled={loading} onClick={() => loginWithAccount(account)} className="rounded-xl border border-[#DDEAE0] bg-white px-3 py-2.5 text-[10px] font-black text-[#60766B] hover:border-[#16A34A]/40 hover:bg-[#16A34A]/[0.035] disabled:cursor-not-allowed">
                     Login as {account.title.replace("Business Owner / ", "")}
                   </button>
                 ))}
@@ -169,12 +164,7 @@ export function LoginPage() {
                   </button>
                 ))}
               </div>
-            </div>
-
-            <div className="mt-5 rounded-2xl border border-[#D4A017]/35 bg-[#FFF9E8] p-4">
-              <p className="text-[10px] font-black uppercase tracking-wider text-[#8A670C]">Demo credentials note</p>
-              <p className="mt-1 text-xs leading-5 text-[#8A670C]">Use any listed email with password <b>demo123</b>. Double-click a role card to log in faster.</p>
-            </div>
+            </details>
           </div>
 
           <footer className="mx-auto mt-5 max-w-xl text-center text-[11px] font-semibold leading-5 text-[#789083]">
