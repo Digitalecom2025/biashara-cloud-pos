@@ -46,7 +46,7 @@ export function TrialCountdownCard() {
         </div>
         <div className="flex flex-wrap gap-2">
           <Link href="/subscriptions" className="rounded-xl bg-[#16A34A] px-4 py-3 text-xs font-black text-white hover:bg-[#12883E]">Choose Package</Link>
-          <Link href="/#request-demo" className="rounded-xl border border-[#D4A017]/35 bg-white px-4 py-3 text-xs font-black text-[#8A670C] hover:bg-[#FFF9E8]">Talk to Support</Link>
+          <Link href="/#request-setup" className="rounded-xl border border-[#D4A017]/35 bg-white px-4 py-3 text-xs font-black text-[#8A670C] hover:bg-[#FFF9E8]">Talk to Support</Link>
         </div>
       </div>
       {trial.status === "active" && (

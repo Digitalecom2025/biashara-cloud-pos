@@ -117,8 +117,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     return (
       <div className="grid min-h-screen place-items-center bg-[#F5FAF6] p-4">
         <div className="rounded-2xl border border-[#DDEAE0] bg-white p-6 text-center shadow-sm shadow-[#12311F]/5">
-          <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-[#12311F] text-lg font-black text-[#22C55E]">B</span>
-          <p className="mt-4 text-sm font-black text-[#173324]">Checking demo session...</p>
+          <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-[#12311F] text-lg font-black text-[#22C55E]">LS</span>
+          <p className="mt-4 text-sm font-black text-[#173324]">Checking account session...</p>
           <p className="mt-1 text-xs text-[#789083]">Redirecting to login if needed.</p>
         </div>
       </div>
@@ -200,7 +200,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </span>
             <div className="min-w-0">
               <p className="truncate text-[11px] font-bold text-[#F6FFF8]">{session?.demoUserName ?? "LeadsStacks POS"}</p>
-              <p className="truncate text-[10px] text-[#B8C7BD]">{session?.demoUserTitle ?? "Demo User"} - Active</p>
+              <p className="truncate text-[10px] text-[#B8C7BD]">{session?.demoUserTitle ?? "Business User"} - Active</p>
               <p className="truncate text-[10px] text-[#B8C7BD]">Business Plan · Active</p>
             </div>
           </div>
@@ -247,7 +247,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </button>
 
             <span className="hidden rounded-xl border border-[#16A34A]/20 bg-[#16A34A]/8 px-3 py-2.5 text-[10px] font-black uppercase tracking-wider text-[#0F8C42] 2xl:inline-flex">
-              Demo Mode: Local business data
+              Trial Workspace: Local business data
             </span>
 
             <PwaControls />
@@ -269,11 +269,11 @@ export function AppShell({ children }: { children: ReactNode }) {
 
             <div className="flex items-center gap-2 rounded-xl py-1 pl-1 text-left">
               <span className="grid h-9 w-9 place-items-center rounded-xl bg-[#12311F] text-xs font-black text-[#F6FFF8]">
-                {session?.demoUserName.split(" ").map((part) => part[0]).slice(0, 2).join("").toUpperCase() ?? "DU"}
+                {session?.demoUserName.split(" ").map((part) => part[0]).slice(0, 2).join("").toUpperCase() ?? "LS"}
               </span>
               <span className="hidden md:block">
-                <span className="block text-xs font-bold text-[#173324]">{session?.demoUserName ?? "Demo User"}</span>
-                <span className="block text-[10px] text-[#789083]">{session?.demoUserTitle ?? "Demo Role"} - {session?.demoUserTill ?? "Demo till"}</span>
+                <span className="block text-xs font-bold text-[#173324]">{session?.demoUserName ?? "Business User"}</span>
+                <span className="block text-[10px] text-[#789083]">{session?.demoUserTitle ?? "Business Role"} - {session?.demoUserTill ?? "Assigned till"}</span>
               </span>
             </div>
 
@@ -284,7 +284,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </header>
 
         <main className="min-h-[calc(100vh-76px)] p-4 md:p-7">
-          {hasRouteAccess ? children : <AccessRestricted currentPage={currentPage} role={session?.demoUserTitle ?? "Demo role"} />}
+          {hasRouteAccess ? children : <AccessRestricted currentPage={currentPage} role={session?.demoUserTitle ?? "Business role"} />}
         </main>
       </div>
     </div>
@@ -298,14 +298,14 @@ function AccessRestricted({ currentPage, role }: { currentPage: string; role: st
         <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-[#D4A017]/12 text-[#9A7108]">
           <CircleHelp size={24} />
         </span>
-        <p className="mt-5 text-xs font-black uppercase tracking-[0.16em] text-[#D4A017]">Demo role access</p>
-        <h2 className="mt-2 text-2xl font-black tracking-tight text-[#173324]">Access restricted for this demo role</h2>
+        <p className="mt-5 text-xs font-black uppercase tracking-[0.16em] text-[#D4A017]">Role access</p>
+        <h2 className="mt-2 text-2xl font-black tracking-tight text-[#173324]">Access restricted for this role</h2>
         <p className="mt-3 text-sm leading-6 text-[#789083]">
-          {role} cannot open {currentPage} in this presentation login. Use the Admin demo account to view every client-facing module.
+          {role} cannot open {currentPage}. Ask the business owner or administrator to update your access.
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <Link href="/dashboard" className="rounded-xl bg-[#12311F] px-4 py-3 text-xs font-black text-white hover:bg-[#0E2418]">Back to dashboard</Link>
-          <Link href="/login" className="rounded-xl border border-[#DDEAE0] px-4 py-3 text-xs font-black text-[#60766B] hover:bg-[#F8FBF8]">Switch demo role</Link>
+          <Link href="/login" className="rounded-xl border border-[#DDEAE0] px-4 py-3 text-xs font-black text-[#60766B] hover:bg-[#F8FBF8]">Sign in with another account</Link>
         </div>
       </article>
     </div>

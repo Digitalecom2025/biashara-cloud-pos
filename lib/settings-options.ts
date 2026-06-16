@@ -2,7 +2,7 @@ export { industryOpsModes as industryModes } from "@/lib/industryops";
 
 export const defaultSettings = {
   businessLogoUrl: "",
-  receiptTitle: "Biashara Cloud POS Demo",
+  receiptTitle: "LeadsStacks POS",
   receiptFooterNote: "Thank you for shopping with us.",
   showBusinessPhone: true,
   showCashierName: true,

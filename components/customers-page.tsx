@@ -233,7 +233,7 @@ function CustomerDialog({ state, loading, error, onClose, onSave }: { state: Cus
     <div className="fixed inset-0 z-[70] grid place-items-center bg-[#07120D]/65 p-4">
       <article className="w-full max-w-2xl rounded-2xl bg-white shadow-2xl">
         <div className="flex items-start justify-between border-b border-[#E8F0EA] p-4">
-          <div><h3 className="text-sm font-black text-[#173324]">{title}</h3><p className="mt-1 text-[11px] text-[#789083]">Customer details are saved to the demo business database.</p></div>
+          <div><h3 className="text-sm font-black text-[#173324]">{title}</h3><p className="mt-1 text-[11px] text-[#789083]">Customer details are saved to the business database.</p></div>
           <button onClick={onClose} className="grid h-8 w-8 place-items-center rounded-lg text-[#789083] hover:bg-[#F5FAF6]" aria-label="Close customer form"><X size={16} /></button>
         </div>
         <form onSubmit={submit} className="p-4">

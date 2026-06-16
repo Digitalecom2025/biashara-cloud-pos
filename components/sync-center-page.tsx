@@ -132,7 +132,7 @@ export function SyncCenterPage() {
   function toggleDemoOffline(enabled: boolean) {
     setSimulateOfflineMode(enabled);
     setSimulateOffline(enabled);
-    showFeedback(enabled ? "Demo Offline Mode enabled. Sales will be saved to this device." : "Demo Offline Mode disabled. Sales will use the online database again.");
+    showFeedback(enabled ? "Offline Test Mode enabled. Sales will be saved to this device." : "Offline Test Mode disabled. Sales will use the online database again.");
   }
 
   const runSync = useCallback(async (source: "manual" | "auto" = "manual") => {
@@ -142,7 +142,7 @@ export function SyncCenterPage() {
       return;
     }
     if (getSimulateOfflineMode()) {
-      if (source === "manual") setError("Turn off Demo Offline Mode before syncing to the database.");
+      if (source === "manual") setError("Turn off Offline Test Mode before syncing to the database.");
       return;
     }
 
@@ -215,7 +215,7 @@ export function SyncCenterPage() {
             {online ? <Wifi size={15} /> : <WifiOff size={15} />}
             {online ? "Online" : "Offline Mode"}
           </span>
-          {simulateOffline && <span className="rounded-xl border border-[#D4A017]/35 bg-[#FFF9E8] px-3 py-2.5 text-xs font-black text-[#8A670C]">Demo Offline Mode</span>}
+          {simulateOffline && <span className="rounded-xl border border-[#D4A017]/35 bg-[#FFF9E8] px-3 py-2.5 text-xs font-black text-[#8A670C]">Offline Test Mode</span>}
           <button onClick={loadQueue} className="inline-flex items-center gap-2 rounded-xl border border-[#DDEAE0] bg-white px-3 py-2.5 text-xs font-black text-[#60766B] hover:bg-[#F8FBF8]">
             <RefreshCw size={15} /> Refresh queue
           </button>
@@ -284,7 +284,7 @@ export function SyncCenterPage() {
             <div>
               <Clock3 className="mx-auto text-[#9AAEA3]" size={34} />
               <p className="mt-3 text-sm font-black text-[#173324]">No offline sales yet</p>
-              <p className="mt-1 text-xs text-[#789083]">Enable Demo Offline Mode, complete a sale, then return here to see it queued.</p>
+              <p className="mt-1 text-xs text-[#789083]">Enable Offline Test Mode, complete a sale, then return here to see it queued.</p>
             </div>
           </div>
         ) : (

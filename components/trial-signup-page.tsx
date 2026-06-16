@@ -40,6 +40,7 @@ type TrialForm = {
   usersCount: string;
   preferredPackage: string;
   password: string;
+  confirmPassword: string;
   message: string;
 };
 
@@ -52,6 +53,7 @@ const initialForm: TrialForm = {
   usersCount: "",
   preferredPackage: "Not sure yet",
   password: "",
+  confirmPassword: "",
   message: "",
 };
 
@@ -92,6 +94,18 @@ export function TrialSignupPage() {
     setFeedback("");
     setError("");
 
+    if (form.password && form.password.length < 6) {
+      setLoading(false);
+      setError("Password should be at least 6 characters.");
+      return;
+    }
+
+    if (form.password !== form.confirmPassword) {
+      setLoading(false);
+      setError("Password and confirm password must match.");
+      return;
+    }
+
     try {
       const response = await fetch("/api/trial-signups", {
         method: "POST",
@@ -116,7 +130,7 @@ export function TrialSignupPage() {
         trialEndsAt: payload.data.trialEndsAt,
       });
 
-      setFeedback(payload.message ?? "Your trial account has been created.");
+      setFeedback("Your trial request has been received. We will activate your account shortly.");
       setForm({ ...initialForm, preferredPackage: queryPackage ?? "Not sure yet" });
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "Trial account could not be created.");
@@ -137,8 +151,8 @@ export function TrialSignupPage() {
             </span>
           </Link>
           <div className="flex items-center gap-2">
-            <Link href="/login" className="rounded-xl border border-[#DDEAE0] bg-white px-3 py-2.5 text-xs font-black text-[#60766B] hover:bg-[#F8FBF8]">Login</Link>
-            <Link href="/#request-demo" className="rounded-xl bg-[#12311F] px-3 py-2.5 text-xs font-black text-white hover:bg-[#0E2418]">Request Demo</Link>
+            <Link href="/login" className="rounded-xl border border-[#DDEAE0] bg-white px-3 py-2.5 text-xs font-black text-[#60766B] hover:bg-[#F8FBF8]">Sign In</Link>
+            <Link href="/#request-setup" className="rounded-xl bg-[#12311F] px-3 py-2.5 text-xs font-black text-white hover:bg-[#0E2418]">Talk to Support</Link>
           </div>
         </nav>
       </header>
@@ -146,9 +160,9 @@ export function TrialSignupPage() {
       <section className="mx-auto grid max-w-[1380px] gap-8 px-4 py-10 md:px-7 lg:grid-cols-[0.92fr_1.08fr] lg:py-16">
         <div className="rounded-[28px] bg-[#07120D] p-6 text-[#F6FFF8] shadow-2xl shadow-[#12311F]/12 md:p-8">
           <p className="text-xs font-black uppercase tracking-[0.2em] text-[#22C55E]">Free trial</p>
-          <h1 className="mt-4 text-4xl font-black tracking-tight md:text-5xl">Start Your LeadsStacks POS Trial</h1>
+          <h1 className="mt-4 text-4xl font-black tracking-tight md:text-5xl">Start Your LeadsStacks POS Free Trial</h1>
           <p className="mt-5 text-sm leading-7 text-[#B8C7BD]">
-            Tell us about your business and we will help you set up the right POS package for your operations.
+            Set up your business profile and test the POS for 14 days before choosing your package.
           </p>
           <div className="mt-7 grid gap-3">
             {signupBenefits.map(([label, Icon]) => (
@@ -183,7 +197,7 @@ export function TrialSignupPage() {
               {error || feedback}
               {feedback && (
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <Link href="/login" className="rounded-lg bg-[#12311F] px-3 py-2 text-[11px] font-black text-white">Login to explore POS</Link>
+                  <Link href="/login" className="rounded-lg bg-[#12311F] px-3 py-2 text-[11px] font-black text-white">Sign in when access is activated</Link>
                   <Link href="/subscriptions" className="rounded-lg border border-[#16A34A]/30 bg-white px-3 py-2 text-[11px] font-black text-[#0F8C42]">View packages after login</Link>
                 </div>
               )}
@@ -194,7 +208,7 @@ export function TrialSignupPage() {
             <Field label="Full name" value={form.fullName} onChange={(value) => updateField("fullName", value)} required />
             <Field label="Business name" value={form.businessName} onChange={(value) => updateField("businessName", value)} required />
             <Field label="Phone number" value={form.phone} onChange={(value) => updateField("phone", value)} required />
-            <Field label="Email optional" type="email" value={form.email} onChange={(value) => updateField("email", value)} />
+            <Field label="Email" type="email" value={form.email} onChange={(value) => updateField("email", value)} required />
             <label>
               <span className="text-[10px] font-black uppercase tracking-wider text-[#789083]">Business type</span>
               <select value={form.businessType} onChange={(event) => updateField("businessType", event.target.value)} className="mt-2 w-full rounded-xl border border-[#DDEAE0] bg-[#F8FBF8] px-3 py-3 text-sm font-semibold outline-none focus:border-[#16A34A]" required>
@@ -209,7 +223,8 @@ export function TrialSignupPage() {
                 {preferredPackages.map((plan) => <option key={plan}>{plan}</option>)}
               </select>
             </label>
-            <Field label="Password optional for future login" type="password" value={form.password} onChange={(value) => updateField("password", value)} />
+            <Field label="Password" type="password" value={form.password} onChange={(value) => updateField("password", value)} required />
+            <Field label="Confirm password" type="password" value={form.confirmPassword} onChange={(value) => updateField("confirmPassword", value)} required />
             <label className="md:col-span-2">
               <span className="text-[10px] font-black uppercase tracking-wider text-[#789083]">Message optional</span>
               <textarea value={form.message} onChange={(event) => updateField("message", event.target.value)} className="mt-2 min-h-28 w-full rounded-xl border border-[#DDEAE0] bg-[#F8FBF8] px-3 py-3 text-sm font-semibold outline-none focus:border-[#16A34A]" placeholder="Tell us what you want to manage with LeadsStacks POS..." />
@@ -217,11 +232,11 @@ export function TrialSignupPage() {
           </div>
 
           <button disabled={loading} className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#16A34A] py-4 text-sm font-black text-white shadow-lg shadow-[#16A34A]/15 hover:bg-[#12883E] disabled:cursor-not-allowed disabled:bg-[#CBD8CF]">
-            {loading ? "Creating trial..." : "Create Free Trial"} {!loading && <ArrowRight size={16} />}
+            {loading ? "Creating trial..." : "Start Free Trial"} {!loading && <ArrowRight size={16} />}
           </button>
           <p className="mt-4 flex items-start gap-2 text-xs leading-5 text-[#789083]">
             <CheckCircle2 className="mt-0.5 shrink-0 text-[#16A34A]" size={15} />
-            Trial setup is saved for onboarding. Production login and payment activation will be connected during deployment.
+            No payment required. Your free trial runs for 14 days.
           </p>
         </form>
       </section>

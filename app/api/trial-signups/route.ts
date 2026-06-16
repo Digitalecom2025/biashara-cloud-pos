@@ -58,7 +58,7 @@ export async function POST(request: Request) {
   const subscriptionId = `sub_trial_${randomUUID()}`;
   const requestId = `trial_req_${randomUUID()}`;
   const auditId = `audit_trial_${randomUUID()}`;
-  const ownerEmail = email || `trial-${Date.now()}@biasharapos.demo`;
+  const ownerEmail = email || `trial-${Date.now()}@leadsstacks.local`;
 
   try {
     await prisma.$transaction(async (tx) => {

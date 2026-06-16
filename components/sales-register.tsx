@@ -321,7 +321,7 @@ export function SalesRegister({
     setLoading(true);
     try {
       if (forceOfflineSale) {
-        await saveCurrentSaleOffline(simulateOfflineMode ? "Demo offline mode enabled." : "Browser is offline.");
+        await saveCurrentSaleOffline(simulateOfflineMode ? "Offline test mode enabled." : "Browser is offline.");
         return;
       }
 
@@ -416,7 +416,7 @@ export function SalesRegister({
           <span className="rounded-xl border border-[#DDEAE0] bg-white px-3 py-2.5 text-xs font-bold text-[#60766B]">Branch: Nairobi CBD</span>
           <span className="rounded-xl border border-[#DDEAE0] bg-white px-3 py-2.5 text-xs font-bold text-[#60766B]">Till: Main Counter</span>
           <span className="rounded-xl border border-[#D4A017]/35 bg-[#FFF9E8] px-3 py-2.5 text-xs font-black text-[#8A670C]">Pending offline sales: {pendingOfflineSales}</span>
-          {simulateOfflineMode && <span className="rounded-xl border border-[#D4A017]/35 bg-[#D4A017]/12 px-3 py-2.5 text-xs font-black text-[#8A670C]">Demo Offline Mode</span>}
+          {simulateOfflineMode && <span className="rounded-xl border border-[#D4A017]/35 bg-[#D4A017]/12 px-3 py-2.5 text-xs font-black text-[#8A670C]">Offline Test Mode</span>}
           {!online && <span className="rounded-xl border border-[#EF4444]/20 bg-[#EF4444]/10 px-3 py-2.5 text-xs font-black text-[#EF4444]">Browser Offline</span>}
           {pendingOfflineSales > 0 && <Link href="/sync-center" className="rounded-xl bg-[#12311F] px-3 py-2.5 text-xs font-black text-white hover:bg-[#0E2418]">Open Sync Center</Link>}
         </div>

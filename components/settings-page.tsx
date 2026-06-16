@@ -43,9 +43,9 @@ type SettingsApiData = {
 };
 
 const initialForm: SettingsForm = {
-  name: "LeadsStacks POS Demo",
+  name: "LeadsStacks POS Trial",
   phone: "+254 712 345 678",
-  email: "admin@biashara.demo",
+  email: "admin@leadsstacks.co.ke",
   location: "Nairobi",
   industryMode: "Retail",
   packagePlan: "Business",
@@ -153,7 +153,7 @@ export function SettingsPage() {
                   <h4 className="mt-1 text-sm font-black text-[#173324]">{industryPreview.dashboardTitle}</h4>
                   <p className="mt-1 text-xs leading-5 text-[#8A670C]">{industryPreview.demoFocus}</p>
                 </div>
-                {industryPreview.label === "Supermarket" && <Link href="/supermarket-demo" className="shrink-0 rounded-xl bg-[#16A34A] px-4 py-3 text-xs font-black text-white">Open 4-Till Demo</Link>}
+                {industryPreview.label === "Supermarket" && <Link href="/supermarket-demo" className="shrink-0 rounded-xl bg-[#16A34A] px-4 py-3 text-xs font-black text-white">Open 4-Till View</Link>}
               </div>
               <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                 <PreviewList title="What changes" items={[industryPreview.productLabel, industryPreview.salesLabel, industryPreview.customerLabel, industryPreview.stockLabel]} />
@@ -209,7 +209,7 @@ export function SettingsPage() {
             <button onClick={backupPlaceholder} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-[#DDEAE0] py-3 text-xs font-black text-[#60766B]"><CloudDownload size={15} />Download data archive</button>
           </Panel>
 
-          <Panel icon={Smartphone} title="Mobile App Experience" note="Installable web app foundation for demos.">
+          <Panel icon={Smartphone} title="Mobile App Experience" note="Installable web app foundation for business users.">
             <p className="rounded-xl bg-[#F8FBF8] p-3 text-[11px] leading-5 text-[#60766B]">
               LeadsStacks POS runs on desktop, tablet and phone. It can be installed like an app using PWA technology. Native Android/iPhone apps can be added later.
             </p>

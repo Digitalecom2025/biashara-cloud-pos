@@ -176,7 +176,7 @@ export function SubscriptionsPage() {
                 <span className="grid h-12 w-12 place-items-center rounded-xl bg-[#22C55E]/15 text-[#22C55E]"><Crown size={22} /></span>
                 <div>
                   <h3 className="text-xl font-black">{currentPlan.name} Plan</h3>
-                  <p className="mt-1 text-xs text-[#B8C7BD]">{subscription?.businessName ?? "Demo business"} - {subscription?.status ?? "active"}</p>
+                  <p className="mt-1 text-xs text-[#B8C7BD]">{subscription?.businessName ?? "Trial business"} - {subscription?.status ?? "active"}</p>
                 </div>
               </div>
             </div>

@@ -210,7 +210,7 @@ export function LandingPage() {
     setError("");
   }
 
-  async function submitDemoRequest(event: FormEvent<HTMLFormElement>) {
+  async function submitSetupRequest(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
     setFeedback("");
@@ -223,7 +223,7 @@ export function LandingPage() {
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error ?? "Failed to submit request.");
-      setFeedback(payload.message ?? "Thank you. We'll contact you shortly to schedule your guided POS demo.");
+      setFeedback(payload.message ?? "Thank you. We'll contact you shortly to help with your POS setup.");
       setForm({ fullName: "", businessName: "", phone: "", email: "", businessType: "", usersCount: "", message: "" });
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Failed to submit request.");
@@ -247,11 +247,11 @@ export function LandingPage() {
             <a href="#features" className="hover:text-[#16A34A]">Features</a>
             <a href="#industryops" className="hover:text-[#16A34A]">IndustryOps</a>
             <a href="#packages" className="hover:text-[#16A34A]">Packages</a>
-            <a href="#request-demo" className="hover:text-[#16A34A]">Request Demo / Signup</a>
-            <Link href="/login" className="hover:text-[#16A34A]">Login</Link>
+            <a href="#request-setup" className="hover:text-[#16A34A]">Start Free Trial</a>
+            <Link href="/login" className="hover:text-[#16A34A]">Sign In</Link>
           </div>
           <div className="flex items-center gap-2">
-            <Link href="/login" className="rounded-xl border border-[#DDEAE0] bg-white px-3 py-2.5 text-xs font-black text-[#60766B] hover:bg-[#F8FBF8]">Login</Link>
+            <Link href="/login" className="rounded-xl border border-[#DDEAE0] bg-white px-3 py-2.5 text-xs font-black text-[#60766B] hover:bg-[#F8FBF8]">Sign In</Link>
             <Link href="/signup" className="rounded-xl bg-[#16A34A] px-3 py-2.5 text-xs font-black text-white hover:bg-[#12883E]">Start Free Trial</Link>
           </div>
         </nav>
@@ -271,14 +271,14 @@ export function LandingPage() {
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link href="/signup" className="inline-flex items-center gap-2 rounded-2xl bg-[#16A34A] px-5 py-4 text-sm font-black text-white shadow-xl shadow-[#16A34A]/20 hover:bg-[#12883E]">
-                Start Free Trial <ArrowRight size={17} />
+                Start Free 14-Day Trial <ArrowRight size={17} />
               </Link>
-              <a href="#request-demo" className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/8 px-5 py-4 text-sm font-black text-white hover:bg-white/12">
-                Request Demo
-              </a>
               <Link href="/login" className="inline-flex items-center gap-2 rounded-2xl border border-[#D4A017]/45 bg-[#D4A017]/12 px-5 py-4 text-sm font-black text-[#F7D783] hover:bg-[#D4A017]/16">
-                Login
+                Sign In
               </Link>
+              <a href="#packages" className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/8 px-5 py-4 text-sm font-black text-white hover:bg-white/12">
+                View Packages
+              </a>
             </div>
             <p className="mt-4 max-w-3xl text-sm font-bold leading-6 text-[#F7D783]">
               No complicated setup. Start with your products, users and payment methods, then test the system with your business operations.
@@ -307,7 +307,7 @@ export function LandingPage() {
               ))}
             </div>
             <Link href="/signup" className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-[#16A34A] px-5 py-4 text-sm font-black text-white shadow-lg shadow-[#16A34A]/15 hover:bg-[#12883E]">
-              Start Free Trial <ArrowRight size={16} />
+              Start Free 14-Day Trial <ArrowRight size={16} />
             </Link>
           </div>
           <VisualPanel icon={ShieldCheck} title="Business onboarding" label="Business onboarding visual showing products, users, cashiers and package selection" items={["Add business profile", "Load products", "Create users/cashiers", "Select package"]} />
@@ -367,13 +367,13 @@ export function LandingPage() {
               <p className="mt-3 rounded-xl bg-[#F8FBF8] p-3 text-[11px] font-bold leading-5 text-[#60766B]">Best for: {plan.bestFor}</p>
               {plan.name === "Custom / Enterprise" ? (
                 <div className="mt-5 grid gap-2">
-                  <Link href={signupHref(plan.name)} className="inline-flex justify-center rounded-xl bg-[#12311F] px-4 py-3 text-xs font-black text-white hover:bg-[#0E2418]">Start Free Trial</Link>
-                  <a href="#request-demo" className="inline-flex justify-center rounded-xl border border-[#D4A017]/35 bg-[#FFF9E8] px-4 py-3 text-xs font-black text-[#8A670C] hover:bg-[#FFF2C9]">Request Custom Setup</a>
+                  <Link href={signupHref(plan.name)} className="inline-flex justify-center rounded-xl bg-[#12311F] px-4 py-3 text-xs font-black text-white hover:bg-[#0E2418]">Start Trial</Link>
+                  <a href="#request-setup" className="inline-flex justify-center rounded-xl border border-[#D4A017]/35 bg-[#FFF9E8] px-4 py-3 text-xs font-black text-[#8A670C] hover:bg-[#FFF2C9]">Talk to Support</a>
                 </div>
               ) : (
                 <div className="mt-5 grid gap-2">
-                  <Link href={signupHref(plan.name)} className="inline-flex justify-center rounded-xl bg-[#12311F] px-4 py-3 text-xs font-black text-white hover:bg-[#0E2418]">Start Free Trial</Link>
-                  <Link href={signupHref(plan.name)} className="inline-flex justify-center rounded-xl border border-[#16A34A]/25 bg-[#16A34A]/[0.045] px-4 py-3 text-xs font-black text-[#0F8C42] hover:bg-[#16A34A]/10">Choose This Package</Link>
+                  <Link href={signupHref(plan.name)} className="inline-flex justify-center rounded-xl bg-[#12311F] px-4 py-3 text-xs font-black text-white hover:bg-[#0E2418]">Start Trial</Link>
+                  <Link href={signupHref(plan.name)} className="inline-flex justify-center rounded-xl border border-[#16A34A]/25 bg-[#16A34A]/[0.045] px-4 py-3 text-xs font-black text-[#0F8C42] hover:bg-[#16A34A]/10">Choose Package</Link>
                 </div>
               )}
             </article>
@@ -384,18 +384,18 @@ export function LandingPage() {
         </p>
       </section>
 
-      <section className="mx-auto grid max-w-[1480px] gap-8 px-4 py-16 md:px-7 lg:grid-cols-[0.9fr_1.1fr]" id="request-demo">
+      <section className="mx-auto grid max-w-[1480px] gap-8 px-4 py-16 md:px-7 lg:grid-cols-[0.9fr_1.1fr]" id="request-setup">
         <div>
-          <SectionIntro eyebrow="Guided demo" title="Want Help Choosing the Right Setup?" note="Tell us about your business and we will walk you through the best LeadsStacks POS package for your operations." />
+          <SectionIntro eyebrow="Setup support" title="Want Help Choosing the Right Setup?" note="Tell us about your business and we will walk you through the best LeadsStacks POS package for your operations." />
           <div className="mt-6 rounded-3xl border border-[#DDEAE0] bg-white p-5">
             <p className="text-sm font-black text-[#173324]">Support</p>
-            <p className="mt-2 text-sm text-[#789083]">Request a guided demo if you want help deciding the right package.</p>
+            <p className="mt-2 text-sm text-[#789083]">Talk to support if you want help deciding the right package or preparing your setup.</p>
             <p className="mt-2 text-sm text-[#789083]">WhatsApp/Phone: +254 700 000 000</p>
             <p className="mt-1 text-sm text-[#789083]">Email: hello@leadsstacks.com</p>
             <Link href="/signup" className="mt-4 inline-flex rounded-xl bg-[#16A34A] px-4 py-3 text-xs font-black text-white hover:bg-[#12883E]">Start free trial instead</Link>
           </div>
         </div>
-        <form onSubmit={submitDemoRequest} className="rounded-3xl border border-[#DDEAE0] bg-white p-5 shadow-xl shadow-[#12311F]/8 md:p-7">
+        <form onSubmit={submitSetupRequest} className="rounded-3xl border border-[#DDEAE0] bg-white p-5 shadow-xl shadow-[#12311F]/8 md:p-7">
           {(feedback || error) && (
             <div className={`mb-4 rounded-xl px-4 py-3 text-xs font-bold ${error ? "border border-[#EF4444]/20 bg-[#EF4444]/10 text-[#EF4444]" : "border border-[#16A34A]/20 bg-[#16A34A]/10 text-[#0F8C42]"}`}>
               {error || feedback}
@@ -420,7 +420,7 @@ export function LandingPage() {
             </label>
           </div>
           <button disabled={loading} className="mt-5 w-full rounded-xl bg-[#16A34A] py-4 text-sm font-black text-white shadow-lg shadow-[#16A34A]/15 hover:bg-[#12883E] disabled:cursor-not-allowed disabled:bg-[#CBD8CF]">
-            {loading ? "Submitting..." : "Request Demo"}
+            {loading ? "Submitting..." : "Request Setup"}
           </button>
         </form>
       </section>
@@ -434,8 +434,8 @@ export function LandingPage() {
           <div className="flex flex-wrap gap-3 text-xs font-black text-[#60766B]">
             <Link href="/signup" className="hover:text-[#16A34A]">Start Free Trial</Link>
             <a href="#packages" className="hover:text-[#16A34A]">Packages</a>
-            <a href="#request-demo" className="hover:text-[#16A34A]">Request Demo</a>
-            <Link href="/login" className="hover:text-[#16A34A]">Login</Link>
+            <a href="#request-setup" className="hover:text-[#16A34A]">Talk to Support</a>
+            <Link href="/login" className="hover:text-[#16A34A]">Sign In</Link>
           </div>
         </div>
       </footer>

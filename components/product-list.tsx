@@ -392,7 +392,7 @@ function ProductDialog({ state, loading, error, onClose, onSave }: { state: Prod
         <div className="flex items-start justify-between border-b border-[#E8F0EA] p-4">
           <div>
             <h3 className="text-sm font-black text-[#173324]">{title}</h3>
-            <p className="mt-1 text-[11px] text-[#789083]">Products are saved to the demo business database.</p>
+            <p className="mt-1 text-[11px] text-[#789083]">Products are saved to the business database.</p>
           </div>
           <button onClick={onClose} className="rounded-lg p-1 text-[#789083] hover:bg-[#F5FAF6]" aria-label="Close product form">
             <MoreHorizontal size={18} />

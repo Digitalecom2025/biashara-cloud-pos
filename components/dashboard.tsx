@@ -115,22 +115,22 @@ export async function Dashboard() {
           <div className="mt-4 grid gap-3 md:grid-cols-3">
             <IndustryList title="Key benefits" items={industry.demoBenefits} />
             <IndustryList title="Recommended modules" items={industry.recommendedModules} />
-            <IndustryList title="Demo focus" items={[industry.productLabel, industry.salesLabel, industry.customerLabel, industry.stockLabel]} />
+            <IndustryList title="Workflow focus" items={[industry.productLabel, industry.salesLabel, industry.customerLabel, industry.stockLabel]} />
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
             <Link href="/settings" className="rounded-xl bg-[#16A34A] px-4 py-3 text-xs font-black text-white">Change industry mode</Link>
-            {industry.label === "Supermarket" && <Link href="/supermarket-demo" className="rounded-xl border border-[#D4A017]/40 bg-white px-4 py-3 text-xs font-black text-[#8A670C]">Open Supermarket 4-Till Demo</Link>}
-            {industry.label !== "Supermarket" && <Link href="/supermarket-demo" className="rounded-xl border border-[#DDEAE0] bg-white px-4 py-3 text-xs font-black text-[#60766B]">View 4-Till supermarket demo</Link>}
+            {industry.label === "Supermarket" && <Link href="/supermarket-demo" className="rounded-xl border border-[#D4A017]/40 bg-white px-4 py-3 text-xs font-black text-[#8A670C]">Open Supermarket 4-Till View</Link>}
+            {industry.label !== "Supermarket" && <Link href="/supermarket-demo" className="rounded-xl border border-[#DDEAE0] bg-white px-4 py-3 text-xs font-black text-[#60766B]">View 4-Till supermarket setup</Link>}
           </div>
         </article>
 
         <article className="rounded-2xl border border-[#DDEAE0] bg-white p-5 shadow-sm shadow-[#12311F]/5">
           <div className="flex items-start justify-between">
             <div>
-              <h3 className="font-black text-[#173324]">Demo Mode</h3>
-              <p className="mt-0.5 text-xs text-[#789083]">Local business data for presentation.</p>
+              <h3 className="font-black text-[#173324]">Trial Workspace</h3>
+              <p className="mt-0.5 text-xs text-[#789083]">Local business data for onboarding.</p>
             </div>
-            <span className="rounded-full bg-[#16A34A]/10 px-3 py-1 text-[10px] font-black text-[#0F8C42]">Demo Mode</span>
+            <span className="rounded-full bg-[#16A34A]/10 px-3 py-1 text-[10px] font-black text-[#0F8C42]">Trial Workspace</span>
           </div>
           <p className="mt-4 text-xs leading-5 text-[#60766B]">
             Use this dashboard to present how LeadsStacks POS adapts to {industry.label.toLowerCase()} operations while keeping the same reliable sales, stock, customers and reports foundation.
