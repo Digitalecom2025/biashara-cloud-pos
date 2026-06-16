@@ -1,4 +1,4 @@
-const CACHE_NAME = "biashara-cloud-pos-shell-v1";
+const CACHE_NAME = "leadsstacks-pos-shell-v1";
 const SHELL_ASSETS = [
   "/",
   "/offline",

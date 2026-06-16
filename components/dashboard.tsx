@@ -133,7 +133,7 @@ export async function Dashboard() {
             <span className="rounded-full bg-[#16A34A]/10 px-3 py-1 text-[10px] font-black text-[#0F8C42]">Demo Mode</span>
           </div>
           <p className="mt-4 text-xs leading-5 text-[#60766B]">
-            Use this dashboard to present how Biashara adapts to {industry.label.toLowerCase()} operations while keeping the same reliable sales, stock, customers and reports foundation.
+            Use this dashboard to present how LeadsStacks POS adapts to {industry.label.toLowerCase()} operations while keeping the same reliable sales, stock, customers and reports foundation.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             {industry.sampleCategories.slice(0, 4).map((category) => <span key={category} className="rounded-full bg-[#F8FBF8] px-3 py-1.5 text-[10px] font-black text-[#60766B]">{category}</span>)}

@@ -2,9 +2,9 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Biashara Cloud POS",
-    short_name: "Biashara POS",
-    description: "Hybrid cloud POS for sales, stock, customers, debtors, reports and offline-ready business operations.",
+    name: "LeadsStacks POS",
+    short_name: "LeadsStacks POS",
+    description: "Cloud POS for sales, stock, customers, debtors, reports and business control.",
     start_url: "/",
     scope: "/",
     display: "standalone",

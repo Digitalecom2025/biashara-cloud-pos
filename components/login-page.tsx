@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight,
-  BrainCircuit,
   CheckCircle2,
   Cloud,
   Lock,
@@ -16,12 +15,11 @@ import {
 import { createDemoSession, demoAccounts, findDemoAccount, saveDemoSession, type DemoAccount } from "@/lib/demo-auth";
 
 const valuePoints = [
-  "Cloud POS for desktop, tablet and phone",
-  "Works as installable PWA app",
-  "Sales, stock, debtors, reports and branches",
-  "Hybrid offline sales queue and sync center",
-  "AI business insights",
-  "Built for supermarkets, restaurants, cosmetics, hardware, auto spares and retail shops",
+  "Secure POS login for business users",
+  "Sales, stock and reports access",
+  "Owner, cashier and manager views",
+  "Cloud access from phone, tablet and computer",
+  "Built for shops, restaurants, hardware stores and SMEs",
 ];
 
 export function LoginPage() {
@@ -70,18 +68,18 @@ export function LoginPage() {
 
           <div className="relative z-10">
             <div className="flex items-center gap-3">
-              <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[#16A34A] text-xl font-black text-white shadow-lg shadow-[#16A34A]/20">B</span>
+              <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[#16A34A] text-sm font-black text-white shadow-lg shadow-[#16A34A]/20">LS</span>
               <div>
-                <p className="text-lg font-black tracking-wide">BIASHARA</p>
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#D4A017]">Cloud POS</p>
+                <p className="text-lg font-black tracking-wide">LEADSSTACKS</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#D4A017]">POS</p>
               </div>
             </div>
 
             <div className="mt-12 max-w-2xl">
               <p className="text-xs font-black uppercase tracking-[0.2em] text-[#22C55E]">Account access</p>
-              <h1 className="mt-3 text-4xl font-black tracking-tight md:text-5xl">Login to Biashara POS</h1>
+              <h1 className="mt-3 text-4xl font-black tracking-tight md:text-5xl">Login to LeadsStacks POS</h1>
               <p className="mt-4 text-base leading-7 text-[#B8C7BD]">
-                Access your trial account, active subscription or internal demo account.
+                Access your LeadsStacks POS dashboard, manage sales, track stock and view reports from your business account.
               </p>
             </div>
 
@@ -95,9 +93,9 @@ export function LoginPage() {
             </div>
 
             <div className="mt-8 grid gap-3 sm:grid-cols-3">
-              <ValueMetric icon={MonitorSmartphone} label="PWA ready" value="Installable" />
-              <ValueMetric icon={RefreshCw} label="Hybrid sync" value="Offline queue" />
-              <ValueMetric icon={BrainCircuit} label="AI demo" value="Rule insights" />
+              <ValueMetric icon={MonitorSmartphone} label="Device access" value="Phone + PC" />
+              <ValueMetric icon={RefreshCw} label="Business control" value="Live records" />
+              <ValueMetric icon={Cloud} label="Cloud POS" value="Connected" />
             </div>
           </div>
         </div>
@@ -108,7 +106,7 @@ export function LoginPage() {
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.16em] text-[#16A34A]">Secure login</p>
                 <h2 className="mt-1 text-2xl font-black tracking-tight">Welcome back</h2>
-                <p className="mt-1 text-sm text-[#789083]">Use your trial, subscription or internal demo account credentials.</p>
+                <p className="mt-1 text-sm text-[#789083]">Access your trial account, active subscription or internal demo account.</p>
               </div>
               <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#12311F] text-[#22C55E]">
                 <ShieldCheck size={20} />
@@ -168,7 +166,7 @@ export function LoginPage() {
           </div>
 
           <footer className="mx-auto mt-5 max-w-xl text-center text-[11px] font-semibold leading-5 text-[#789083]">
-            Demo environment — production login and user permissions will be connected during deployment.
+            LeadsStacks POS account access for trial users, subscribed businesses and internal presentation accounts.
           </footer>
         </div>
       </section>

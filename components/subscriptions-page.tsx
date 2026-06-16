@@ -142,7 +142,7 @@ export function SubscriptionsPage() {
                 {trialPreview.status === "active"
                   ? "Payment confirmation will be handled manually for now. Your selected package is saved against the trial business."
                   : trialExpired
-                  ? "Choose a package to continue using Biashara POS. Trial data remains available."
+                  ? "Choose a package to continue using LeadsStacks POS. Trial data remains available."
                   : `${trialDaysRemaining} day${trialDaysRemaining === 1 ? "" : "s"} remaining. Trial ends on ${formatTrialEndDate(trialPreview.trialEndsAt)}.`}
               </p>
             </div>

@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { TrialSignupPage } from "@/components/trial-signup-page";
 
 export const metadata: Metadata = {
-  title: "Start Free Trial | Biashara Cloud POS",
-  description: "Start a free 14-day Biashara Cloud POS trial for sales, stock, customers, debtors, reports and offline sync.",
+  title: "Start Free Trial | LeadsStacks POS",
+  description: "Start a free LeadsStacks POS trial for sales, stock, customers, debtors, reports and cloud business control.",
 };
 
 export default function SignupPage() {

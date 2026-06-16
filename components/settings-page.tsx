@@ -43,7 +43,7 @@ type SettingsApiData = {
 };
 
 const initialForm: SettingsForm = {
-  name: "Biashara Cloud POS Demo",
+  name: "LeadsStacks POS Demo",
   phone: "+254 712 345 678",
   email: "admin@biashara.demo",
   location: "Nairobi",
@@ -211,7 +211,7 @@ export function SettingsPage() {
 
           <Panel icon={Smartphone} title="Mobile App Experience" note="Installable web app foundation for demos.">
             <p className="rounded-xl bg-[#F8FBF8] p-3 text-[11px] leading-5 text-[#60766B]">
-              Biashara Cloud POS runs on desktop, tablet and phone. It can be installed like an app using PWA technology. Native Android/iPhone apps can be added later.
+              LeadsStacks POS runs on desktop, tablet and phone. It can be installed like an app using PWA technology. Native Android/iPhone apps can be added later.
             </p>
             <p className="mt-3 rounded-xl bg-[#FFF9E8] p-3 text-[11px] leading-5 text-[#8A670C]">
               Offline sales sync is the next Hybrid POS stage.

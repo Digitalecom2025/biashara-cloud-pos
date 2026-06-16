@@ -4,7 +4,7 @@ import { ArrowRight, Construction, Sparkles } from "lucide-react";
 export function PlaceholderPage({ title }: { title: string }) {
   return (
     <div className="mx-auto max-w-[1500px]">
-      <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#16A34A]">Biashara Cloud POS</p>
+      <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#16A34A]">LeadsStacks POS</p>
       <h2 className="mt-1 text-2xl font-black tracking-tight text-[#10271B] md:text-3xl">{title}</h2>
       <p className="mt-1 text-sm text-[#789083]">This module is ready for the next build phase.</p>
 

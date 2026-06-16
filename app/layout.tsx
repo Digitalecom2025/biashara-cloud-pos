@@ -3,12 +3,12 @@ import "./globals.css";
 import { AppShell } from "@/components/app-shell";
 
 export const metadata: Metadata = {
-  title: "Biashara Cloud POS",
-  description: "Modern cloud point of sale management for growing businesses.",
+  title: "LeadsStacks POS",
+  description: "Cloud POS system for sales, stock, customers, debtors, reports and business control.",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
-    title: "Biashara POS",
+    title: "LeadsStacks POS",
     statusBarStyle: "black-translucent",
   },
 };

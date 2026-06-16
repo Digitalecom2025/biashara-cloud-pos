@@ -656,7 +656,7 @@ function ReceiptModal({ receipt, onClose }: { receipt: Receipt; onClose: () => v
         <div className="p-5">
           <div className="text-center">
             <span className="mx-auto grid h-11 w-11 place-items-center rounded-xl bg-[#12311F] text-sm font-black text-white">B</span>
-            <p className="mt-2 text-sm font-black text-[#173324]">BIASHARA CLOUD POS</p>
+            <p className="mt-2 text-sm font-black text-[#173324]">LEADSSTACKS POS</p>
             <p className="mt-0.5 text-[10px] text-[#789083]">{receipt.branch} - Till: Main Counter</p>
           </div>
           <div className="mt-4 space-y-1 border-y border-dashed border-[#DDEAE0] py-3 text-[11px] text-[#60766B]">

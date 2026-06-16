@@ -27,8 +27,8 @@ const preferredPackages = ["Not sure yet", "Lite", "Growth", "Business", "Premiu
 const signupBenefits: Array<[string, LucideIcon]> = [
   ["14 days to test your business workflow", Clock3],
   ["Works on desktop, tablet and phone", Smartphone],
-  ["Trial records are saved for onboarding", ShieldCheck],
-  ["Production login will be activated during setup", LockKeyhole],
+  ["Products, users and package selection in one setup", ShieldCheck],
+  ["Account access is prepared during onboarding", LockKeyhole],
 ];
 
 type TrialForm = {
@@ -130,10 +130,10 @@ export function TrialSignupPage() {
       <header className="border-b border-[#DDEAE0] bg-white/95">
         <nav className="mx-auto flex max-w-[1380px] items-center justify-between gap-4 px-4 py-4 md:px-7">
           <Link href="/" className="flex items-center gap-3">
-            <span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#16A34A] text-lg font-black text-white shadow-lg shadow-[#16A34A]/20">B</span>
+            <span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#16A34A] text-sm font-black text-white shadow-lg shadow-[#16A34A]/20">LS</span>
             <span>
-              <span className="block text-sm font-black tracking-wide">BIASHARA</span>
-              <span className="block text-[10px] font-black uppercase tracking-[0.25em] text-[#D4A017]">Cloud POS</span>
+              <span className="block text-sm font-black tracking-wide">LEADSSTACKS</span>
+              <span className="block text-[10px] font-black uppercase tracking-[0.25em] text-[#D4A017]">POS</span>
             </span>
           </Link>
           <div className="flex items-center gap-2">
@@ -146,9 +146,9 @@ export function TrialSignupPage() {
       <section className="mx-auto grid max-w-[1380px] gap-8 px-4 py-10 md:px-7 lg:grid-cols-[0.92fr_1.08fr] lg:py-16">
         <div className="rounded-[28px] bg-[#07120D] p-6 text-[#F6FFF8] shadow-2xl shadow-[#12311F]/12 md:p-8">
           <p className="text-xs font-black uppercase tracking-[0.2em] text-[#22C55E]">Free trial</p>
-          <h1 className="mt-4 text-4xl font-black tracking-tight md:text-5xl">Start Your Free 14-Day Biashara POS Trial</h1>
+          <h1 className="mt-4 text-4xl font-black tracking-tight md:text-5xl">Start Your LeadsStacks POS Trial</h1>
           <p className="mt-5 text-sm leading-7 text-[#B8C7BD]">
-            No payment required. Try sales, stock, customers, debtors, reports and offline sync before choosing your package.
+            Tell us about your business and we will help you set up the right POS package for your operations.
           </p>
           <div className="mt-7 grid gap-3">
             {signupBenefits.map(([label, Icon]) => (
@@ -160,7 +160,7 @@ export function TrialSignupPage() {
           <div className="mt-7 rounded-2xl border border-[#D4A017]/30 bg-[#D4A017]/10 p-4">
             <p className="text-xs font-black uppercase tracking-wider text-[#F7D783]">Trial access</p>
             <p className="mt-2 text-sm leading-6 text-[#E8F7EC]">
-              Trial users can preview dashboard, sales, products, customers, debtors, purchases, warehouse, reports, AI Assistant and Sync Center. SMS, rewards and advanced integrations stay locked for package setup.
+              You can start with a small product list and test the system before completing full setup.
             </p>
           </div>
         </div>
@@ -169,7 +169,7 @@ export function TrialSignupPage() {
           <div className="mb-5">
             <p className="text-xs font-black uppercase tracking-[0.16em] text-[#16A34A]">Create trial account</p>
             <h2 className="mt-2 text-2xl font-black text-[#10271B]">Business details</h2>
-            <p className="mt-1 text-sm text-[#789083]">We use this to create a 14-day trial tenant and prepare onboarding.</p>
+            <p className="mt-1 text-sm text-[#789083]">We use this to prepare products, users/cashiers, package selection and onboarding support.</p>
           </div>
 
           {selectedPackageNotice && (
@@ -212,7 +212,7 @@ export function TrialSignupPage() {
             <Field label="Password optional for future login" type="password" value={form.password} onChange={(value) => updateField("password", value)} />
             <label className="md:col-span-2">
               <span className="text-[10px] font-black uppercase tracking-wider text-[#789083]">Message optional</span>
-              <textarea value={form.message} onChange={(event) => updateField("message", event.target.value)} className="mt-2 min-h-28 w-full rounded-xl border border-[#DDEAE0] bg-[#F8FBF8] px-3 py-3 text-sm font-semibold outline-none focus:border-[#16A34A]" placeholder="Tell us what you want to manage with Biashara POS..." />
+              <textarea value={form.message} onChange={(event) => updateField("message", event.target.value)} className="mt-2 min-h-28 w-full rounded-xl border border-[#DDEAE0] bg-[#F8FBF8] px-3 py-3 text-sm font-semibold outline-none focus:border-[#16A34A]" placeholder="Tell us what you want to manage with LeadsStacks POS..." />
             </label>
           </div>
 

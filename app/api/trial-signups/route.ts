@@ -121,7 +121,7 @@ export async function POST(request: Request) {
         trialEndsAt: trialEndsAt.toISOString(),
         selectedPlan: preferredPackage,
       },
-      message: "Your trial account has been created. Use the demo login to explore the system. Production login activation will be completed during onboarding.",
+      message: "Your trial account has been created. We will help you activate account access during onboarding.",
     }, { status: 201 });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Trial signup could not be created." }, { status: 400 });

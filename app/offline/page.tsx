@@ -10,10 +10,10 @@ export default function OfflinePage() {
         <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-[#07120D] text-[#22C55E]">
           <CloudOff size={30} />
         </div>
-        <p className="mt-5 text-xs font-black uppercase tracking-[0.18em] text-[#16A34A]">Biashara Cloud POS</p>
+        <p className="mt-5 text-xs font-black uppercase tracking-[0.18em] text-[#16A34A]">LeadsStacks POS</p>
         <h1 className="mt-2 text-2xl font-black text-[#10271B] md:text-3xl">You&apos;re offline</h1>
         <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-[#60766B]">
-          You&apos;re offline. Biashara POS will allow offline sales in the next Hybrid Sync stage. Reconnect to continue full cloud features.
+          You&apos;re offline. LeadsStacks POS will allow offline sales in the next Hybrid Sync stage. Reconnect to continue full cloud features.
         </p>
         <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-[#D4A017]/35 bg-[#FFF9E8] px-4 py-2 text-xs font-black text-[#8A670C]">
           <Wifi size={14} /> Offline Mode

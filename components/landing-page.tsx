@@ -1,93 +1,190 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import {
   ArrowRight,
   BarChart3,
-  BrainCircuit,
-  Building2,
+  Boxes,
   CheckCircle2,
+  Cloud,
   CreditCard,
-  Database,
-  FileText,
-  Landmark,
-  Layers3,
-  PackageCheck,
-  RefreshCw,
+  Crown,
+  Hammer,
+  Leaf,
+  Pill,
+  Settings,
+  ShieldCheck,
+  ShoppingBasket,
   ShoppingCart,
+  Sparkles,
   Store,
+  TrendingUp,
+  Utensils,
   Users,
-  WifiOff,
+  Wrench,
   type LucideIcon,
 } from "lucide-react";
 
 const trustBullets = [
-  "Works on desktop, tablet and phone",
   "Sales, stock, customers and debtors",
-  "Offline sales queue + sync center",
-  "Branches, cashiers and reports",
-  "AI business insights",
+  "Cloud access from phone, tablet and computer",
+  "Reports for owners and managers",
+  "Packages for small and growing businesses",
+  "Guided setup available",
 ];
 
-const painPoints = [
-  "Sales are not properly tracked",
-  "Stock goes missing",
-  "Customers buy on debt and follow-up is hard",
-  "Cashier accountability is poor",
-  "Reports are manual or delayed",
-  "Internet issues interrupt cloud systems",
+const featureHighlights: Array<{
+  title: string;
+  note: string;
+  icon: LucideIcon;
+  visualLabel: string;
+  stats: string[];
+}> = [
+  {
+    title: "Sales & Stock",
+    note: "Run fast checkout, track product movement and know when stock is running low.",
+    icon: ShoppingCart,
+    visualLabel: "Sales and stock visual with cart, product box and inventory cards",
+    stats: ["POS checkout", "Stock levels", "Low stock alerts"],
+  },
+  {
+    title: "Customers & Debtors",
+    note: "Keep customer records, monitor balances and follow up on debt without manual books.",
+    icon: Users,
+    visualLabel: "Customer profile, receipt and debtor ledger visual",
+    stats: ["Customer profiles", "Debt balances", "Payment history"],
+  },
+  {
+    title: "Reports",
+    note: "See daily sales, product performance, payments, expenses and business summaries.",
+    icon: BarChart3,
+    visualLabel: "Daily sales report and analytics chart visual",
+    stats: ["Sales reports", "Stock reports", "Owner summaries"],
+  },
+  {
+    title: "Cloud Access",
+    note: "Monitor your business from your phone, tablet or computer while staff continue selling.",
+    icon: Cloud,
+    visualLabel: "Phone, laptop and cloud access visual",
+    stats: ["Remote view", "Branch visibility", "Secure access"],
+  },
 ];
 
-const features: Array<[string, LucideIcon]> = [
-  ["Fast POS checkout", ShoppingCart],
-  ["Product and stock tracking", PackageCheck],
-  ["Customer and debtor management", Users],
-  ["Purchases and suppliers", Store],
-  ["Branch and cashier control", Building2],
-  ["Finance and expenses", Landmark],
-  ["Reports and party statements", FileText],
-  ["AI business assistant", BrainCircuit],
-  ["Offline sales queue and sync center", RefreshCw],
+const industries: Array<{
+  title: string;
+  note: string;
+  bestFor: string;
+  icon: LucideIcon;
+}> = [
+  {
+    title: "Restaurant / Cafe",
+    note: "Track orders, sales, payments, customers and daily reports.",
+    bestFor: "Food service",
+    icon: Utensils,
+  },
+  {
+    title: "Hardware Store",
+    note: "Manage stock, suppliers, purchases, sales and customer balances.",
+    bestFor: "Building supplies",
+    icon: Hammer,
+  },
+  {
+    title: "Mini-mart / Retail Shop",
+    note: "Sell faster, track products, view stock and monitor daily sales.",
+    bestFor: "Daily retail",
+    icon: ShoppingBasket,
+  },
+  {
+    title: "Cosmetics / Beauty Shop",
+    note: "Manage product variations, stock levels, customers and sales reports.",
+    bestFor: "Beauty products",
+    icon: Sparkles,
+  },
+  {
+    title: "Pharmacy / Chemist",
+    note: "Track products, stock movement, sales and low-stock items.",
+    bestFor: "Health retail",
+    icon: Pill,
+  },
+  {
+    title: "Auto Spares",
+    note: "Manage parts, stock, supplier purchases and customer payments.",
+    bestFor: "Vehicle parts",
+    icon: Wrench,
+  },
+  {
+    title: "Agrovet / Supplies",
+    note: "Track products, stock, suppliers and customer purchases.",
+    bestFor: "Agro supplies",
+    icon: Leaf,
+  },
 ];
 
-const industries = [
-  ["Supermarkets", "Run multiple tills with central stock and cashier reports."],
-  ["Restaurants / Small Hotels", "Track food sales, waiter activity and debt accounts."],
-  ["Retail Shops", "Manage daily sales, products, customers and payments."],
-  ["Cosmetics / Skin Care", "Control fast-moving oils, beauty stock and repeat buyers."],
-  ["Hardware", "Track bulky inventory, contractor debts and supplier purchases."],
-  ["Auto Spares", "Find parts quickly and manage branch stock movement."],
-  ["Salons / Barbers", "Track services, staff activity and regular customers."],
-  ["Pharmacies / Chemists", "Monitor stock, low quantities and customer purchases."],
-  ["Agrovets", "Manage seasonal stock, suppliers and farmer accounts."],
-  ["Butcheries", "Track daily sales, cash flow and stock movement."],
-];
-
-const packages = [
-  ["Lite", "Ksh 700/month", "For simple sales and basic stock."],
-  ["Growth", "Ksh 1,500/month", "For stock, customers, debtors, expenses, purchases and suppliers."],
-  ["Business", "Ksh 3,000/month", "For staff, tills, branches, user roles and advanced reports."],
-  ["Premium", "Ksh 5,000/month", "For AI insights, rewards, SMS marketing placeholders, advanced reporting and priority support."],
-  ["Custom / Enterprise", "Quoted", "For supermarkets, multi-branch businesses, offline sync, M-Pesa API, eTIMS, WhatsApp and custom workflows."],
+const packages: Array<{
+  name: string;
+  price: string;
+  note: string;
+  bestFor: string;
+  icon: LucideIcon;
+  recommended?: boolean;
+}> = [
+  {
+    name: "Lite",
+    price: "Ksh 700/month",
+    note: "Basic sales and stock tracking for simple business operations.",
+    bestFor: "Small businesses starting with basic sales and stock tracking.",
+    icon: Store,
+  },
+  {
+    name: "Growth",
+    price: "Ksh 1,500/month or Ksh 4,500 quarterly",
+    note: "Customers, debtors, suppliers, purchases and reports for growing teams.",
+    bestFor: "Small shops, restaurants and hardware stores that need customers, debtors, suppliers and reports.",
+    icon: TrendingUp,
+    recommended: true,
+  },
+  {
+    name: "Business",
+    price: "Ksh 3,000/month",
+    note: "Staff roles, branches, stock movement and advanced reporting controls.",
+    bestFor: "Businesses with staff, roles, branches, stock movement and advanced reports.",
+    icon: Users,
+  },
+  {
+    name: "Premium",
+    price: "Ksh 5,000/month",
+    note: "More users, priority support and advanced business controls.",
+    bestFor: "Businesses that need more users, priority support and advanced controls.",
+    icon: Crown,
+  },
+  {
+    name: "Custom / Enterprise",
+    price: "Quoted",
+    note: "Special workflows, custom setup and selected advanced integrations.",
+    bestFor: "Businesses that need special workflows, integrations or custom setup.",
+    icon: Settings,
+  },
 ];
 
 const freeTrialBullets = [
   "No payment required",
-  "Test real business workflows",
+  "Start with your products, users and payment methods",
+  "Test sales, stock, customers, debtors and reports",
   "Choose Lite, Growth, Business, Premium or Custom later",
-  "Request help if you want guided setup",
 ];
 
-const aiQuestions = [
-  "What sold the most today?",
-  "Which products are running low?",
-  "Who owes me money?",
-  "Which cashier sold the most?",
-  "What should I restock first?",
+const businessTypes = [
+  "Retail Shop",
+  "Mini-mart / Supermarket",
+  "Restaurant / Cafe",
+  "Hardware Store",
+  "Cosmetics / Beauty Shop",
+  "Auto Spares",
+  "Pharmacy / Chemist",
+  "Agrovet / Supplies",
+  "Other",
 ];
-
-const businessTypes = ["Retail Shop", "Supermarket", "Restaurant / Small Hotel", "Cosmetics / Skin Care", "Hardware", "Auto Spares", "Salon / Barber", "Pharmacy / Chemist", "Agrovet", "Butchery", "Other"];
 
 function signupHref(packageName: string) {
   const normalized = packageName === "Custom / Enterprise" ? "Custom" : packageName;
@@ -113,7 +210,7 @@ export function LandingPage() {
     setError("");
   }
 
-  async function submitDemoRequest(event: React.FormEvent<HTMLFormElement>) {
+  async function submitDemoRequest(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
     setFeedback("");
@@ -139,19 +236,18 @@ export function LandingPage() {
     <main className="min-h-screen scroll-smooth bg-[#F5FAF6] text-[#173324]">
       <header className="sticky top-0 z-50 border-b border-[#DDEAE0] bg-white/92 backdrop-blur">
         <nav className="mx-auto flex max-w-[1480px] items-center justify-between gap-4 px-4 py-4 md:px-7">
-          <Link href="/" className="flex items-center gap-3">
-            <span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#16A34A] text-lg font-black text-white shadow-lg shadow-[#16A34A]/20">B</span>
+          <Link href="/" className="flex items-center gap-3" aria-label="LeadsStacks POS home">
+            <span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#16A34A] text-sm font-black text-white shadow-lg shadow-[#16A34A]/20">LS</span>
             <span>
-              <span className="block text-sm font-black tracking-wide">BIASHARA</span>
-              <span className="block text-[10px] font-black uppercase tracking-[0.25em] text-[#D4A017]">Cloud POS</span>
+              <span className="block text-sm font-black tracking-wide">LEADSSTACKS</span>
+              <span className="block text-[10px] font-black uppercase tracking-[0.25em] text-[#D4A017]">POS</span>
             </span>
           </Link>
           <div className="hidden items-center gap-5 text-xs font-black text-[#60766B] lg:flex">
             <a href="#features" className="hover:text-[#16A34A]">Features</a>
-            <a href="#industries" className="hover:text-[#16A34A]">Industries</a>
-            <a href="#pricing" className="hover:text-[#16A34A]">Pricing</a>
-            <a href="#free-trial" className="hover:text-[#16A34A]">Free Trial</a>
-            <a href="#request-demo" className="hover:text-[#16A34A]">Request Demo</a>
+            <a href="#industryops" className="hover:text-[#16A34A]">IndustryOps</a>
+            <a href="#packages" className="hover:text-[#16A34A]">Packages</a>
+            <a href="#request-demo" className="hover:text-[#16A34A]">Request Demo / Signup</a>
             <Link href="/login" className="hover:text-[#16A34A]">Login</Link>
           </div>
           <div className="flex items-center gap-2">
@@ -166,22 +262,27 @@ export function LandingPage() {
         <div className="absolute bottom-0 right-0 h-96 w-96 rounded-full bg-[#D4A017]/14 blur-3xl" />
         <div className="mx-auto grid max-w-[1480px] items-center gap-10 px-4 py-16 md:px-7 lg:grid-cols-[1.02fr_0.98fr] lg:py-24">
           <div className="relative z-10">
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-[#22C55E]">Biashara Cloud POS by LeadsStacks</p>
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-[#22C55E]">LeadsStacks POS</p>
             <h1 className="mt-4 max-w-4xl text-4xl font-black tracking-tight md:text-6xl">
-              Affordable Hybrid POS for Kenyan Businesses
+              LeadsStacks POS for Kenyan Businesses
             </h1>
             <p className="mt-5 max-w-3xl text-base leading-8 text-[#B8C7BD] md:text-lg">
-              Manage sales, stock, customers, debts, cashiers, reports and offline sales sync from phone, tablet or computer.
+              Manage sales, stock, customers, debtors, reports and subscriptions from one simple cloud POS system built for shops, restaurants, hardware stores, mini-marts and growing SMEs.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link href="/signup" className="inline-flex items-center gap-2 rounded-2xl bg-[#16A34A] px-5 py-4 text-sm font-black text-white shadow-xl shadow-[#16A34A]/20 hover:bg-[#12883E]">
-                Start Free 14-Day Trial <ArrowRight size={17} />
+                Start Free Trial <ArrowRight size={17} />
               </Link>
-              <a href="#pricing" className="inline-flex items-center gap-2 rounded-2xl border border-[#D4A017]/45 bg-[#D4A017]/12 px-5 py-4 text-sm font-black text-[#F7D783] hover:bg-[#D4A017]/16">
-                View Packages
+              <a href="#request-demo" className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/8 px-5 py-4 text-sm font-black text-white hover:bg-white/12">
+                Request Demo
               </a>
+              <Link href="/login" className="inline-flex items-center gap-2 rounded-2xl border border-[#D4A017]/45 bg-[#D4A017]/12 px-5 py-4 text-sm font-black text-[#F7D783] hover:bg-[#D4A017]/16">
+                Login
+              </Link>
             </div>
-            <p className="mt-4 text-sm font-bold text-[#F7D783]">No payment required. Try the system before choosing your package.</p>
+            <p className="mt-4 max-w-3xl text-sm font-bold leading-6 text-[#F7D783]">
+              No complicated setup. Start with your products, users and payment methods, then test the system with your business operations.
+            </p>
             <div className="mt-8 grid gap-3 sm:grid-cols-2">
               {trustBullets.map((item) => (
                 <p key={item} className="flex items-center gap-2 text-sm font-semibold text-[#E8F7EC]">
@@ -194,164 +295,101 @@ export function LandingPage() {
         </div>
       </section>
 
-      <section className="bg-white py-16" id="free-trial">
+      <section className="bg-white py-16">
         <div className="mx-auto grid max-w-[1480px] gap-8 px-4 md:px-7 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.16em] text-[#16A34A]">Free trial</p>
-            <h2 className="mt-2 max-w-3xl text-3xl font-black tracking-tight text-[#10271B] md:text-4xl">Start Free. Choose Later.</h2>
-            <p className="mt-4 max-w-3xl text-sm leading-7 text-[#789083]">
-              Try Biashara POS for 14 days and test sales, stock, customers, debtors, reports and offline sync before choosing the package that fits your business.
-            </p>
-            <Link href="/signup" className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-[#16A34A] px-5 py-4 text-sm font-black text-white shadow-lg shadow-[#16A34A]/15 hover:bg-[#12883E]">
-              Start Free 14-Day Trial <ArrowRight size={16} />
-            </Link>
-          </div>
-          <article className="rounded-3xl border border-[#DDEAE0] bg-[#F8FBF8] p-5 shadow-sm shadow-[#12311F]/5 md:p-6">
-            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-wider text-[#D4A017]">No payment required</p>
-                <h3 className="mt-1 text-xl font-black text-[#173324]">Trial access for real workflows</h3>
-              </div>
-              <span className="rounded-full bg-[#16A34A]/10 px-3 py-2 text-[10px] font-black uppercase tracking-wider text-[#0F8C42]">14 days free</span>
-            </div>
-            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            <SectionIntro eyebrow="Cloud POS control" title="One Simple System for Daily Business Control" note="LeadsStacks POS is a cloud-based POS system for Kenyan businesses that need sales, stock, customers, debtors, reports and business control from one simple system." />
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
               {freeTrialBullets.map((item) => (
-                <p key={item} className="flex items-center gap-2 rounded-xl border border-[#E8F0EA] bg-white p-3 text-xs font-black text-[#60766B]">
+                <p key={item} className="flex items-center gap-2 rounded-xl border border-[#E8F0EA] bg-[#F8FBF8] p-3 text-xs font-black text-[#60766B]">
                   <CheckCircle2 size={15} className="shrink-0 text-[#16A34A]" /> {item}
                 </p>
               ))}
             </div>
-          </article>
+            <Link href="/signup" className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-[#16A34A] px-5 py-4 text-sm font-black text-white shadow-lg shadow-[#16A34A]/15 hover:bg-[#12883E]">
+              Start Free Trial <ArrowRight size={16} />
+            </Link>
+          </div>
+          <VisualPanel icon={ShieldCheck} title="Business onboarding" label="Business onboarding visual showing products, users, cashiers and package selection" items={["Add business profile", "Load products", "Create users/cashiers", "Select package"]} />
         </div>
       </section>
 
       <section className="mx-auto max-w-[1480px] px-4 py-16 md:px-7" id="features">
-        <SectionIntro eyebrow="The problem" title="Stop Guessing What Is Happening in Your Business" note="Biashara gives owners a clear view of daily sales, stock movement, cashiers, debtors and reports." />
-        <div className="mt-8 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {painPoints.map((point) => (
-            <article key={point} className="rounded-2xl border border-[#DDEAE0] bg-white p-5 shadow-sm shadow-[#12311F]/5">
-              <WifiOff className="text-[#EF4444]" size={19} />
-              <p className="mt-3 text-sm font-black text-[#173324]">{point}</p>
+        <SectionIntro eyebrow="Features" title="Everything You Need to Run Daily POS Operations" note="Start with sales and stock, then add customers, debtors, reports, staff and package controls as the business grows." />
+        <div className="mt-8 grid gap-5 lg:grid-cols-2">
+          {featureHighlights.map((feature) => (
+            <article key={feature.title} className="grid gap-4 rounded-3xl border border-[#DDEAE0] bg-white p-5 shadow-sm shadow-[#12311F]/5 md:grid-cols-[0.9fr_1.1fr]">
+              <VisualPanel icon={feature.icon} title={feature.title} label={feature.visualLabel} items={feature.stats} compact />
+              <div className="flex flex-col justify-center">
+                <span className="grid h-11 w-11 place-items-center rounded-xl bg-[#16A34A]/10 text-[#16A34A]">
+                  <feature.icon size={20} />
+                </span>
+                <h3 className="mt-4 text-xl font-black text-[#173324]">{feature.title}</h3>
+                <p className="mt-2 text-sm leading-7 text-[#789083]">{feature.note}</p>
+              </div>
             </article>
           ))}
         </div>
       </section>
 
-      <section className="bg-white py-16">
+      <section className="bg-[#F8FBF8] py-16" id="industryops">
         <div className="mx-auto max-w-[1480px] px-4 md:px-7">
-          <SectionIntro eyebrow="The solution" title="One POS System for Sales, Stock, Debtors, Branches and Reports" note="Start with the core POS, then grow into branches, staff control, AI insights and hybrid offline sync." />
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {features.map(([title, Icon]) => (
-              <article key={String(title)} className="rounded-2xl border border-[#DDEAE0] bg-[#F8FBF8] p-5">
-                <span className="grid h-11 w-11 place-items-center rounded-xl bg-[#16A34A]/10 text-[#16A34A]"><Icon size={20} /></span>
-                <h3 className="mt-4 text-sm font-black text-[#173324]">{title}</h3>
+          <SectionIntro eyebrow="IndustryOps" title="IndustryOps: POS Setups for Different Business Types" note="Choose a POS setup that matches how your business operates. LeadsStacks POS can be configured for different industries and workflows." />
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {industries.map((industry) => (
+              <article key={industry.title} className="rounded-3xl border border-[#DDEAE0] bg-white p-5 shadow-sm shadow-[#12311F]/5">
+                <div role="img" aria-label={`${industry.title} POS setup illustration`} className="grid h-20 w-20 place-items-center rounded-2xl border border-[#D4A017]/25 bg-[#FFF9E8] text-[#A57809]">
+                  <industry.icon size={32} />
+                </div>
+                <h3 className="mt-4 text-sm font-black text-[#173324]">{industry.title}</h3>
+                <p className="mt-2 min-h-12 text-xs leading-5 text-[#789083]">{industry.note}</p>
+                <span className="mt-4 inline-flex rounded-full bg-[#16A34A]/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-[#0F8C42]">
+                  Best for: {industry.bestFor}
+                </span>
               </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-[1480px] gap-8 px-4 py-16 md:px-7 lg:grid-cols-[0.9fr_1.1fr]" id="hybrid">
-        <div>
-          <SectionIntro eyebrow="Hybrid POS advantage" title="Keep Selling Even When Connection Drops" note="Biashara Hybrid POS allows sales to be saved offline on the device and synced once the connection returns." />
-          <div className="mt-6 grid gap-3">
-            {["Save offline sales locally", "View pending sales in Sync Center", "Sync when online", "Prevent duplicate sales", "Track cashier, branch and payment method"].map((item) => (
-              <p key={item} className="flex items-center gap-2 text-sm font-bold text-[#60766B]"><CheckCircle2 size={16} className="text-[#16A34A]" /> {item}</p>
-            ))}
-          </div>
-        </div>
-        <article className="rounded-3xl bg-[#12311F] p-6 text-white shadow-xl shadow-[#12311F]/10">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-black uppercase tracking-wider text-[#D4A017]">Sync Center</p>
-              <h3 className="mt-1 text-2xl font-black">Offline queue ready</h3>
-            </div>
-            <RefreshCw className="text-[#22C55E]" size={30} />
-          </div>
-          <div className="mt-6 grid gap-3 sm:grid-cols-3">
-            <Metric label="Pending" value="3" />
-            <Metric label="Synced" value="18" />
-            <Metric label="Failed" value="0" />
-          </div>
-          <div className="mt-6 rounded-2xl border border-white/10 bg-white/6 p-4 text-sm text-[#B8C7BD]">
-            A cashier can finish a sale while the connection is down. The owner later syncs the pending sale to the cloud database without duplicating records.
-          </div>
-        </article>
-      </section>
-
-      <section className="bg-[#F8FBF8] py-16" id="industries">
-        <div className="mx-auto max-w-[1480px] px-4 md:px-7">
-          <SectionIntro eyebrow="IndustryOps" title="Built for Different Business Types" note="Use the same reliable POS foundation, adjusted for how your business sells, stocks and reports." />
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-            {industries.map(([name, note]) => (
-              <article key={name} className="rounded-2xl border border-[#DDEAE0] bg-white p-5 shadow-sm shadow-[#12311F]/5">
-                <Layers3 size={18} className="text-[#D4A017]" />
-                <h3 className="mt-3 text-sm font-black text-[#173324]">{name}</h3>
-                <p className="mt-2 text-xs leading-5 text-[#789083]">{note}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-[1480px] px-4 py-16 md:px-7" id="pricing">
-        <SectionIntro eyebrow="Packages" title="Choose a Package That Fits Your Business" note="Start with a free 14-day trial. If you already know what you need, choose a package and we will prepare your setup." />
+      <section className="mx-auto max-w-[1480px] px-4 py-16 md:px-7" id="packages">
+        <SectionIntro eyebrow="Packages" title="Choose a Package That Fits Your Business" note="Start with a free trial. If you already know what you need, choose a package and we will prepare your setup." />
         <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-          {packages.map(([name, price, note]) => (
-            <article key={name} className={`rounded-3xl border p-5 shadow-sm shadow-[#12311F]/5 ${name === "Business" ? "border-[#16A34A]/45 bg-[#16A34A]/[0.045]" : "border-[#DDEAE0] bg-white"}`}>
-              <h3 className="text-lg font-black text-[#173324]">{name}</h3>
-              <p className="mt-2 text-2xl font-black text-[#12311F]">{price}</p>
-              <p className="mt-3 text-xs leading-5 text-[#789083]">{note}</p>
-              {name === "Custom / Enterprise" ? (
+          {packages.map((plan) => (
+            <article key={plan.name} className={`relative rounded-3xl border p-5 shadow-sm shadow-[#12311F]/5 ${plan.recommended ? "border-[#16A34A]/50 bg-[#16A34A]/[0.045]" : "border-[#DDEAE0] bg-white"}`}>
+              {plan.recommended && <span className="absolute right-4 top-4 rounded-full bg-[#16A34A] px-3 py-1 text-[9px] font-black uppercase tracking-wider text-white">Recommended</span>}
+              <div role="img" aria-label={`${plan.name} package icon`} className="grid h-12 w-12 place-items-center rounded-2xl bg-[#12311F] text-[#D4A017]">
+                <plan.icon size={22} />
+              </div>
+              <h3 className="mt-4 text-lg font-black text-[#173324]">{plan.name}</h3>
+              <p className="mt-2 text-xl font-black text-[#12311F]">{plan.price}</p>
+              <p className="mt-3 text-xs leading-5 text-[#789083]">{plan.note}</p>
+              <p className="mt-3 rounded-xl bg-[#F8FBF8] p-3 text-[11px] font-bold leading-5 text-[#60766B]">Best for: {plan.bestFor}</p>
+              {plan.name === "Custom / Enterprise" ? (
                 <div className="mt-5 grid gap-2">
-                  <Link href={signupHref(name)} className="inline-flex justify-center rounded-xl bg-[#12311F] px-4 py-3 text-xs font-black text-white hover:bg-[#0E2418]">Start Free Trial</Link>
+                  <Link href={signupHref(plan.name)} className="inline-flex justify-center rounded-xl bg-[#12311F] px-4 py-3 text-xs font-black text-white hover:bg-[#0E2418]">Start Free Trial</Link>
                   <a href="#request-demo" className="inline-flex justify-center rounded-xl border border-[#D4A017]/35 bg-[#FFF9E8] px-4 py-3 text-xs font-black text-[#8A670C] hover:bg-[#FFF2C9]">Request Custom Setup</a>
                 </div>
               ) : (
                 <div className="mt-5 grid gap-2">
-                  <Link href={signupHref(name)} className="inline-flex justify-center rounded-xl bg-[#12311F] px-4 py-3 text-xs font-black text-white hover:bg-[#0E2418]">Start Free Trial</Link>
-                  <Link href={signupHref(name)} className="inline-flex justify-center rounded-xl border border-[#16A34A]/25 bg-[#16A34A]/[0.045] px-4 py-3 text-xs font-black text-[#0F8C42] hover:bg-[#16A34A]/10">Choose This Package</Link>
+                  <Link href={signupHref(plan.name)} className="inline-flex justify-center rounded-xl bg-[#12311F] px-4 py-3 text-xs font-black text-white hover:bg-[#0E2418]">Start Free Trial</Link>
+                  <Link href={signupHref(plan.name)} className="inline-flex justify-center rounded-xl border border-[#16A34A]/25 bg-[#16A34A]/[0.045] px-4 py-3 text-xs font-black text-[#0F8C42] hover:bg-[#16A34A]/10">Choose This Package</Link>
                 </div>
               )}
             </article>
           ))}
         </div>
         <p className="mt-5 rounded-2xl border border-[#D4A017]/35 bg-[#FFF9E8] p-4 text-sm font-bold text-[#8A670C]">
-          Not sure which package fits your business? Start the free trial and decide after testing. Hybrid offline sync is available on Custom / Enterprise plans or selected advanced packages.
+          Not sure which package fits your business? Start the free trial and decide after testing.
         </p>
-      </section>
-
-      <section className="bg-[#07120D] py-16 text-white">
-        <div className="mx-auto grid max-w-[1480px] gap-8 px-4 md:px-7 lg:grid-cols-2">
-          <article className="rounded-3xl border border-white/10 bg-white/[0.035] p-7">
-            <Store className="text-[#D4A017]" size={28} />
-            <h2 className="mt-4 text-3xl font-black">Perfect for Supermarkets with Multiple Cashiers</h2>
-            <p className="mt-3 text-sm leading-7 text-[#B8C7BD]">
-              Each cashier logs in separately, sales go to one central system, stock updates centrally, and the owner sees all cashier reports.
-            </p>
-            <Link href="/supermarket-demo" className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#D4A017] px-4 py-3 text-xs font-black text-[#07120D]">
-              View Supermarket Demo <ArrowRight size={15} />
-            </Link>
-          </article>
-          <article className="rounded-3xl border border-white/10 bg-white/[0.035] p-7">
-            <BrainCircuit className="text-[#22C55E]" size={28} />
-            <h2 className="mt-4 text-3xl font-black">AI Business Assistant</h2>
-            <p className="mt-3 text-sm leading-7 text-[#B8C7BD]">Ask questions about sales, stock, debtors, expenses, cashiers and reports.</p>
-            <div className="mt-5 flex flex-wrap gap-2">
-              {aiQuestions.map((question) => <span key={question} className="rounded-full bg-white/8 px-3 py-2 text-[11px] font-bold text-[#E8F7EC]">{question}</span>)}
-            </div>
-            <Link href="/login" className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#16A34A] px-4 py-3 text-xs font-black text-white">
-              Try AI Demo <ArrowRight size={15} />
-            </Link>
-          </article>
-        </div>
       </section>
 
       <section className="mx-auto grid max-w-[1480px] gap-8 px-4 py-16 md:px-7 lg:grid-cols-[0.9fr_1.1fr]" id="request-demo">
         <div>
-          <SectionIntro eyebrow="Guided assistance" title="Prefer a Guided Demo?" note="If you want help deciding the right package, request a guided demo and we will walk you through the best setup for your business." />
+          <SectionIntro eyebrow="Guided demo" title="Want Help Choosing the Right Setup?" note="Tell us about your business and we will walk you through the best LeadsStacks POS package for your operations." />
           <div className="mt-6 rounded-3xl border border-[#DDEAE0] bg-white p-5">
-            <p className="text-sm font-black text-[#173324]">Contact</p>
+            <p className="text-sm font-black text-[#173324]">Support</p>
+            <p className="mt-2 text-sm text-[#789083]">Request a guided demo if you want help deciding the right package.</p>
             <p className="mt-2 text-sm text-[#789083]">WhatsApp/Phone: +254 700 000 000</p>
             <p className="mt-1 text-sm text-[#789083]">Email: hello@leadsstacks.com</p>
             <Link href="/signup" className="mt-4 inline-flex rounded-xl bg-[#16A34A] px-4 py-3 text-xs font-black text-white hover:bg-[#12883E]">Start free trial instead</Link>
@@ -378,11 +416,11 @@ export function LandingPage() {
             <Field label="Number of users/cashiers" type="number" value={form.usersCount} onChange={(value) => updateField("usersCount", value)} />
             <label className="md:col-span-2">
               <span className="text-[10px] font-black uppercase tracking-wider text-[#789083]">Message optional</span>
-              <textarea value={form.message} onChange={(event) => updateField("message", event.target.value)} className="mt-2 min-h-28 w-full rounded-xl border border-[#DDEAE0] bg-[#F8FBF8] px-3 py-3 text-sm font-semibold outline-none focus:border-[#16A34A]" placeholder="Tell us what you want to manage with Biashara POS..." />
+              <textarea value={form.message} onChange={(event) => updateField("message", event.target.value)} className="mt-2 min-h-28 w-full rounded-xl border border-[#DDEAE0] bg-[#F8FBF8] px-3 py-3 text-sm font-semibold outline-none focus:border-[#16A34A]" placeholder="Tell us what you want to manage with LeadsStacks POS..." />
             </label>
           </div>
           <button disabled={loading} className="mt-5 w-full rounded-xl bg-[#16A34A] py-4 text-sm font-black text-white shadow-lg shadow-[#16A34A]/15 hover:bg-[#12883E] disabled:cursor-not-allowed disabled:bg-[#CBD8CF]">
-            {loading ? "Submitting..." : "Request Guided Demo"}
+            {loading ? "Submitting..." : "Request Demo"}
           </button>
         </form>
       </section>
@@ -390,15 +428,14 @@ export function LandingPage() {
       <footer className="border-t border-[#DDEAE0] bg-white">
         <div className="mx-auto flex max-w-[1480px] flex-col justify-between gap-6 px-4 py-8 md:flex-row md:items-center md:px-7">
           <div>
-            <p className="text-sm font-black text-[#173324]">Biashara Cloud POS by LeadsStacks</p>
-            <p className="mt-1 text-xs text-[#789083]">Copyright 2026 LeadsStacks. Demo environment - do not enter real business data.</p>
+            <p className="text-sm font-black text-[#173324]">LeadsStacks POS by Integrated Revenue Solutions</p>
+            <p className="mt-1 text-xs text-[#789083]">Copyright 2026 LeadsStacks</p>
           </div>
           <div className="flex flex-wrap gap-3 text-xs font-black text-[#60766B]">
-            <Link href="/login" className="hover:text-[#16A34A]">Login</Link>
             <Link href="/signup" className="hover:text-[#16A34A]">Start Free Trial</Link>
-            <a href="#request-demo" className="hover:text-[#16A34A]">Request Guided Demo</a>
-            <a href="#pricing" className="hover:text-[#16A34A]">Packages</a>
-            <a href="#request-demo" className="hover:text-[#16A34A]">Contact</a>
+            <a href="#packages" className="hover:text-[#16A34A]">Packages</a>
+            <a href="#request-demo" className="hover:text-[#16A34A]">Request Demo</a>
+            <Link href="/login" className="hover:text-[#16A34A]">Login</Link>
           </div>
         </div>
       </footer>
@@ -418,25 +455,25 @@ function SectionIntro({ eyebrow, title, note }: { eyebrow: string; title: string
 
 function HeroPreview() {
   return (
-    <article className="relative z-10 rounded-[28px] border border-white/10 bg-white/[0.06] p-4 shadow-2xl shadow-black/30 backdrop-blur md:p-5">
+    <article role="img" aria-label="LeadsStacks POS dashboard visual on laptop and tablet with sales chart, products and payment cards" className="relative z-10 rounded-[28px] border border-white/10 bg-white/[0.06] p-4 shadow-2xl shadow-black/30 backdrop-blur md:p-5">
       <div className="rounded-3xl bg-[#F5FAF6] p-4 text-[#173324]">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-[10px] font-black uppercase tracking-wider text-[#16A34A]">Owner dashboard</p>
-            <h3 className="mt-1 text-lg font-black">Nairobi CBD Store</h3>
+            <h3 className="mt-1 text-lg font-black">LeadsStacks POS</h3>
           </div>
-          <span className="rounded-xl bg-[#12311F] px-3 py-2 text-[10px] font-black text-[#22C55E]">Online + Offline Ready</span>
+          <span className="rounded-xl bg-[#12311F] px-3 py-2 text-[10px] font-black text-[#22C55E]">Cloud POS</span>
         </div>
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
           <PreviewCard icon={BarChart3} label="Today sales" value="KES 184K" />
           <PreviewCard icon={CreditCard} label="M-Pesa" value="KES 126K" />
-          <PreviewCard icon={Database} label="Stock value" value="KES 4.8M" />
+          <PreviewCard icon={Boxes} label="Stock value" value="KES 4.8M" />
         </div>
         <div className="mt-4 grid gap-3 lg:grid-cols-[1fr_0.9fr]">
           <div className="rounded-2xl border border-[#DDEAE0] bg-white p-4">
-            <p className="text-xs font-black text-[#173324]">POS checkout tiles</p>
+            <p className="text-xs font-black text-[#173324]">POS checkout</p>
             <div className="mt-3 grid grid-cols-2 gap-2">
-              {["Seed Oil 250ml", "Ugali Beef Stew", "Cement 50kg", "Brake Pads"].map((item) => (
+              {["Bread", "Rice 1kg", "Cooking Oil", "Receipt"].map((item) => (
                 <div key={item} className="rounded-xl border border-[#E8F0EA] bg-[#F8FBF8] p-3">
                   <p className="text-[11px] font-black text-[#173324]">{item}</p>
                   <p className="mt-1 text-[10px] text-[#789083]">Tap to sell</p>
@@ -445,13 +482,34 @@ function HeroPreview() {
             </div>
           </div>
           <div className="rounded-2xl bg-[#12311F] p-4 text-white">
-            <p className="text-xs font-black text-[#D4A017]">Sync Center</p>
-            <p className="mt-2 text-2xl font-black">3 pending</p>
-            <p className="mt-2 text-[11px] leading-5 text-[#B8C7BD]">Offline sales saved locally and ready to sync.</p>
+            <p className="text-xs font-black text-[#D4A017]">Payment mix</p>
+            <p className="mt-2 text-2xl font-black">Cash + M-Pesa</p>
+            <p className="mt-2 text-[11px] leading-5 text-[#B8C7BD]">Track daily payments, cashiers and reports from one cloud dashboard.</p>
           </div>
         </div>
       </div>
     </article>
+  );
+}
+
+function VisualPanel({ icon: Icon, title, label, items, compact }: { icon: LucideIcon; title: string; label: string; items: string[]; compact?: boolean }) {
+  return (
+    <div role="img" aria-label={label} className={`rounded-2xl border border-[#DDEAE0] bg-[#F8FBF8] ${compact ? "p-4" : "p-5"}`}>
+      <div className="flex items-center justify-between">
+        <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[#12311F] text-[#D4A017]">
+          <Icon size={22} />
+        </span>
+        <span className="rounded-full bg-[#16A34A]/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-[#0F8C42]">Cloud POS</span>
+      </div>
+      <p className="mt-4 text-sm font-black text-[#173324]">{title}</p>
+      <div className="mt-3 grid gap-2">
+        {items.map((item) => (
+          <div key={item} className="rounded-xl border border-[#E8F0EA] bg-white px-3 py-2 text-[11px] font-black text-[#60766B]">
+            {item}
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -461,15 +519,6 @@ function PreviewCard({ icon: Icon, label, value }: { icon: LucideIcon; label: st
       <Icon size={17} className="text-[#16A34A]" />
       <p className="mt-3 text-[10px] font-black uppercase tracking-wider text-[#789083]">{label}</p>
       <p className="mt-1 text-sm font-black text-[#173324]">{value}</p>
-    </div>
-  );
-}
-
-function Metric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-2xl border border-white/10 bg-white/8 p-4">
-      <p className="text-[10px] font-black uppercase tracking-wider text-[#B8C7BD]">{label}</p>
-      <p className="mt-2 text-2xl font-black text-white">{value}</p>
     </div>
   );
 }

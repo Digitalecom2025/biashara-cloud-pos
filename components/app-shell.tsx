@@ -141,14 +141,14 @@ export function AppShell({ children }: { children: ReactNode }) {
         }`}
       >
         <div className="flex h-[76px] items-center justify-between border-b border-white/8 px-5">
-          <Link href="/dashboard" className="flex items-center gap-3" aria-label="Biashara Cloud POS dashboard">
+          <Link href="/dashboard" className="flex items-center gap-3" aria-label="LeadsStacks POS dashboard">
             <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#16A34A] text-lg font-black text-white shadow-lg shadow-[#16A34A]/20">
-              B
+              LS
             </span>
             <span>
-              <span className="block text-[15px] font-black tracking-wide">BIASHARA</span>
+              <span className="block text-[15px] font-black tracking-wide">LEADSSTACKS</span>
               <span className="block text-[10px] font-bold uppercase tracking-[0.25em] text-[#D4A017]">
-                Cloud POS
+                POS
               </span>
             </span>
           </Link>
@@ -199,7 +199,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Zap size={16} />
             </span>
             <div className="min-w-0">
-              <p className="truncate text-[11px] font-bold text-[#F6FFF8]">{session?.demoUserName ?? "Biashara Cloud"}</p>
+              <p className="truncate text-[11px] font-bold text-[#F6FFF8]">{session?.demoUserName ?? "LeadsStacks POS"}</p>
               <p className="truncate text-[10px] text-[#B8C7BD]">{session?.demoUserTitle ?? "Demo User"} - Active</p>
               <p className="truncate text-[10px] text-[#B8C7BD]">Business Plan · Active</p>
             </div>
