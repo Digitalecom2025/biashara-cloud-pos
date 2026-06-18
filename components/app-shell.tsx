@@ -45,6 +45,13 @@ import {
   sidebarItemsForRole,
   type DemoSession,
 } from "@/lib/demo-auth";
+import {
+  canBusinessAccessRoute,
+  clearBusinessSession,
+  getBusinessSession,
+  sidebarItemsForBusinessRole,
+  type BusinessSession,
+} from "@/lib/business-session";
 
 const icons = {
   ArrowLeftRight,
@@ -77,6 +84,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [session, setSession] = useState<DemoSession | null>(null);
+  const [businessSession, setBusinessSession] = useState<BusinessSession | null>(null);
   const [authReady, setAuthReady] = useState(false);
 
   const bypassShell = pathname === "/" || pathname === "/login" || pathname === "/signup" || pathname.startsWith("/super-admin");
@@ -87,33 +95,41 @@ export function AppShell({ children }: { children: ReactNode }) {
 
     const timer = window.setTimeout(() => {
       const currentSession = getDemoSession();
+      const currentBusinessSession = getBusinessSession();
       setSession(currentSession);
+      setBusinessSession(currentBusinessSession);
       setAuthReady(true);
-      if (!currentSession && protectedRoute) router.replace("/login");
+      if (!currentSession && !currentBusinessSession && protectedRoute) router.replace("/login");
     }, 0);
 
     return () => window.clearTimeout(timer);
   }, [bypassShell, protectedRoute, router]);
 
   const visibleSidebarItems = useMemo(() => {
+    if (businessSession) return sidebarItemsForBusinessRole(businessSession.userRole);
     if (!session) return sidebarItems;
     return sidebarItemsForRole(session.demoUserRole);
-  }, [session]);
+  }, [businessSession, session]);
 
-  const hasRouteAccess = !protectedRoute || !session || canAccessRoute(pathname, session.demoUserRole);
+  const hasRouteAccess =
+    !protectedRoute ||
+    (!session && !businessSession) ||
+    (businessSession ? canBusinessAccessRoute(pathname, businessSession.userRole) : session ? canAccessRoute(pathname, session.demoUserRole) : true);
 
   const currentPage =
     sidebarItems.find((item) => item.href === pathname)?.label ?? "Dashboard";
 
   function logout() {
     clearDemoSession();
+    clearBusinessSession();
     setSession(null);
+    setBusinessSession(null);
     router.replace("/login");
   }
 
   if (bypassShell) return <>{children}</>;
 
-  if (!authReady || (!session && protectedRoute)) {
+  if (!authReady || (!session && !businessSession && protectedRoute)) {
     return (
       <div className="grid min-h-screen place-items-center bg-[#F5FAF6] p-4">
         <div className="rounded-2xl border border-[#DDEAE0] bg-white p-6 text-center shadow-sm shadow-[#12311F]/5">
@@ -199,8 +215,8 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Zap size={16} />
             </span>
             <div className="min-w-0">
-              <p className="truncate text-[11px] font-bold text-[#F6FFF8]">{session?.demoUserName ?? "LeadsStacks POS"}</p>
-              <p className="truncate text-[10px] text-[#B8C7BD]">{session?.demoUserTitle ?? "Business User"} - Active</p>
+              <p className="truncate text-[11px] font-bold text-[#F6FFF8]">{businessSession?.userName ?? session?.demoUserName ?? "LeadsStacks POS"}</p>
+              <p className="truncate text-[10px] text-[#B8C7BD]">{businessSession?.userRole ?? session?.demoUserTitle ?? "Business User"} - Active</p>
               <p className="truncate text-[10px] text-[#B8C7BD]">Business Plan · Active</p>
             </div>
           </div>
@@ -269,11 +285,11 @@ export function AppShell({ children }: { children: ReactNode }) {
 
             <div className="flex items-center gap-2 rounded-xl py-1 pl-1 text-left">
               <span className="grid h-9 w-9 place-items-center rounded-xl bg-[#12311F] text-xs font-black text-[#F6FFF8]">
-                {session?.demoUserName.split(" ").map((part) => part[0]).slice(0, 2).join("").toUpperCase() ?? "LS"}
+                {(businessSession?.userName ?? session?.demoUserName)?.split(" ").map((part) => part[0]).slice(0, 2).join("").toUpperCase() ?? "LS"}
               </span>
               <span className="hidden md:block">
-                <span className="block text-xs font-bold text-[#173324]">{session?.demoUserName ?? "Business User"}</span>
-                <span className="block text-[10px] text-[#789083]">{session?.demoUserTitle ?? "Business Role"} - {session?.demoUserTill ?? "Assigned till"}</span>
+                <span className="block text-xs font-bold text-[#173324]">{businessSession?.userName ?? session?.demoUserName ?? "Business User"}</span>
+                <span className="block text-[10px] text-[#789083]">{businessSession?.userRole ?? session?.demoUserTitle ?? "Business Role"} - {businessSession?.till ?? session?.demoUserTill ?? "Assigned till"}</span>
               </span>
             </div>
 
@@ -284,7 +300,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </header>
 
         <main className="min-h-[calc(100vh-76px)] p-4 md:p-7">
-          {hasRouteAccess ? children : <AccessRestricted currentPage={currentPage} role={session?.demoUserTitle ?? "Business role"} />}
+          {hasRouteAccess ? children : <AccessRestricted currentPage={currentPage} role={businessSession?.userRole ?? session?.demoUserTitle ?? "Business role"} />}
         </main>
       </div>
     </div>

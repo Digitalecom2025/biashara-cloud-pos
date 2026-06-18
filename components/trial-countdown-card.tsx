@@ -38,10 +38,10 @@ export function TrialCountdownCard() {
               {packageSelected
                 ? `${trial.selectedPlan} is now selected for ${trial.businessName}. Payment confirmation will be handled manually.`
                 : expired
-                ? "Choose a package to continue using LeadsStacks POS. Your trial data remains safe."
+                ? "Choose a package to continue using Biashara POS. Your trial data remains safe."
                 : `${days} day${days === 1 ? "" : "s"} remaining for ${trial.businessName}. Trial ends on ${formatTrialEndDate(trial.trialEndsAt)}.`}
             </p>
-            {endingSoon && <p className="mt-2 text-xs font-black text-[#8A670C]">Your trial ends soon. Choose a package to continue using LeadsStacks POS.</p>}
+            {endingSoon && <p className="mt-2 text-xs font-black text-[#8A670C]">Your trial ends soon. Choose a package to continue using Biashara POS.</p>}
           </div>
         </div>
         <div className="flex flex-wrap gap-2">

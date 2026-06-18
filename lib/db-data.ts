@@ -572,7 +572,7 @@ export function mapUserForPage(user: {
   id: string;
   name: string;
   email: string;
-  phone: string;
+  phone: string | null;
   role: string;
   status: string;
   lastLoginAt: Date | null;
@@ -584,7 +584,7 @@ export function mapUserForPage(user: {
     initials: initials(user.name),
     name: user.name,
     email: user.email,
-    phone: user.phone,
+    phone: user.phone ?? "",
     role: user.role,
     branchId: user.branchId ?? undefined,
     branch: user.branch?.name ?? "All branches",

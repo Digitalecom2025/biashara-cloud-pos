@@ -17,6 +17,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { createDemoSession, findDemoAccount, saveDemoSession } from "@/lib/demo-auth";
+import { saveBusinessSession, type BusinessSession } from "@/lib/business-session";
 import { saveTrialPreview } from "@/lib/trial-session";
 
 const businessTypes = [
@@ -85,23 +86,75 @@ export function LoginPage() {
     setSuccess("");
   }
 
-  function submitLogin(event: FormEvent<HTMLFormElement>) {
+  async function submitLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
     setSuccess("");
     setLoading(true);
 
     const account = findDemoAccount(email, password);
-    if (!account) {
-      window.setTimeout(() => {
-        setLoading(false);
-        setError("Invalid email or password. If you are new, start a free 14-day trial.");
-      }, 250);
+    if (account) {
+      saveDemoSession(createDemoSession(account));
+      window.setTimeout(() => router.replace("/dashboard"), 250);
       return;
     }
 
-    saveDemoSession(createDemoSession(account));
-    window.setTimeout(() => router.replace("/dashboard"), 250);
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const payload = (await response.json()) as {
+        data?: {
+          user: { id: string; name: string; email: string; role: string; branchName: string };
+          business: { id: string; name: string; status: string; packagePlan: string; selectedPlan?: string | null } | null;
+          subscription: { status: string; accessStatus?: string; packagePlan: string; trialEndsAt?: string | null } | null;
+          permissions: string[];
+          trialDaysRemaining: number;
+        };
+        error?: string;
+      };
+      if (!response.ok || !payload.data || !payload.data.business) {
+        throw new Error(payload.error ?? "Invalid email or password.");
+      }
+
+      const session: BusinessSession = {
+        businessLoggedIn: true,
+        userId: payload.data.user.id,
+        businessId: payload.data.business.id,
+        businessName: payload.data.business.name,
+        businessStatus: payload.data.business.status,
+        userName: payload.data.user.name,
+        userEmail: payload.data.user.email,
+        userRole: payload.data.user.role,
+        branchName: payload.data.user.branchName,
+        till: payload.data.user.role.toLowerCase().includes("cashier") ? "Till 1" : "Office",
+        subscriptionStatus: payload.data.subscription?.status ?? "active",
+        packagePlan: payload.data.subscription?.packagePlan ?? payload.data.business.packagePlan,
+        selectedPlan: payload.data.business.selectedPlan,
+        trialEndsAt: payload.data.subscription?.trialEndsAt,
+        trialDaysRemaining: payload.data.trialDaysRemaining,
+        permissions: payload.data.permissions,
+      };
+      saveBusinessSession(session);
+      if (payload.data.subscription?.status === "trial" && payload.data.subscription.trialEndsAt) {
+        saveTrialPreview({
+          businessId: payload.data.business.id,
+          businessName: payload.data.business.name,
+          fullName: payload.data.user.name,
+          selectedPlan: payload.data.business.selectedPlan ?? payload.data.subscription.packagePlan,
+          status: "trial",
+          trialStartedAt: new Date().toISOString(),
+          trialEndsAt: payload.data.subscription.trialEndsAt,
+        });
+      }
+      router.replace(payload.data.subscription?.accessStatus === "expired" ? "/subscriptions" : "/dashboard");
+    } catch (loginError) {
+      setError(loginError instanceof Error ? loginError.message : "Invalid email or password.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function submitSignup(event: FormEvent<HTMLFormElement>) {
@@ -126,23 +179,17 @@ export function LoginPage() {
         body: JSON.stringify(signupForm),
       });
       const payload = (await response.json()) as {
-        data?: { businessId: string; trialEndsAt: string; selectedPlan: string };
+        data?: { businessId: string; trialEndsAt: string | null; selectedPlan: string };
         error?: string;
+        message?: string;
       };
       if (!response.ok || !payload.data) throw new Error(payload.error ?? "Trial account could not be created.");
 
-      saveTrialPreview({
-        businessId: payload.data.businessId,
-        businessName: signupForm.businessName,
-        fullName: signupForm.fullName,
-        selectedPlan: payload.data.selectedPlan,
-        status: "trial",
-        trialStartedAt: new Date().toISOString(),
-        trialEndsAt: payload.data.trialEndsAt,
-      });
-
-      setSuccess("Your trial request has been received. We will activate your account shortly.");
+      setSuccess(payload.message ?? "Your trial request has been received. Our team will review and approve your account before your 14-day trial starts.");
       setSignupForm(initialSignupForm);
+      setActiveTab("signin");
+      setEmail(signupForm.email);
+      setPassword("");
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "Trial account could not be created.");
     } finally {

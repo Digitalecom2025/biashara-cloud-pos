@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useState, type FormEvent } from "react";
 import { ArrowRight, CheckCircle2, Clock3, LockKeyhole, ShieldCheck, Smartphone, type LucideIcon } from "lucide-react";
-import { saveTrialPreview } from "@/lib/trial-session";
 
 const businessTypes = [
   "Retail",
@@ -113,24 +112,14 @@ export function TrialSignupPage() {
         body: JSON.stringify(form),
       });
       const payload = (await response.json()) as {
-        data?: { businessId: string; trialEndsAt: string; selectedPlan: string };
+        data?: { businessId: string; userId: string; trialEndsAt: string | null; selectedPlan: string; redirectTo: string };
         message?: string;
         error?: string;
       };
 
       if (!response.ok || !payload.data) throw new Error(payload.error ?? "Trial account could not be created.");
 
-      saveTrialPreview({
-        businessId: payload.data.businessId,
-        businessName: form.businessName,
-        fullName: form.fullName,
-        selectedPlan: payload.data.selectedPlan,
-        status: "trial",
-        trialStartedAt: new Date().toISOString(),
-        trialEndsAt: payload.data.trialEndsAt,
-      });
-
-      setFeedback("Your trial request has been received. We will activate your account shortly.");
+      setFeedback(payload.message ?? "Your trial request has been received. Our team will review and approve your account before your 14-day trial starts.");
       setForm({ ...initialForm, preferredPackage: queryPackage ?? "Not sure yet" });
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "Trial account could not be created.");
@@ -160,7 +149,7 @@ export function TrialSignupPage() {
       <section className="mx-auto grid max-w-[1380px] gap-8 px-4 py-10 md:px-7 lg:grid-cols-[0.92fr_1.08fr] lg:py-16">
         <div className="rounded-[28px] bg-[#07120D] p-6 text-[#F6FFF8] shadow-2xl shadow-[#12311F]/12 md:p-8">
           <p className="text-xs font-black uppercase tracking-[0.2em] text-[#22C55E]">Free trial</p>
-          <h1 className="mt-4 text-4xl font-black tracking-tight md:text-5xl">Start Your LeadsStacks POS Free Trial</h1>
+          <h1 className="mt-4 text-4xl font-black tracking-tight md:text-5xl">Start Your Free 14-Day Biashara POS Trial</h1>
           <p className="mt-5 text-sm leading-7 text-[#B8C7BD]">
             Set up your business profile and test the POS for 14 days before choosing your package.
           </p>
@@ -197,7 +186,7 @@ export function TrialSignupPage() {
               {error || feedback}
               {feedback && (
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <Link href="/login" className="rounded-lg bg-[#12311F] px-3 py-2 text-[11px] font-black text-white">Sign in when access is activated</Link>
+                  <Link href="/login" className="rounded-lg bg-[#12311F] px-3 py-2 text-[11px] font-black text-white">Go to Login</Link>
                   <Link href="/subscriptions" className="rounded-lg border border-[#16A34A]/30 bg-white px-3 py-2 text-[11px] font-black text-[#0F8C42]">View packages after login</Link>
                 </div>
               )}
@@ -227,7 +216,7 @@ export function TrialSignupPage() {
             <Field label="Confirm password" type="password" value={form.confirmPassword} onChange={(value) => updateField("confirmPassword", value)} required />
             <label className="md:col-span-2">
               <span className="text-[10px] font-black uppercase tracking-wider text-[#789083]">Message optional</span>
-              <textarea value={form.message} onChange={(event) => updateField("message", event.target.value)} className="mt-2 min-h-28 w-full rounded-xl border border-[#DDEAE0] bg-[#F8FBF8] px-3 py-3 text-sm font-semibold outline-none focus:border-[#16A34A]" placeholder="Tell us what you want to manage with LeadsStacks POS..." />
+              <textarea value={form.message} onChange={(event) => updateField("message", event.target.value)} className="mt-2 min-h-28 w-full rounded-xl border border-[#DDEAE0] bg-[#F8FBF8] px-3 py-3 text-sm font-semibold outline-none focus:border-[#16A34A]" placeholder="Tell us what you want to manage with Biashara POS..." />
             </label>
           </div>
 
@@ -236,7 +225,7 @@ export function TrialSignupPage() {
           </button>
           <p className="mt-4 flex items-start gap-2 text-xs leading-5 text-[#789083]">
             <CheckCircle2 className="mt-0.5 shrink-0 text-[#16A34A]" size={15} />
-            No payment required. Your free trial runs for 14 days.
+            No payment required. Try Biashara POS for 14 days, then choose the package that fits your business.
           </p>
         </form>
       </section>

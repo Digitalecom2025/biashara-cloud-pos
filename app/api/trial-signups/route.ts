@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 
 type TrialSignupInput = {
@@ -10,6 +11,7 @@ type TrialSignupInput = {
   businessType?: unknown;
   usersCount?: unknown;
   preferredPackage?: unknown;
+  password?: unknown;
   message?: unknown;
 };
 
@@ -34,6 +36,7 @@ export async function POST(request: Request) {
   const email = text(body.email);
   const businessType = text(body.businessType);
   const preferredPackage = text(body.preferredPackage) || "Not sure yet";
+  const password = text(body.password);
   const message = text(body.message);
   const usersCountText = text(body.usersCount);
   const usersCount = usersCountText ? Number(usersCountText) : null;
@@ -42,8 +45,11 @@ export async function POST(request: Request) {
   if (!fullName) errors.push("Full name is required.");
   if (!businessName) errors.push("Business name is required.");
   if (!phone) errors.push("Phone number is required.");
+  if (!email) errors.push("Email is required.");
   if (!businessType) errors.push("Business type is required.");
   if (email && !validEmail(email)) errors.push("Enter a valid email address.");
+  if (!password) errors.push("Password is required.");
+  if (password && password.length < 6) errors.push("Password must be at least 6 characters.");
   if (usersCountText && (!Number.isFinite(usersCount) || Number(usersCount) < 0)) errors.push("Number of users/cashiers must be 0 or greater.");
 
   if (errors.length > 0) {
@@ -51,22 +57,26 @@ export async function POST(request: Request) {
   }
 
   const now = new Date();
-  const trialEndsAt = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
   const businessId = `biz_trial_${randomUUID()}`;
   const branchId = `branch_trial_${randomUUID()}`;
   const userId = `user_trial_${randomUUID()}`;
   const subscriptionId = `sub_trial_${randomUUID()}`;
   const requestId = `trial_req_${randomUUID()}`;
   const auditId = `audit_trial_${randomUUID()}`;
-  const ownerEmail = email || `trial-${Date.now()}@leadsstacks.local`;
+  const passwordHash = await bcrypt.hash(password, 12);
 
   try {
+    const existingUser = await prisma.user.findUnique({ where: { email }, select: { id: true } });
+    if (existingUser) {
+      return NextResponse.json({ error: "An account with this email already exists. Please sign in instead." }, { status: 409 });
+    }
+
     await prisma.$transaction(async (tx) => {
       await tx.$executeRaw`
         INSERT INTO "Business"
-          ("id", "name", "slug", "phone", "email", "location", "industryMode", "packagePlan", "status", "trialStartedAt", "trialEndsAt", "selectedPlan", "onboardingStatus", "signupSource", "contactPerson", "createdAt", "updatedAt")
+          ("id", "name", "slug", "phone", "email", "location", "industryMode", "packagePlan", "status", "approvalStatus", "trialStartedAt", "trialEndsAt", "subscriptionStartedAt", "subscriptionEndsAt", "subscriptionStatus", "selectedPlan", "onboardingStatus", "signupSource", "contactPerson", "createdAt", "updatedAt")
         VALUES
-          (${businessId}, ${businessName}, ${slugify(businessName)}, ${phone}, ${ownerEmail}, ${"Trial signup"}, ${businessType}, ${"Trial"}, ${"trial"}, ${now}, ${trialEndsAt}, ${preferredPackage}, ${"trial_created"}, ${"public_signup"}, ${fullName}, ${now}, ${now})
+          (${businessId}, ${businessName}, ${slugify(businessName)}, ${phone}, ${email}, ${"Trial signup"}, ${businessType}, ${preferredPackage || "Trial"}, ${"pending_approval"}, ${"pending_approval"}, ${null}, ${null}, ${null}, ${null}, ${"pending_approval"}, ${preferredPackage}, ${"pending_approval"}, ${"website_signup"}, ${fullName}, ${now}, ${now})
       `;
 
       await tx.$executeRaw`
@@ -78,16 +88,16 @@ export async function POST(request: Request) {
 
       await tx.$executeRaw`
         INSERT INTO "User"
-          ("id", "businessId", "branchId", "name", "email", "phone", "role", "status", "lastLoginAt", "createdAt", "updatedAt")
+          ("id", "businessId", "branchId", "name", "email", "phone", "passwordHash", "role", "status", "lastLoginAt", "createdAt", "updatedAt")
         VALUES
-          (${userId}, ${businessId}, ${branchId}, ${fullName}, ${ownerEmail}, ${phone}, ${"Business Owner"}, ${"Active"}, ${null}, ${now}, ${now})
+          (${userId}, ${businessId}, ${branchId}, ${fullName}, ${email}, ${phone}, ${passwordHash}, ${"OWNER"}, ${"pending_approval"}, ${null}, ${now}, ${now})
       `;
 
       await tx.$executeRaw`
         INSERT INTO "Subscription"
           ("id", "businessId", "packagePlan", "status", "startDate", "renewalDate", "trialEndsAt", "amount", "createdAt", "updatedAt")
         VALUES
-          (${subscriptionId}, ${businessId}, ${"Trial"}, ${"trial"}, ${now}, ${trialEndsAt}, ${trialEndsAt}, ${0}, ${now}, ${now})
+          (${subscriptionId}, ${businessId}, ${preferredPackage || "Trial"}, ${"pending_approval"}, ${now}, ${now}, ${null}, ${0}, ${now}, ${now})
       `;
 
       await tx.$executeRaw`
@@ -103,25 +113,27 @@ export async function POST(request: Request) {
         INSERT INTO "AuditLog"
           ("id", "businessId", "userId", "action", "entity", "entityId", "details", "createdAt")
         VALUES
-          (${auditId}, ${businessId}, ${userId}, ${"Trial account created"}, ${"Business"}, ${businessId}, ${`Trial signup for ${businessName} by ${fullName}. Preferred package: ${preferredPackage}.`}, ${now})
+          (${auditId}, ${businessId}, ${userId}, ${"Trial request submitted"}, ${"Business"}, ${businessId}, ${`Pending approval signup for ${businessName} by ${fullName}. Preferred package: ${preferredPackage}.`}, ${now})
       `;
 
       await tx.$executeRaw`
         INSERT INTO "DemoRequest"
           ("id", "fullName", "businessName", "phone", "email", "businessType", "usersCount", "preferredPackage", "message", "status", "createdAt", "updatedAt")
         VALUES
-          (${requestId}, ${fullName}, ${businessName}, ${phone}, ${email || null}, ${businessType}, ${usersCount}, ${preferredPackage}, ${message || null}, ${"trial_created"}, ${now}, ${now})
+          (${requestId}, ${fullName}, ${businessName}, ${phone}, ${email || null}, ${businessType}, ${usersCount}, ${preferredPackage}, ${message || null}, ${"pending_approval"}, ${now}, ${now})
       `;
     });
 
     return NextResponse.json({
       data: {
         businessId,
+        userId,
         subscriptionId,
-        trialEndsAt: trialEndsAt.toISOString(),
+        trialEndsAt: null,
         selectedPlan: preferredPackage,
+        redirectTo: "/login",
       },
-      message: "Your trial account has been created. We will help you activate account access during onboarding.",
+      message: "Your trial request has been received. Our team will review and approve your account before your 14-day trial starts.",
     }, { status: 201 });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Trial signup could not be created." }, { status: 400 });

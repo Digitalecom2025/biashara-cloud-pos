@@ -15,10 +15,16 @@ model Business {
   email        String
   location     String
   industryMode String
-  packagePlan  String
-  status       String
+  packagePlan  String   @default("Trial")
+  status       String   @default("pending_approval")
+  approvalStatus String  @default("pending_approval")
+  approvedAt    DateTime?
+  approvedBy    String?
   trialStartedAt DateTime?
   trialEndsAt    DateTime?
+  subscriptionStartedAt DateTime?
+  subscriptionEndsAt DateTime?
+  subscriptionStatus String?
   selectedPlan   String?
   onboardingStatus String?
   signupSource   String?
@@ -68,9 +74,11 @@ model User {
   branchId    String?
   name        String
   email       String    @unique
-  phone       String
+  phone       String?
+  passwordHash String?
   role        String
-  status      String
+  status      String    @default("pending_approval")
+  approvedAt  DateTime?
   lastLoginAt DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -331,12 +339,12 @@ model AuditLog {
 model Subscription {
   id          String   @id @default(cuid())
   businessId  String
-  packagePlan String
-  status      String
+  packagePlan String   @default("Trial")
+  status      String   @default("pending_approval")
   startDate   DateTime
   renewalDate DateTime
   trialEndsAt  DateTime?
-  amount      Decimal
+  amount      Decimal  @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

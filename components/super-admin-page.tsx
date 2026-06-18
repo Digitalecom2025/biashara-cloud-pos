@@ -1,69 +1,269 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Banknote, Building2, CalendarClock, ChevronDown, CircleDollarSign, Crown, Headphones, Layers3, MoreHorizontal, NotebookPen, Plus, Search, ShieldCheck, Store, Users, X } from "lucide-react";
-import { industryModes, platformAdmins, platformBusinesses as mockPlatformBusinesses, platformPayments, supportLogs, type PlatformBusiness, type PlatformBusinessStatus } from "@/lib/platform-mock-data";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { AlertTriangle, Building2, CalendarClock, CheckCircle2, Crown, LogOut, RefreshCw, ShieldCheck, Users } from "lucide-react";
+import { clearSuperAdminSession, getSuperAdminSession, type SuperAdminSession } from "@/lib/super-admin-session";
 
-type Tab = "businesses" | "subscriptions" | "industries" | "support" | "admins";
-type Dialog = "business" | "note" | null;
+type AdminBusinessRow = {
+  id: string;
+  name: string;
+  contactPerson: string;
+  phone: string;
+  email: string;
+  businessType: string;
+  packageSelected: string;
+  subscriptionStatus: string;
+  approvalStatus: string;
+  usersCount: number | null;
+  trialStartedAt: string | null;
+  trialEndsAt: string | null;
+  daysRemaining: number;
+  createdAt: string;
+};
 
-function money(value: number) { return `Ksh ${new Intl.NumberFormat("en-KE").format(value)}`; }
+type AdminSummary = {
+  totalBusinesses: number;
+  pendingApprovals: number;
+  trialBusinesses: number;
+  activeTrials: number;
+  activePaidAccounts: number;
+  activeSubscriptions: number;
+  expiredTrials: number;
+  suspendedAccounts: number;
+  selectedPackages: number;
+  recentSignups: number;
+};
 
-export function SuperAdminPage({ initialBusinesses = mockPlatformBusinesses }: { initialBusinesses?: PlatformBusiness[] }) {
-  const [tab, setTab] = useState<Tab>("businesses");
-  const [query, setQuery] = useState("");
-  const [status, setStatus] = useState("All statuses");
-  const businesses = initialBusinesses.length > 0 ? initialBusinesses : mockPlatformBusinesses;
-  const [selectedId, setSelectedId] = useState(businesses[0]?.id ?? "BIZ-001");
-  const [dialog, setDialog] = useState<Dialog>(null);
+type AdminData = { summary: AdminSummary; rows: AdminBusinessRow[] };
+type AdminTab = "overview" | "businesses" | "trials" | "subscriptions";
+
+const tabs: Array<[AdminTab, string, string]> = [
+  ["overview", "Overview", "/super-admin"],
+  ["businesses", "Businesses", "/super-admin/businesses"],
+  ["trials", "Trials", "/super-admin/trials"],
+  ["subscriptions", "Subscriptions", "/super-admin/subscriptions"],
+];
+
+const packageOptions = ["Trial", "Lite", "Growth", "Business", "Premium", "Custom"];
+
+function formatDate(value?: string | null) {
+  if (!value) return "Not set";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Not set";
+  return new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric" }).format(date);
+}
+
+export function SuperAdminPage({ initialTab = "overview" }: { initialTab?: AdminTab }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const [session, setSession] = useState<SuperAdminSession | null>(null);
+  const [data, setData] = useState<AdminData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [savingId, setSavingId] = useState("");
   const [feedback, setFeedback] = useState("");
-  const selected = businesses.find((business) => business.id === selectedId) ?? businesses[0];
-  const filtered = useMemo(() => {
-    const normalized = query.trim().toLowerCase();
-    return businesses.filter((business) => (status === "All statuses" || business.status === status) && (!normalized || `${business.name} ${business.owner} ${business.email} ${business.phone}`.toLowerCase().includes(normalized)));
-  }, [query, status, businesses]);
-  const totals = { active: businesses.filter((business) => business.status === "Active").length, trials: businesses.filter((business) => business.status === "Trial").length, expired: businesses.filter((business) => business.status === "Expired").length, users: businesses.reduce((sum, business) => sum + business.users, 0), branches: businesses.reduce((sum, business) => sum + business.branches, 0) };
-  function show(message: string) { setFeedback(message); window.setTimeout(() => setFeedback(""), 2600); }
-  return <div className="mx-auto max-w-[1800px]">
-    <div className="mb-4 rounded-2xl border border-[#D4A017]/35 bg-[#FFF9E8] p-4 text-xs font-bold text-[#8A670C]">Internal LeadsStacks/Biashara admin area. Not visible to POS clients.</div>
-    <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-end"><div><p className="text-xs font-black uppercase tracking-[0.18em] text-[#A57809]">LeadsStacks platform operations</p><h2 className="mt-1 text-2xl font-black text-[#10271B] md:text-3xl">Super Admin</h2><p className="mt-1 text-sm text-[#789083]">Manage Biashara POS businesses, subscriptions, IndustryOps profiles and platform support.</p></div><div><button onClick={() => setDialog("business")} className="flex w-fit items-center gap-2 rounded-xl bg-[#D4A017] px-4 py-3 text-xs font-black text-[#07120D]"><Plus size={16} />Add business</button>{feedback && <p className="mt-2 max-w-sm text-xs font-bold text-[#16A34A]">{feedback}</p>}</div></div>
-    <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-8"><Summary icon={Building2} label="Total businesses" value={`${businesses.length}`} note="Registered tenants" /><Summary icon={ShieldCheck} label="Active subscribers" value={`${totals.active}`} note="Enabled accounts" /><Summary icon={CalendarClock} label="Trial accounts" value={`${totals.trials}`} note="Onboarding period" gold /><Summary icon={X} label="Expired accounts" value={`${totals.expired}`} note="Renewal required" danger /><Summary icon={CircleDollarSign} label="Monthly recurring revenue" value={money(58200)} note="Current MRR estimate" gold /><Summary icon={Headphones} label="Support tickets" value="4" note="Open follow-ups" /><Summary icon={Users} label="Total users" value={`${totals.users}`} note="Business users" /><Summary icon={Store} label="Total branches" value={`${totals.branches}`} note="Tenant locations" /></section>
-    <div className="table-scroll mt-5 flex gap-1 overflow-x-auto rounded-xl border border-[#DDEAE0] bg-white p-1">{([["businesses", "Businesses"], ["subscriptions", "Subscriptions"], ["industries", "IndustryOps"], ["support", "Support notes"], ["admins", "Admin users"]] as [Tab, string][]).map(([id, label]) => <button key={id} onClick={() => setTab(id)} className={`shrink-0 rounded-lg px-4 py-2.5 text-xs font-black ${tab === id ? "bg-[#12311F] text-white" : "text-[#60766B]"}`}>{label}</button>)}</div>
-    {tab === "businesses" && <BusinessesPanel filtered={filtered} totalBusinesses={businesses.length} query={query} setQuery={setQuery} status={status} setStatus={setStatus} selected={selected} onSelect={setSelectedId} onAction={show} />}
-    {tab === "subscriptions" && <SubscriptionsPanel onAction={show} />}
-    {tab === "industries" && <IndustriesPanel onAction={show} />}
-    {tab === "support" && <SupportPanel onAdd={() => setDialog("note")} />}
-    {tab === "admins" && <AdminsPanel onAction={show} />}
-    {dialog === "business" && <AddBusinessDialog onClose={() => setDialog(null)} />}
-    {dialog === "note" && <AddNoteDialog onClose={() => setDialog(null)} />}
-  </div>;
+  const [error, setError] = useState("");
+  const [packageSelections, setPackageSelections] = useState<Record<string, string>>({});
+
+  const activeTab = useMemo<AdminTab>(() => {
+    if (pathname.endsWith("/businesses")) return "businesses";
+    if (pathname.endsWith("/trials")) return "trials";
+    if (pathname.endsWith("/subscriptions")) return "subscriptions";
+    return initialTab;
+  }, [initialTab, pathname]);
+
+  const loadData = useCallback(async (currentSession: SuperAdminSession) => {
+    setLoading(true);
+    setError("");
+    try {
+      const endpoint = activeTab === "trials" ? "/api/admin/trials" : "/api/admin/businesses";
+      const response = await fetch(endpoint, { headers: { "x-super-admin-token": currentSession.token } });
+      const json = (await response.json()) as { data?: AdminData; error?: string };
+      if (!response.ok || !json.data) throw new Error(json.error ?? "Admin data could not be loaded.");
+      setData(json.data);
+      setPackageSelections(Object.fromEntries(json.data.rows.map((row) => [row.id, row.packageSelected || "Trial"])));
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : "Admin data could not be loaded.");
+    } finally {
+      setLoading(false);
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const currentSession = getSuperAdminSession();
+      if (!currentSession) {
+        router.replace("/super-admin/login");
+        return;
+      }
+      setSession(currentSession);
+      void loadData(currentSession);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [loadData, router]);
+
+  function logout() {
+    clearSuperAdminSession();
+    router.replace("/super-admin/login");
+  }
+
+  async function runAction(businessId: string, action: string) {
+    if (!session) return;
+    setSavingId(`${businessId}:${action}`);
+    setFeedback("");
+    setError("");
+    try {
+      const endpoint =
+        action === "approve_trial"
+          ? `/api/admin/businesses/${businessId}/approve-trial`
+          : action === "suspend"
+          ? `/api/admin/businesses/${businessId}/suspend`
+          : `/api/admin/businesses/${businessId}/subscription`;
+      const response = await fetch(endpoint, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "x-super-admin-token": session.token },
+        body: JSON.stringify({ action, packagePlan: packageSelections[businessId] }),
+      });
+      const json = (await response.json()) as { message?: string; error?: string };
+      if (!response.ok) throw new Error(json.error ?? "Subscription update failed.");
+      setFeedback(json.message ?? "Subscription updated.");
+      await loadData(session);
+    } catch (actionError) {
+      setError(actionError instanceof Error ? actionError.message : "Subscription update failed.");
+    } finally {
+      setSavingId("");
+    }
+  }
+
+  const rows = data?.rows ?? [];
+  const trialRows = rows.filter((row) => ["pending_approval", "trial", "expired"].includes(row.subscriptionStatus) || row.approvalStatus === "pending_approval");
+  const visibleRows = activeTab === "trials" ? trialRows : rows;
+
+  if (!session && loading) {
+    return <div className="grid min-h-screen place-items-center bg-[#F5FAF6] p-4"><p className="rounded-2xl border border-[#DDEAE0] bg-white p-5 text-sm font-black text-[#173324]">Checking Super Admin session...</p></div>;
+  }
+
+  return (
+    <main className="min-h-screen bg-[#F5FAF6] text-[#173324]">
+      <header className="border-b border-[#DDEAE0] bg-[#07120D] text-[#F6FFF8]">
+        <div className="mx-auto flex max-w-[1700px] flex-col justify-between gap-4 px-4 py-5 md:flex-row md:items-center md:px-7">
+          <div className="flex items-center gap-3">
+            <span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#D4A017] text-sm font-black text-[#07120D]">SA</span>
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-[#D4A017]">Internal admin</p>
+              <h1 className="text-xl font-black">LeadsStacks / Biashara Super Admin</h1>
+              <p className="text-xs text-[#B8C7BD]">Internal LeadsStacks/Biashara admin area. Not visible to POS clients.</p>
+            </div>
+          </div>
+          <button onClick={logout} className="flex w-fit items-center gap-2 rounded-xl border border-[#D4A017]/35 bg-[#D4A017]/10 px-4 py-3 text-xs font-black text-[#D4A017]">
+            <LogOut size={15} /> Logout
+          </button>
+        </div>
+      </header>
+
+      <section className="mx-auto max-w-[1700px] px-4 py-6 md:px-7">
+        <div className="mb-5 flex gap-2 overflow-x-auto rounded-2xl border border-[#DDEAE0] bg-white p-1">
+          {tabs.map(([id, label, href]) => (
+            <Link key={id} href={href} className={`shrink-0 rounded-xl px-4 py-3 text-xs font-black ${activeTab === id ? "bg-[#12311F] text-white" : "text-[#60766B] hover:bg-[#F8FBF8]"}`}>
+              {label}
+            </Link>
+          ))}
+        </div>
+
+        {(feedback || error) && <p className={`mb-5 rounded-xl px-4 py-3 text-xs font-black ${error ? "border border-[#EF4444]/20 bg-[#EF4444]/10 text-[#EF4444]" : "border border-[#16A34A]/20 bg-[#16A34A]/10 text-[#0F8C42]"}`}>{error || feedback}</p>}
+
+        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-7">
+          <Summary icon={Building2} label="Total businesses" value={data?.summary.totalBusinesses ?? 0} />
+          <Summary icon={CalendarClock} label="Pending approvals" value={data?.summary.pendingApprovals ?? 0} gold />
+          <Summary icon={CalendarClock} label="Active trials" value={data?.summary.activeTrials ?? 0} gold />
+          <Summary icon={CheckCircle2} label="Active paid accounts" value={data?.summary.activePaidAccounts ?? 0} />
+          <Summary icon={AlertTriangle} label="Expired trials" value={data?.summary.expiredTrials ?? 0} danger />
+          <Summary icon={ShieldCheck} label="Suspended accounts" value={data?.summary.suspendedAccounts ?? 0} danger />
+          <Summary icon={Crown} label="Selected packages" value={data?.summary.selectedPackages ?? 0} gold />
+          <Summary icon={Users} label="Recent signups" value={data?.summary.recentSignups ?? 0} />
+        </section>
+
+        <section className="mt-5 overflow-hidden rounded-2xl border border-[#DDEAE0] bg-white">
+          <div className="flex flex-col justify-between gap-3 border-b border-[#E8F0EA] p-4 md:flex-row md:items-center">
+            <div>
+              <h2 className="font-black text-[#173324]">{activeTab === "trials" ? "Pending Trial Requests" : activeTab === "subscriptions" ? "Subscription management" : "Businesses"}</h2>
+              <p className="text-xs text-[#789083]">Review new signups, approve trials and manage account status.</p>
+            </div>
+            <button onClick={() => session && loadData(session)} className="flex w-fit items-center gap-2 rounded-xl border border-[#DDEAE0] px-4 py-3 text-xs font-black text-[#60766B]">
+              <RefreshCw size={14} /> Refresh
+            </button>
+          </div>
+
+          {loading ? <p className="p-5 text-sm font-bold text-[#789083]">Loading businesses...</p> : null}
+          {!loading && visibleRows.length === 0 ? <p className="p-5 text-sm font-bold text-[#789083]">No records found.</p> : null}
+
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[1450px] text-left">
+              <thead>
+                <tr className="bg-[#F8FBF8] text-[10px] font-black uppercase tracking-wider text-[#789083]">
+                  {["Business name", "Contact person", "Phone", "Email", "Business type", "Preferred package", "Users/cashiers", "Status", "Trial start", "Trial end", "Days", "Signup date", "Actions"].map((heading) => <th key={heading} className="px-4 py-3.5">{heading}</th>)}
+                </tr>
+              </thead>
+              <tbody>
+                {visibleRows.map((row) => (
+                  <tr key={row.id} className="border-t border-[#EEF3EF] text-xs text-[#60766B]">
+                    <td className="px-4 py-3 font-black text-[#173324]">{row.name}</td>
+                    <td className="px-4 py-3">{row.contactPerson}</td>
+                    <td className="px-4 py-3">{row.phone}</td>
+                    <td className="px-4 py-3">{row.email}</td>
+                    <td className="px-4 py-3">{row.businessType}</td>
+                    <td className="px-4 py-3">
+                      <select value={packageSelections[row.id] ?? row.packageSelected} onChange={(event) => setPackageSelections((current) => ({ ...current, [row.id]: event.target.value }))} className="rounded-lg border border-[#DDEAE0] bg-white px-2 py-2 text-xs font-bold text-[#173324]">
+                        {packageOptions.map((option) => <option key={option}>{option}</option>)}
+                      </select>
+                    </td>
+                    <td className="px-4 py-3">{row.usersCount ?? "Not set"}</td>
+                    <td className="px-4 py-3"><Status value={row.subscriptionStatus} /></td>
+                    <td className="px-4 py-3">{formatDate(row.trialStartedAt)}</td>
+                    <td className="px-4 py-3">{formatDate(row.trialEndsAt)}</td>
+                    <td className="px-4 py-3 font-black">{row.daysRemaining}</td>
+                    <td className="px-4 py-3">{formatDate(row.createdAt)}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-wrap gap-1.5">
+                        {row.subscriptionStatus === "pending_approval" || row.approvalStatus === "pending_approval" ? <Action disabled={savingId === `${row.id}:approve_trial`} onClick={() => runAction(row.id, "approve_trial")}>Approve Trial</Action> : null}
+                        <Action disabled={savingId === `${row.id}:mark_active`} onClick={() => runAction(row.id, "mark_active")}>Active</Action>
+                        <Action disabled={savingId === `${row.id}:suspend`} onClick={() => runAction(row.id, "suspend")}>Suspend</Action>
+                        <Action disabled={savingId === `${row.id}:mark_expired`} onClick={() => runAction(row.id, "mark_expired")}>Expire</Action>
+                        <Action disabled={savingId === `${row.id}:extend_7`} onClick={() => runAction(row.id, "extend_7")}>+7 days</Action>
+                        <Action disabled={savingId === `${row.id}:extend_14`} onClick={() => runAction(row.id, "extend_14")}>+14 days</Action>
+                        <Action disabled={savingId === `${row.id}:change_package`} onClick={() => runAction(row.id, "change_package")}>Change plan</Action>
+                        <Action onClick={() => setFeedback(`${row.name}: ${row.contactPerson}, ${row.phone}, ${row.email}, ${row.businessType}, ${row.packageSelected}`)}>View</Action>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+    </main>
+  );
 }
 
-function Summary({ icon: Icon, label, value, note, gold, danger }: { icon: typeof Store; label: string; value: string; note: string; gold?: boolean; danger?: boolean }) { const tone = danger ? "bg-[#EF4444]/10 text-[#EF4444]" : gold ? "bg-[#D4A017]/12 text-[#A57809]" : "bg-[#16A34A]/10 text-[#16A34A]"; return <article className="rounded-2xl border border-[#DDEAE0] bg-white p-4"><span className={`grid h-9 w-9 place-items-center rounded-xl ${tone}`}><Icon size={17} /></span><p className="mt-3 text-[9px] font-black uppercase tracking-wider text-[#789083]">{label}</p><p className="mt-1 text-base font-black text-[#173324]">{value}</p><p className="mt-1 text-[10px] text-[#789083]">{note}</p></article>; }
-
-function BusinessesPanel({ filtered, totalBusinesses, query, setQuery, status, setStatus, selected, onSelect, onAction }: { filtered: PlatformBusiness[]; totalBusinesses: number; query: string; setQuery: (value: string) => void; status: string; setStatus: (value: string) => void; selected: PlatformBusiness; onSelect: (id: string) => void; onAction: (message: string) => void }) {
-  return <section className="mt-3 grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]"><article className="overflow-hidden rounded-2xl border border-[#DDEAE0] bg-white"><div className="grid gap-3 border-b border-[#E8F0EA] p-4 md:grid-cols-[minmax(0,1fr)_180px]"><label className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#789083]" size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} aria-label="Search businesses" placeholder="Search business, owner, phone or email..." className="w-full rounded-xl border border-[#DDEAE0] bg-[#F8FBF8] py-2.5 pl-9 pr-3 text-xs outline-none focus:border-[#16A34A]" /></label><Select label="Filter business status" value={status} onChange={setStatus} options={["All statuses", "Active", "Trial", "Suspended", "Expired"]} /></div><div className="hidden overflow-x-auto lg:block"><table className="w-full min-w-[1480px] text-left"><thead><tr className="bg-[#F8FBF8] text-[10px] font-black uppercase tracking-wider text-[#789083]">{["Business", "Owner", "Phone", "Email", "IndustryOps", "Package", "Branches", "Users", "Status", "Renewal", "Actions"].map((heading) => <th key={heading} className="px-3 py-3.5">{heading}</th>)}</tr></thead><tbody>{filtered.map((business) => <tr key={business.id} onClick={() => onSelect(business.id)} className={`cursor-pointer border-t border-[#EEF3EF] text-xs text-[#60766B] hover:bg-[#FBFDFB] ${selected.id === business.id ? "bg-[#16A34A]/[0.035]" : ""}`}><td className="px-3 py-3"><b className="text-[#173324]">{business.name}</b><p className="mt-1 text-[10px] text-[#789083]">{business.id}</p></td><td className="px-3 py-3">{business.owner}</td><td className="px-3 py-3">{business.phone}</td><td className="px-3 py-3">{business.email}</td><td className="px-3 py-3">{business.industry}</td><td className="px-3 py-3"><Plan value={business.plan} /></td><td className="px-3 py-3">{business.branches}</td><td className="px-3 py-3">{business.users}</td><td className="px-3 py-3"><Status value={business.status} /></td><td className="px-3 py-3">{business.renewal}</td><td className="px-3 py-3"><button aria-label={`Open ${business.name} actions`}><MoreHorizontal size={16} /></button></td></tr>)}</tbody></table></div><div className="grid gap-3 p-3 lg:hidden">{filtered.map((business) => <button key={business.id} onClick={() => onSelect(business.id)} className={`rounded-xl border p-3 text-left ${selected.id === business.id ? "border-[#16A34A]/60 bg-[#16A34A]/[0.035]" : "border-[#E8F0EA]"}`}><div className="flex justify-between gap-2"><div><p className="text-xs font-black text-[#173324]">{business.name}</p><p className="mt-1 text-[10px] text-[#789083]">{business.owner} · {business.industry}</p></div><Status value={business.status} /></div><div className="mt-3 grid grid-cols-3 rounded-lg bg-[#F8FBF8] p-2.5 text-[10px] text-[#60766B]"><span><b className="block text-[#789083]">Package</b>{business.plan}</span><span><b className="block text-[#789083]">Branches</b>{business.branches}</span><span><b className="block text-[#789083]">Users</b>{business.users}</span></div></button>)}</div><footer className="border-t border-[#E8F0EA] p-4 text-xs text-[#789083]">Showing <b>{filtered.length}</b> of <b>{totalBusinesses}</b> businesses</footer></article><BusinessProfile business={selected} onAction={onAction} /></section>;
+function Summary({ icon: Icon, label, value, gold, danger }: { icon: typeof Building2; label: string; value: number; gold?: boolean; danger?: boolean }) {
+  const tone = danger ? "bg-[#EF4444]/10 text-[#EF4444]" : gold ? "bg-[#D4A017]/12 text-[#A57809]" : "bg-[#16A34A]/10 text-[#16A34A]";
+  return (
+    <article className="rounded-2xl border border-[#DDEAE0] bg-white p-4 shadow-sm shadow-[#12311F]/5">
+      <span className={`grid h-10 w-10 place-items-center rounded-xl ${tone}`}><Icon size={18} /></span>
+      <p className="mt-3 text-[10px] font-black uppercase tracking-wider text-[#789083]">{label}</p>
+      <p className="mt-1 text-xl font-black text-[#173324]">{value.toLocaleString()}</p>
+    </article>
+  );
 }
 
-function BusinessProfile({ business, onAction }: { business: PlatformBusiness; onAction: (message: string) => void }) { return <aside className="overflow-hidden rounded-2xl border border-[#DDEAE0] bg-white xl:sticky xl:top-[96px]"><div className="bg-[#12311F] p-5 text-white"><span className="grid h-12 w-12 place-items-center rounded-xl bg-[#D4A017]/15 text-sm font-black text-[#D4A017]">{business.name.split(" ").map((part) => part[0]).slice(0, 2).join("")}</span><h3 className="mt-4 text-lg font-black">{business.name}</h3><p className="mt-1 text-[11px] text-[#B8C7BD]">{business.owner} · {business.industry}</p></div><div className="grid grid-cols-2 gap-px bg-[#E8F0EA]"><ProfileStat label="Package" value={business.plan} /><ProfileStat label="Renewal" value={business.renewal} /></div><div className="space-y-2 p-4"><button onClick={() => onAction("Change package placeholder opened.")} className="w-full rounded-xl bg-[#16A34A] py-3 text-xs font-black text-white">Change package</button><button onClick={() => onAction("Activate account placeholder opened.")} className="w-full rounded-xl border border-[#DDEAE0] py-3 text-xs font-black text-[#60766B]">Activate account</button><button onClick={() => onAction("Suspend or expire account placeholder opened.")} className="w-full rounded-xl border border-[#EF4444]/25 py-3 text-xs font-black text-[#EF4444]">Suspend / expire account</button></div></aside>; }
-function ProfileStat({ label, value }: { label: string; value: string }) { return <div className="bg-[#F8FBF8] p-3"><p className="text-[10px] font-bold uppercase tracking-wider text-[#789083]">{label}</p><p className="mt-1 text-xs font-black text-[#173324]">{value}</p></div>; }
-function Plan({ value }: { value: string }) { return <span className="rounded-full bg-[#D4A017]/12 px-2.5 py-1 text-[10px] font-black text-[#8A670C]">{value}</span>; }
-function Status({ value }: { value: PlatformBusinessStatus }) { const tone = value === "Active" ? "bg-[#16A34A]/10 text-[#0F8C42]" : value === "Trial" ? "bg-[#D4A017]/12 text-[#8A670C]" : value === "Suspended" ? "bg-[#EF4444]/10 text-[#EF4444]" : "bg-[#789083]/10 text-[#60766B]"; return <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-black ${tone}`}>{value}</span>; }
+function Status({ value }: { value: string }) {
+  const normalized = value.toLowerCase();
+  const tone = normalized === "active" ? "bg-[#16A34A]/10 text-[#0F8C42]" : normalized === "trial" ? "bg-[#D4A017]/12 text-[#8A670C]" : "bg-[#EF4444]/10 text-[#EF4444]";
+  return <span className={`rounded-full px-2.5 py-1 text-[10px] font-black capitalize ${tone}`}>{value}</span>;
+}
 
-function SubscriptionsPanel({ onAction }: { onAction: (message: string) => void }) { return <section className="mt-3 space-y-5"><div className="grid gap-3 md:grid-cols-3"><MiniCard icon={CircleDollarSign} title="Renewals due in 14 days" value="6 accounts" note="Track upcoming subscriber payments" /><MiniCard icon={Banknote} title="Payments this month" value={money(13200)} note="Mock platform collections" /><MiniCard icon={CalendarClock} title="Overdue renewals" value="2 accounts" note="Follow-up required" danger /></div><article className="overflow-hidden rounded-2xl border border-[#DDEAE0] bg-white"><SectionTitle icon={Crown} title="Subscription payment history" note="Recent tenant package payments and failed renewal attempts." /><div className="overflow-x-auto"><table className="w-full min-w-[930px] text-left"><thead><tr className="bg-[#F8FBF8] text-[10px] font-black uppercase tracking-wider text-[#789083]">{["Payment ID", "Business", "Package", "Billing period", "Method", "Amount", "Date", "Status", "Actions"].map((heading) => <th key={heading} className="px-4 py-3.5">{heading}</th>)}</tr></thead><tbody>{platformPayments.map((payment) => <tr key={payment.id} className="border-t border-[#EEF3EF] text-xs text-[#60766B]"><td className="px-4 py-3 font-black text-[#173324]">{payment.id}</td><td className="px-4 py-3">{payment.business}</td><td className="px-4 py-3"><Plan value={payment.plan} /></td><td className="px-4 py-3">{payment.period}</td><td className="px-4 py-3">{payment.method}</td><td className="px-4 py-3 font-black text-[#173324]">{money(payment.amount)}</td><td className="px-4 py-3">{payment.date}</td><td className="px-4 py-3"><span className={`rounded-full px-2.5 py-1 text-[10px] font-black ${payment.status === "Paid" ? "bg-[#16A34A]/10 text-[#0F8C42]" : "bg-[#EF4444]/10 text-[#EF4444]"}`}>{payment.status}</span></td><td className="px-4 py-3"><button onClick={() => onAction("Payment detail placeholder opened.")} className="text-[#789083]"><MoreHorizontal size={16} /></button></td></tr>)}</tbody></table></div></article><article className="overflow-hidden rounded-2xl border border-[#DDEAE0] bg-white"><SectionTitle icon={CalendarClock} title="Renewal tracking" note="Accounts approaching expiry or requiring billing follow-up." /><div className="grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-4">{mockPlatformBusinesses.slice(1, 5).map((business) => <div key={business.id} className="rounded-xl border border-[#EEF3EF] p-3"><div className="flex justify-between gap-2"><p className="text-xs font-black text-[#173324]">{business.name}</p><Status value={business.status} /></div><p className="mt-3 text-[10px] font-bold uppercase tracking-wider text-[#789083]">Renewal date</p><p className="mt-1 text-xs font-black text-[#173324]">{business.renewal}</p></div>)}</div></article></section>; }
-
-function IndustriesPanel({ onAction }: { onAction: (message: string) => void }) { return <section className="mt-3 overflow-hidden rounded-2xl border border-[#DDEAE0] bg-white"><SectionTitle icon={Layers3} title="IndustryOps management" note="Platform workflow profiles available to Biashara POS businesses." /><div className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-3">{industryModes.map((mode) => <article key={mode.name} className="rounded-xl border border-[#EEF3EF] p-4"><div className="flex items-start justify-between gap-3"><span className="grid h-9 w-9 place-items-center rounded-lg bg-[#16A34A]/10 text-[#16A34A]"><Layers3 size={16} /></span><span className="rounded-full bg-[#D4A017]/12 px-2.5 py-1 text-[10px] font-black text-[#8A670C]">{mode.businesses} businesses</span></div><h3 className="mt-3 text-xs font-black text-[#173324]">{mode.name}</h3><p className="mt-1 text-[11px] leading-5 text-[#789083]">{mode.note}</p><button onClick={() => onAction(`${mode.name} IndustryOps edit placeholder opened.`)} className="mt-3 text-[10px] font-black text-[#16A34A]">Edit industry setup</button></article>)}</div></section>; }
-
-function SupportPanel({ onAdd }: { onAdd: () => void }) { return <section className="mt-3 overflow-hidden rounded-2xl border border-[#DDEAE0] bg-white"><div className="flex flex-col justify-between gap-3 border-b border-[#E8F0EA] p-4 sm:flex-row sm:items-center"><SectionHeading icon={NotebookPen} title="Support notes" note="Tenant follow-up history and unresolved account issues." /><button onClick={onAdd} className="flex w-fit items-center gap-2 rounded-xl bg-[#16A34A] px-4 py-3 text-xs font-black text-white"><Plus size={15} />Add support note</button></div><div className="overflow-x-auto"><table className="w-full min-w-[930px] text-left"><thead><tr className="bg-[#F8FBF8] text-[10px] font-black uppercase tracking-wider text-[#789083]">{["Log ID", "Business", "Last contacted", "Issue type", "Assigned admin", "Support note", "Status"].map((heading) => <th key={heading} className="px-4 py-3.5">{heading}</th>)}</tr></thead><tbody>{supportLogs.map((log) => <tr key={log.id} className="border-t border-[#EEF3EF] text-xs text-[#60766B]"><td className="px-4 py-3 font-black text-[#173324]">{log.id}</td><td className="px-4 py-3">{log.business}</td><td className="px-4 py-3">{log.contacted}</td><td className="px-4 py-3">{log.issue}</td><td className="px-4 py-3">{log.owner}</td><td className="max-w-sm px-4 py-3 text-[11px] leading-5">{log.note}</td><td className="px-4 py-3"><span className={`rounded-full px-2.5 py-1 text-[10px] font-black ${log.status === "Resolved" ? "bg-[#16A34A]/10 text-[#0F8C42]" : "bg-[#D4A017]/12 text-[#8A670C]"}`}>{log.status}</span></td></tr>)}</tbody></table></div></section>; }
-
-function AdminsPanel({ onAction }: { onAction: (message: string) => void }) { return <section className="mt-3 overflow-hidden rounded-2xl border border-[#DDEAE0] bg-white"><div className="flex flex-col justify-between gap-3 border-b border-[#E8F0EA] p-4 sm:flex-row sm:items-center"><SectionHeading icon={ShieldCheck} title="LeadsStacks admin users" note="Platform operators with tenant support and billing access." /><button onClick={() => onAction("Add platform admin placeholder opened.")} className="flex w-fit items-center gap-2 rounded-xl bg-[#16A34A] px-4 py-3 text-xs font-black text-white"><Plus size={15} />Add admin user</button></div><div className="grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-4">{platformAdmins.map((admin) => <article key={admin.email} className="rounded-xl border border-[#EEF3EF] p-4"><div className="flex items-start justify-between gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#12311F] text-[10px] font-black text-white">{admin.initials}</span><span className="rounded-full bg-[#16A34A]/10 px-2.5 py-1 text-[10px] font-black text-[#0F8C42]">{admin.status}</span></div><h3 className="mt-3 text-xs font-black text-[#173324]">{admin.name}</h3><p className="mt-1 text-[10px] text-[#789083]">{admin.email}</p><p className="mt-1 text-[10px] text-[#789083]">{admin.phone}</p><p className="mt-3 w-fit rounded-full bg-[#D4A017]/12 px-2.5 py-1 text-[10px] font-black text-[#8A670C]">{admin.role}</p><p className="mt-3 text-[10px] text-[#789083]">Last login: {admin.lastLogin}</p></article>)}</div></section>; }
-
-function MiniCard({ icon: Icon, title, value, note, danger }: { icon: typeof Banknote; title: string; value: string; note: string; danger?: boolean }) { return <article className="rounded-2xl border border-[#DDEAE0] bg-white p-4"><Icon size={18} className={danger ? "text-[#EF4444]" : "text-[#16A34A]"} /><p className="mt-3 text-[10px] font-black uppercase tracking-wider text-[#789083]">{title}</p><p className="mt-1 text-lg font-black text-[#173324]">{value}</p><p className="mt-1 text-[11px] text-[#789083]">{note}</p></article>; }
-function SectionTitle({ icon, title, note }: { icon: typeof Crown; title: string; note: string }) { return <div className="border-b border-[#E8F0EA] p-4"><SectionHeading icon={icon} title={title} note={note} /></div>; }
-function SectionHeading({ icon: Icon, title, note }: { icon: typeof Crown; title: string; note: string }) { return <div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#16A34A]/10 text-[#16A34A]"><Icon size={18} /></span><div><h3 className="font-black text-[#173324]">{title}</h3><p className="text-xs text-[#789083]">{note}</p></div></div>; }
-function Select({ label, value, onChange, options }: { label: string; value: string; onChange: (value: string) => void; options: string[] }) { return <label className="relative"><select aria-label={label} value={value} onChange={(event) => onChange(event.target.value)} className="w-full appearance-none rounded-xl border border-[#DDEAE0] bg-white py-2.5 pl-3 pr-9 text-xs font-bold text-[#60766B]">{options.map((option) => <option key={option}>{option}</option>)}</select><ChevronDown size={14} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#789083]" /></label>; }
-
-function AddBusinessDialog({ onClose }: { onClose: () => void }) { return <DialogShell title="Create business" note="Mock tenant setup. No business will be saved." onClose={onClose}><div className="grid gap-3 sm:grid-cols-2">{["Business name", "Owner name", "Owner email", "Owner phone", "Branch count", "User limit"].map((label) => <Field key={label} label={label} />)}<Select label="Industry mode" value="Retail" onChange={() => undefined} options={industryModes.map((mode) => mode.name)} /><Select label="Package" value="Growth" onChange={() => undefined} options={["Lite", "Growth", "Business", "Premium", "Custom"]} /><Select label="Business status" value="Trial" onChange={() => undefined} options={["Active", "Trial", "Suspended", "Expired"]} /><button className="rounded-xl bg-[#D4A017] py-3 text-xs font-black text-[#07120D] sm:col-span-2">Save mock business</button></div></DialogShell>; }
-function AddNoteDialog({ onClose }: { onClose: () => void }) { return <DialogShell title="Add support note" note="Mock platform support log entry." onClose={onClose}><div className="grid gap-3"><Select label="Select business" value={mockPlatformBusinesses[0].name} onChange={() => undefined} options={mockPlatformBusinesses.map((business) => business.name)} /><Select label="Issue type" value="Billing follow-up" onChange={() => undefined} options={["Billing follow-up", "Trial onboarding", "Branch setup", "Technical issue", "Report question"]} /><label><span className="text-[10px] font-black uppercase tracking-wider text-[#789083]">Support note</span><textarea className="mt-2 min-h-24 w-full rounded-xl border border-[#DDEAE0] px-3 py-3 text-xs outline-none focus:border-[#16A34A]" placeholder="Enter follow-up note..." /></label><button className="rounded-xl bg-[#16A34A] py-3 text-xs font-black text-white">Save mock support note</button></div></DialogShell>; }
-function DialogShell({ title, note, onClose, children }: { title: string; note: string; onClose: () => void; children: React.ReactNode }) { return <div className="fixed inset-0 z-[70] grid place-items-center bg-[#07120D]/65 p-4"><article className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl bg-white"><div className="flex items-center justify-between border-b border-[#E8F0EA] p-4"><div><h3 className="text-sm font-black text-[#173324]">{title}</h3><p className="text-[10px] text-[#789083]">{note}</p></div><button aria-label="Close dialog" onClick={onClose}><X size={16} /></button></div><div className="p-4">{children}</div></article></div>; }
-function Field({ label }: { label: string }) { return <label><span className="text-[10px] font-black uppercase tracking-wider text-[#789083]">{label}</span><input className="mt-2 w-full rounded-xl border border-[#DDEAE0] px-3 py-3 text-xs outline-none focus:border-[#16A34A]" placeholder={`Enter ${label.toLowerCase()}`} /></label>; }
+function Action({ children, disabled, onClick }: { children: React.ReactNode; disabled?: boolean; onClick: () => void }) {
+  return <button disabled={disabled} onClick={onClick} className="rounded-lg border border-[#DDEAE0] bg-white px-2.5 py-1.5 text-[10px] font-black text-[#60766B] hover:bg-[#F8FBF8] disabled:opacity-50">{children}</button>;
+}
