@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Wifi, WifiOff } from "lucide-react";
 
 export function PwaControls() {
   const [online, setOnline] = useState(true);
@@ -37,8 +36,8 @@ export function PwaControls() {
   return (
     <div className="relative flex items-center gap-1.5 sm:gap-2">
       <span className={`inline-flex items-center gap-1.5 rounded-xl border px-2 py-2.5 text-[9px] font-black uppercase tracking-wider sm:px-3 sm:text-[10px] ${online ? "border-[#16A34A]/25 bg-[#16A34A]/10 text-[#0F8C42]" : "border-[#D4A017]/35 bg-[#FFF9E8] text-[#8A670C]"}`}>
-        {online ? <Wifi size={13} /> : <WifiOff size={13} />}
-        {online ? "Online" : "Offline Mode"}
+        <span className={`h-2 w-2 rounded-full ${online ? "bg-[#16A34A]" : "bg-[#D4A017]"}`} />
+        {online ? "Online" : "Offline"}
       </span>
     </div>
   );
