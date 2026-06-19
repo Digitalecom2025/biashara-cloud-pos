@@ -52,7 +52,8 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   });
 
   return NextResponse.json({
-    data: { businessId: id, status: "suspended" },
-    message: "Business suspended. The user cannot access Biashara POS.",
+    success: true,
+    business: { id, status: "suspended", subscriptionStatus: "suspended" },
+    message: "Account suspended.",
   });
 }

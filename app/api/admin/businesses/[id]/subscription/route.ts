@@ -111,8 +111,9 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   });
 
   return NextResponse.json({
-    data: {
-      businessId: id,
+    success: true,
+    business: {
+      id,
       status: nextStatus,
       packagePlan: nextPlan,
       trialEndsAt: nextTrialEnd?.toISOString() ?? null,

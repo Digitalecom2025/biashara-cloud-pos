@@ -98,7 +98,7 @@ export async function POST(request: Request) {
             status: subscription.status,
             accessStatus: subscriptionStatus,
             packagePlan: subscription.packagePlan,
-            renewalDate: subscription.renewalDate.toISOString(),
+            renewalDate: subscription.renewalDate?.toISOString() ?? null,
             trialEndsAt: subscription.trialEndsAt?.toISOString() ?? null,
             amount: Number(subscription.amount),
           }

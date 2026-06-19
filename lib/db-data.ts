@@ -2,7 +2,6 @@ import { prisma } from "@/lib/prisma";
 import { branches as mockBranches, staffUsers as mockStaffUsers, type Branch, type BranchStatus, type StaffStatus, type StaffUser } from "@/lib/organization-mock-data";
 import { customers as mockCustomers, debtors as mockDebtors, type Customer, type CustomerStatus, type CustomerType, type Debtor } from "@/lib/customer-mock-data";
 import { products as mockProducts, type Product } from "@/lib/mock-data";
-import { platformBusinesses as mockPlatformBusinesses, type PlatformBusiness, type PlatformBusinessStatus } from "@/lib/platform-mock-data";
 import { recentSales as mockRecentSales, salesProducts as mockSalesProducts, type RecentSale, type SalesProduct } from "@/lib/sales-mock-data";
 import { purchases as mockPurchases, suppliers as mockSuppliers, type Purchase, type PurchaseStatus, type Supplier, type SupplierStatus } from "@/lib/purchasing-mock-data";
 import {
@@ -19,6 +18,28 @@ import {
 } from "@/lib/inventory-mock-data";
 
 const DEMO_BUSINESS_SLUG = "nairobi-cbd-store";
+
+export type PlatformBusinessStatus = "Active" | "Trial" | "Suspended" | "Expired";
+
+export type PlatformBusiness = {
+  id: string;
+  name: string;
+  owner: string;
+  phone: string;
+  email: string;
+  industry: string;
+  plan: string;
+  branches: number;
+  users: number;
+  status: PlatformBusinessStatus;
+  renewal: string;
+  contactPerson?: string;
+  businessType?: string;
+  trialStart?: string;
+  trialEnd?: string;
+  daysRemaining?: number;
+  selectedPlan?: string;
+};
 
 function initials(name: string) {
   return name
@@ -604,7 +625,7 @@ export async function getBusinessesForSuperAdmin(): Promise<PlatformBusiness[]> 
       },
       orderBy: { createdAt: "asc" },
     });
-    if (businesses.length === 0) return mockPlatformBusinesses;
+    if (businesses.length === 0) return [];
     return businesses.map((business, index) => {
       const trialFields = business as unknown as {
         trialStartedAt?: Date | null;
@@ -625,7 +646,7 @@ export async function getBusinessesForSuperAdmin(): Promise<PlatformBusiness[]> 
         branches: business.branches.length,
         users: business.users.length,
         status: businessStatus(business.status),
-        renewal: subscription ? formatDateTime(subscription.renewalDate) : "Not set",
+        renewal: subscription?.renewalDate ? formatDateTime(subscription.renewalDate) : "Not set",
         contactPerson: trialFields.contactPerson ?? owner?.name ?? "Owner not assigned",
         businessType: business.industryMode,
         trialStart: trialFields.trialStartedAt ? formatShortDate(trialFields.trialStartedAt) : undefined,
@@ -635,7 +656,7 @@ export async function getBusinessesForSuperAdmin(): Promise<PlatformBusiness[]> 
       };
     });
   } catch (error) {
-    console.warn("Falling back to mock platform businesses", error);
-    return mockPlatformBusinesses;
+    console.warn("Super Admin businesses could not be loaded", error);
+    return [];
   }
 }

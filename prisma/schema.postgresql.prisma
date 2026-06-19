@@ -341,8 +341,8 @@ model Subscription {
   businessId  String
   packagePlan String   @default("Trial")
   status      String   @default("pending_approval")
-  startDate   DateTime
-  renewalDate DateTime
+  startDate   DateTime?
+  renewalDate DateTime?
   trialEndsAt  DateTime?
   amount      Decimal  @default(0)
   createdAt   DateTime @default(now())
