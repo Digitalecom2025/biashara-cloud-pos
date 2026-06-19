@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
   ArrowUpRight,
@@ -196,7 +197,7 @@ export function CustomersPage({ initialCustomers = [] }: { initialCustomers?: Cu
           <footer className="border-t border-[#E8F0EA] p-4 text-xs text-[#789083]">Showing <b className="text-[#173324]">{filteredCustomers.length}</b> of <b className="text-[#173324]">{customers.length}</b> customers</footer>
         </article>
 
-        {selected ? <CustomerProfile customer={selected} onFeedback={showFeedback} /> : <EmptyProfile />}
+        {selected ? <CustomerProfile customer={selected} /> : <EmptyProfile />}
       </section>
 
       {dialog && <CustomerDialog state={dialog} loading={loading} error={error} onClose={() => setDialog(null)} onSave={saveCustomer} />}
@@ -270,7 +271,7 @@ function StatusBadge({ status }: { status: CustomerStatus }) {
   return <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-black ${tone}`}>{status}</span>;
 }
 
-function CustomerProfile({ customer, onFeedback }: { customer: Customer; onFeedback: (message: string) => void }) {
+function CustomerProfile({ customer }: { customer: Customer }) {
   return (
     <aside className="overflow-hidden rounded-2xl border border-[#DDEAE0] bg-white shadow-sm shadow-[#12311F]/5 xl:sticky xl:top-[96px]">
       <div className="bg-[#12311F] p-5 text-white">
@@ -283,7 +284,7 @@ function CustomerProfile({ customer, onFeedback }: { customer: Customer; onFeedb
       <div className="grid grid-cols-2 gap-px bg-[#E8F0EA]">
         <ProfileStat icon={ShoppingBag} label="Purchases" value={formatCurrency(customer.totalPurchases)} /><ProfileStat icon={WalletCards} label="Balance" value={formatCurrency(customer.debtBalance)} danger={customer.debtBalance > 0} />
       </div>
-      <div className="space-y-2 p-4"><button disabled title="Detailed customer profile coming soon" className="flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-[#CBD8CF] py-3 text-xs font-black text-white">Profile coming soon <ArrowUpRight size={14} /></button><button disabled title="Customer PDF statements coming soon" className="w-full cursor-not-allowed rounded-xl border border-[#DDEAE0] bg-[#F5FAF6] py-3 text-xs font-black text-[#9AAEA3]">Statement coming soon</button></div>
+      <div className="space-y-2 p-4"><Link href={`/customers/${customer.id}`} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#16A34A] py-3 text-xs font-black text-white hover:bg-[#12883E]">View full profile <ArrowUpRight size={14} /></Link><Link href={`/customers/${customer.id}#statement`} className="block w-full rounded-xl border border-[#DDEAE0] bg-[#F5FAF6] py-3 text-center text-xs font-black text-[#60766B] hover:bg-[#EEF7F0]">View / print statement</Link></div>
     </aside>
   );
 }

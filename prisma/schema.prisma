@@ -45,6 +45,8 @@ model Business {
   auditLogs      AuditLog[]
   subscriptions  Subscription[]
   settings       Setting[]
+  rewardRules    RewardRule[]
+  smsLogs        SmsLog[]
 }
 
 model Branch {
@@ -365,6 +367,41 @@ model Setting {
 
   @@unique([businessId, key])
   @@index([businessId])
+}
+
+model RewardRule {
+  id                String    @id @default(cuid())
+  businessId        String
+  name              String
+  type              String
+  thresholdAmount   Decimal   @default(0)
+  rewardDescription String
+  startDate         DateTime
+  endDate           DateTime?
+  status            String    @default("active")
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([status])
+}
+
+model SmsLog {
+  id             String   @id @default(cuid())
+  businessId     String
+  recipientPhone String
+  message        String
+  status         String
+  provider       String?
+  errorMessage   String?
+  createdAt      DateTime @default(now())
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([status])
 }
 
 model DemoRequest {

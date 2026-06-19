@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
   ChevronDown,
@@ -307,7 +308,7 @@ export function ProductList({ initialProducts = [] }: { initialProducts?: Produc
                     <td className="px-3 py-3">{product.shelf}</td>
                     <td className="px-4 py-3">
                       <div className="flex justify-end gap-1">
-                        <button onClick={() => showFeedback(`${product.name}: ${product.stock} ${product.unit} in ${product.warehouse}.`)} aria-label={`View ${product.name}`} className="grid h-8 w-8 place-items-center rounded-lg text-[#789083] hover:bg-[#16A34A]/10 hover:text-[#16A34A]"><Eye size={15} /></button>
+                        <Link href={`/products/${product.id}`} aria-label={`View ${product.name}`} className="grid h-8 w-8 place-items-center rounded-lg text-[#789083] hover:bg-[#16A34A]/10 hover:text-[#16A34A]"><Eye size={15} /></Link>
                         <button onClick={() => openEditDialog(product)} aria-label={`Edit ${product.name}`} className="grid h-8 w-8 place-items-center rounded-lg text-[#789083] hover:bg-[#D4A017]/10 hover:text-[#A57809]"><Pencil size={14} /></button>
                         <button onClick={() => deactivateProduct(product)} aria-label={`Deactivate ${product.name}`} className="grid h-8 w-8 place-items-center rounded-lg text-[#789083] hover:bg-[#EF4444]/10 hover:text-[#EF4444]"><Trash2 size={14} /></button>
                       </div>

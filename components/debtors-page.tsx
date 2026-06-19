@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { CalendarClock, ChevronDown, CircleDollarSign, Download, FileText, HandCoins, History, MoreHorizontal, ReceiptText, Search, Users, X } from "lucide-react";
 import type { Customer, Debtor } from "@/lib/customer-mock-data";
-import { exportToCsv } from "@/lib/export";
+import { exportReportToPdf, exportToCsv } from "@/lib/export";
 
 type PaymentFormState = {
   customerId: string;
@@ -131,9 +131,38 @@ export function DebtorsPage({ initialDebtors = [], initialCustomers = [] }: { in
     showFeedback(ok ? "Debtors CSV exported." : "No debtor rows to export.");
   }
 
+  function exportDebtorsPdf() {
+    if (filteredDebtors.length === 0) {
+      showFeedback("No debtor rows to export.");
+      return;
+    }
+    exportReportToPdf({
+      filename: "leadsstacks-debtors-report.pdf",
+      title: "Debtors Report",
+      summary: {
+        "Total debt": formatCurrency(totals.debt),
+        "Paid amount": formatCurrency(totals.paid),
+        "Balance due": formatCurrency(totals.balance),
+        "Overdue amount": formatCurrency(totals.overdue),
+      },
+      rows: filteredDebtors.map((debtor) => ({
+        customer: debtor.customer,
+        phone: debtor.phone,
+        invoice: debtor.invoice,
+        originalAmount: formatCurrency(debtor.originalAmount),
+        paidAmount: formatCurrency(debtor.paidAmount),
+        balanceDue: formatCurrency(debtor.balanceDue),
+        dueDate: debtor.dueDate,
+        daysOverdue: debtor.daysOverdue,
+        status: debtor.status,
+      })),
+    });
+    showFeedback("Debtors PDF exported.");
+  }
+
   return (
     <div className="mx-auto max-w-[1700px]">
-      <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-end"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-[#16A34A]">Accounts receivable</p><h2 className="mt-1 text-2xl font-black tracking-tight text-[#10271B] md:text-3xl">Due List / Debtors</h2><p className="mt-1 text-sm text-[#789083]">Monitor outstanding invoices and follow up customer balances.</p></div><div><div className="flex flex-wrap gap-2"><button disabled title="Debtors PDF export coming soon" className="flex w-fit cursor-not-allowed items-center gap-2 rounded-xl border border-[#DDEAE0] bg-[#F5FAF6] px-4 py-3 text-xs font-black text-[#9AAEA3]"><FileText size={15} /> PDF coming soon</button><button onClick={exportDebtorsCsv} className="flex w-fit items-center gap-2 rounded-xl bg-[#16A34A] px-4 py-3 text-xs font-black text-white"><Download size={15} /> Export CSV</button></div>{feedback && <p className="mt-2 text-right text-[11px] font-bold text-[#16A34A]">{feedback}</p>}</div></div>
+      <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-end"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-[#16A34A]">Accounts receivable</p><h2 className="mt-1 text-2xl font-black tracking-tight text-[#10271B] md:text-3xl">Due List / Debtors</h2><p className="mt-1 text-sm text-[#789083]">Monitor outstanding invoices and follow up customer balances.</p></div><div><div className="flex flex-wrap gap-2"><button onClick={exportDebtorsPdf} className="flex w-fit items-center gap-2 rounded-xl border border-[#DDEAE0] bg-[#F5FAF6] px-4 py-3 text-xs font-black text-[#60766B] hover:bg-[#EEF7F0]"><FileText size={15} /> Export PDF</button><button onClick={exportDebtorsCsv} className="flex w-fit items-center gap-2 rounded-xl bg-[#16A34A] px-4 py-3 text-xs font-black text-white"><Download size={15} /> Export CSV</button></div>{feedback && <p className="mt-2 text-right text-[11px] font-bold text-[#16A34A]">{feedback}</p>}</div></div>
       {error && <div className="mb-4 rounded-xl border border-[#EF4444]/20 bg-[#EF4444]/10 px-4 py-3 text-xs font-bold text-[#EF4444]">{error}</div>}
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <SummaryCard icon={HandCoins} label="Total debt issued" value={formatCurrency(totals.debt)} note={`${debtors.length} open invoices`} /><SummaryCard icon={CircleDollarSign} label="Paid amount" value={formatCurrency(totals.paid)} note="Collected against credit sales" /><SummaryCard icon={CalendarClock} label="Overdue amount" value={formatCurrency(totals.overdue)} note="Requires follow-up" danger /><SummaryCard icon={Users} label="Number of debtors" value={`${debtors.length} customers`} note={`Balance due ${formatCurrency(totals.balance)}`} />
@@ -147,7 +176,7 @@ export function DebtorsPage({ initialDebtors = [], initialCustomers = [] }: { in
         <footer className="border-t border-[#E8F0EA] p-4 text-xs text-[#789083]">Showing <b className="text-[#173324]">{filteredDebtors.length}</b> of <b className="text-[#173324]">{debtors.length}</b> outstanding invoices</footer>
       </section>
       {paymentDebtor && <PaymentModal debtor={paymentDebtor} customers={customers} loading={loading} error={error} onClose={() => setPaymentDebtor(null)} onSave={recordPayment} />}
-      {historyDebtor && <HistoryPanel debtor={historyDebtor} history={history} loading={loadingHistory} onClose={() => setHistoryDebtor(null)} onFeedback={showFeedback} />}
+      {historyDebtor && <HistoryPanel debtor={historyDebtor} history={history} loading={loadingHistory} onClose={() => setHistoryDebtor(null)} />}
     </div>
   );
 }
@@ -170,8 +199,8 @@ function PaymentModal({ debtor, customers, loading, error, onClose, onSave }: { 
   return <Modal title="Record payment" subtitle={`${debtor.customer} - ${debtor.invoice}`} onClose={onClose}><form onSubmit={(event) => { event.preventDefault(); onSave(values); }}>{error && <div className="mb-4 rounded-xl border border-[#EF4444]/20 bg-[#EF4444]/10 px-4 py-3 text-xs font-bold text-[#EF4444]">{error}</div>}<div className="rounded-xl bg-[#F8FBF8] p-3 text-xs"><p className="flex justify-between text-[#789083]"><span>Current balance</span><b className="text-[#EF4444]">{formatCurrency(balance)}</b></p></div><label className="mt-4 block"><span className="text-[11px] font-black uppercase tracking-wider text-[#789083]">Customer</span><select value={values.customerId} onChange={(event) => update("customerId", event.target.value)} className="mt-2 w-full rounded-xl border border-[#DDEAE0] bg-white px-3 py-3 text-xs font-bold text-[#173324] outline-none focus:border-[#16A34A]">{customers.filter((customer) => customer.debtBalance > 0 || customer.id === values.customerId).map((customer) => <option key={customer.id} value={customer.id}>{customer.name} - {formatCurrency(customer.debtBalance)}</option>)}</select></label><Field label="Amount paid" required type="number" value={values.amount} onChange={(value) => update("amount", value)} /><label className="mt-3 block"><span className="text-[11px] font-black uppercase tracking-wider text-[#789083]">Payment method</span><select value={values.paymentMethod} onChange={(event) => update("paymentMethod", event.target.value as PaymentFormState["paymentMethod"])} className="mt-2 w-full rounded-xl border border-[#DDEAE0] bg-white px-3 py-3 text-xs font-bold text-[#173324] outline-none focus:border-[#16A34A]"><option>Cash</option><option>M-Pesa</option><option>Bank</option></select></label><Field label="Reference" value={values.reference} onChange={(value) => update("reference", value)} /><label className="mt-3 block"><span className="text-[11px] font-black uppercase tracking-wider text-[#789083]">Payment note</span><textarea value={values.note} onChange={(event) => update("note", event.target.value)} className="mt-2 min-h-20 w-full rounded-xl border border-[#DDEAE0] px-3 py-3 text-xs font-bold text-[#173324] outline-none focus:border-[#16A34A]" placeholder="Optional note..." /></label><button disabled={loading} className="mt-4 w-full rounded-xl bg-[#16A34A] py-3 text-xs font-black text-white disabled:opacity-60">{loading ? "Saving..." : "Save payment"}</button></form></Modal>;
 }
 
-function HistoryPanel({ debtor, history, loading, onClose, onFeedback }: { debtor: Debtor; history: PaymentHistory[]; loading: boolean; onClose: () => void; onFeedback: (message: string) => void }) {
-  return <Modal title="Payment history" subtitle={`${debtor.customer} - ${debtor.invoice}`} onClose={onClose}>{loading && <p className="rounded-xl bg-[#FFF9E8] p-3 text-xs font-bold text-[#8A670C]">Loading payment history...</p>} {!loading && history.length === 0 && <p className="rounded-xl bg-[#F8FBF8] p-3 text-xs text-[#789083]">No database payment history found yet for this customer.</p>} <div className="mt-3 space-y-2">{history.map((payment) => <HistoryItem key={payment.id} label={`${payment.paymentMethod} payment`} amount={payment.amount} date={formatDateTime(payment.createdAt)} reference={payment.reference} />)}</div><button disabled title="Customer PDF statements coming soon" className="mt-4 flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-[#DDEAE0] bg-[#F5FAF6] py-3 text-xs font-black text-[#9AAEA3]"><Download size={14} /> Statement coming soon</button></Modal>;
+function HistoryPanel({ debtor, history, loading, onClose }: { debtor: Debtor; history: PaymentHistory[]; loading: boolean; onClose: () => void }) {
+  return <Modal title="Payment history" subtitle={`${debtor.customer} - ${debtor.invoice}`} onClose={onClose}>{loading && <p className="rounded-xl bg-[#FFF9E8] p-3 text-xs font-bold text-[#8A670C]">Loading payment history...</p>} {!loading && history.length === 0 && <p className="rounded-xl bg-[#F8FBF8] p-3 text-xs text-[#789083]">No database payment history found yet for this customer.</p>} <div className="mt-3 space-y-2">{history.map((payment) => <HistoryItem key={payment.id} label={`${payment.paymentMethod} payment`} amount={payment.amount} date={formatDateTime(payment.createdAt)} reference={payment.reference} />)}</div><a href={`/customers/${debtor.customerId}#statement`} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-[#DDEAE0] bg-[#F5FAF6] py-3 text-xs font-black text-[#60766B] hover:bg-[#EEF7F0]"><Download size={14} /> View / print customer statement</a></Modal>;
 }
 
 function Field({ label, value, onChange, type = "text", required }: { label: string; value: string; onChange: (value: string) => void; type?: string; required?: boolean }) {
