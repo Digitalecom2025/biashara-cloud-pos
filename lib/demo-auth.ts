@@ -25,6 +25,8 @@ export type DemoSession = {
 };
 
 const DEMO_SESSION_KEY = "biashara.demoSession";
+const BUSINESS_COOKIE = "biashara_business_id";
+const SESSION_TYPE_COOKIE = "biashara_session_type";
 const LEGACY_DEMO_AUTH_KEYS = [
   "demoLoggedIn",
   "demoUserRole",
@@ -145,6 +147,8 @@ export function createDemoSession(account: DemoAccount): DemoSession {
 
 export function saveDemoSession(session: DemoSession) {
   window.localStorage.setItem(DEMO_SESSION_KEY, JSON.stringify(session));
+  document.cookie = `${SESSION_TYPE_COOKIE}=demo; path=/; max-age=${60 * 60 * 24 * 14}; SameSite=Lax`;
+  document.cookie = `${BUSINESS_COOKIE}=; path=/; max-age=0; SameSite=Lax`;
 }
 
 export function getDemoSession(): DemoSession | null {
@@ -167,6 +171,7 @@ export function clearDemoSession() {
     window.sessionStorage.removeItem(key);
   }
   window.sessionStorage.removeItem(DEMO_SESSION_KEY);
+  document.cookie = `${SESSION_TYPE_COOKIE}=; path=/; max-age=0; SameSite=Lax`;
 }
 
 export function accountForRole(role: DemoRole) {

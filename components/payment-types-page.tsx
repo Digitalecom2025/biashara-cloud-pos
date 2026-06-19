@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Banknote, Building2, CreditCard, MoreHorizontal, Plus, Smartphone, Users, WalletCards, X } from "lucide-react";
-import { paymentTypes as mockPaymentTypes } from "@/lib/finance-mock-data";
 import type { StoredPaymentType } from "@/lib/finance-data";
 
 type PaymentForm = {
@@ -28,7 +27,7 @@ function formFromPaymentType(item?: StoredPaymentType): PaymentForm {
 }
 
 export function PaymentTypesPage() {
-  const [items, setItems] = useState<StoredPaymentType[]>(mockPaymentTypes.map((item) => ({ ...item, code: item.id })));
+  const [items, setItems] = useState<StoredPaymentType[]>([]);
   const [open, setOpen] = useState<StoredPaymentType | "add" | null>(null);
   const [form, setForm] = useState<PaymentForm>(formFromPaymentType());
   const [loading, setLoading] = useState(true);

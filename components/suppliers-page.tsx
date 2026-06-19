@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { ArrowUpRight, Building2, ChevronDown, Mail, Pencil, Phone, Plus, ShoppingBag, Trash2, Truck, Users, WalletCards, X } from "lucide-react";
-import { suppliers as mockSuppliers, type Supplier, type SupplierStatus } from "@/lib/purchasing-mock-data";
+import type { Supplier, SupplierStatus } from "@/lib/purchasing-mock-data";
 
 type SupplierFormState = {
   name: string;
@@ -23,10 +23,10 @@ function formatCurrency(value: number) {
   return new Intl.NumberFormat("en-KE", { style: "currency", currency: "KES", maximumFractionDigits: 0 }).format(value);
 }
 
-export function SuppliersPage({ initialSuppliers = mockSuppliers }: { initialSuppliers?: Supplier[] }) {
+export function SuppliersPage({ initialSuppliers = [] }: { initialSuppliers?: Supplier[] }) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("All statuses");
-  const [suppliers, setSuppliers] = useState<Supplier[]>(initialSuppliers.length > 0 ? initialSuppliers : mockSuppliers);
+  const [suppliers, setSuppliers] = useState<Supplier[]>(initialSuppliers);
   const [selectedId, setSelectedId] = useState(suppliers[0]?.id ?? "");
   const [dialog, setDialog] = useState<SupplierDialogState | null>(null);
   const [loading, setLoading] = useState(false);
@@ -116,7 +116,7 @@ export function SuppliersPage({ initialSuppliers = mockSuppliers }: { initialSup
           {loading && <div className="border-b border-[#E8F0EA] bg-[#FFF9E8] px-4 py-2 text-xs font-bold text-[#8A670C]">Updating suppliers...</div>}
           <div className="hidden overflow-x-auto lg:block"><table className="w-full min-w-[1150px] border-collapse text-left"><thead><tr className="bg-[#F8FBF8] text-[10px] font-black uppercase tracking-[0.13em] text-[#789083]"><th className="px-4 py-3.5">Supplier</th><th className="px-3 py-3.5">Phone</th><th className="px-3 py-3.5">Email</th><th className="px-3 py-3.5">Category</th><th className="px-3 py-3.5">Total purchases</th><th className="px-3 py-3.5">Current balance</th><th className="px-3 py-3.5">Last purchase</th><th className="px-3 py-3.5">Status</th><th className="px-4 py-3.5 text-right">Actions</th></tr></thead><tbody>{filteredSuppliers.map((supplier) => <SupplierRow key={supplier.id} supplier={supplier} selected={selectedId === supplier.id} onSelect={() => setSelectedId(supplier.id)} onEdit={() => { setError(""); setDialog({ mode: "edit", supplier }); }} onDeactivate={() => deactivateSupplier(supplier)} />)}</tbody></table></div>
           <div className="grid gap-3 p-3 lg:hidden">{filteredSuppliers.map((supplier) => <SupplierCard key={supplier.id} supplier={supplier} selected={selectedId === supplier.id} onSelect={() => setSelectedId(supplier.id)} onEdit={() => { setError(""); setDialog({ mode: "edit", supplier }); }} onDeactivate={() => deactivateSupplier(supplier)} />)}</div>
-          {filteredSuppliers.length === 0 && <div className="grid min-h-56 place-items-center p-8 text-center"><div><Truck className="mx-auto text-[#9AAEA3]" size={32} /><p className="mt-3 text-sm font-black text-[#173324]">No matching suppliers</p><p className="mt-1 text-xs text-[#789083]">Adjust the search or status filter.</p></div></div>}
+          {filteredSuppliers.length === 0 && <div className="grid min-h-56 place-items-center p-8 text-center"><div><Truck className="mx-auto text-[#9AAEA3]" size={32} /><p className="mt-3 text-sm font-black text-[#173324]">{suppliers.length === 0 ? "No suppliers yet" : "No matching suppliers"}</p><p className="mt-1 text-xs text-[#789083]">{suppliers.length === 0 ? "Add a supplier when you start purchasing stock." : "Adjust the search or status filter."}</p></div></div>}
           <footer className="border-t border-[#E8F0EA] p-4 text-xs text-[#789083]">Showing <b className="text-[#173324]">{filteredSuppliers.length}</b> of <b className="text-[#173324]">{suppliers.length}</b> suppliers</footer>
         </article>
         {selected ? <SupplierProfile supplier={selected} onFeedback={showFeedback} /> : <aside className="grid min-h-72 place-items-center rounded-2xl border border-[#DDEAE0] bg-white p-6 text-center text-xs text-[#789083]">No supplier selected.</aside>}

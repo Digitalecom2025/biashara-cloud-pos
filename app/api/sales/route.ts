@@ -72,7 +72,7 @@ export async function POST(request: Request) {
         }
       }
 
-      const branch = await tx.branch.findFirst({ where: { businessId, name: "Nairobi CBD Store" } }) ?? await tx.branch.findFirst({ where: { businessId } });
+      const branch = await tx.branch.findFirst({ where: { businessId, status: { notIn: ["inactive", "Inactive"] } }, orderBy: { createdAt: "asc" } });
       if (!branch) throw new Error("No branch found for this business.");
 
       const cashier = await tx.user.findFirst({ where: { businessId, role: "Cashier" } }) ?? await tx.user.findFirst({ where: { businessId } });

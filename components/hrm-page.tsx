@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Check, ChevronDown, CircleUserRound, Crown, Pencil, Plus, Search, ShieldCheck, Trash2, UserRoundCheck, Users, X } from "lucide-react";
-import { branches as mockBranches, permissions, roles, staffUsers as mockStaffUsers, type Branch, type StaffStatus, type StaffUser } from "@/lib/organization-mock-data";
+import { permissions, roles, type Branch, type StaffStatus, type StaffUser } from "@/lib/organization-mock-data";
 
 type UserFormState = {
   name: string;
@@ -21,14 +21,14 @@ type UserDialogState =
 const roleOptions = ["Business Owner", "Branch Manager", "Cashier", "Stock Clerk", "Accountant", "Waiter", "Support Staff"];
 const defaultForm: UserFormState = { name: "", email: "", phone: "", role: "Cashier", branchId: "", till: "", status: "active" };
 
-export function HrmPage({ initialUsers = mockStaffUsers, initialBranches = mockBranches }: { initialUsers?: StaffUser[]; initialBranches?: Branch[] }) {
+export function HrmPage({ initialUsers = [], initialBranches = [] }: { initialUsers?: StaffUser[]; initialBranches?: Branch[] }) {
   const [tab, setTab] = useState<"staff" | "roles">("staff");
   const [query, setQuery] = useState("");
   const [role, setRole] = useState("All roles");
   const [branch, setBranch] = useState("All branches");
   const [status, setStatus] = useState("All statuses");
-  const [staffUsers, setStaffUsers] = useState<StaffUser[]>(initialUsers.length > 0 ? initialUsers : mockStaffUsers);
-  const [branches, setBranches] = useState<Branch[]>(initialBranches.length > 0 ? initialBranches : mockBranches);
+  const [staffUsers, setStaffUsers] = useState<StaffUser[]>(initialUsers);
+  const [branches, setBranches] = useState<Branch[]>(initialBranches);
   const [dialog, setDialog] = useState<UserDialogState | null>(null);
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState("");

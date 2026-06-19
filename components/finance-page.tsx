@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { ArrowDownLeft, Banknote, ChevronDown, CircleDollarSign, FileSpreadsheet, FileText, Landmark, Pencil, Plus, Search, Smartphone, Trash2, TrendingUp, WalletCards, X } from "lucide-react";
-import { bankRecords as mockBankRecords, expenses as mockExpenses, incomeRecords as mockIncomeRecords, mpesaRecords as mockMpesaRecords, tillSummaries as mockTillSummaries, type ExpenseRecord, type LedgerRecord, type TillSummary } from "@/lib/finance-mock-data";
+import type { ExpenseRecord, LedgerRecord, TillSummary } from "@/lib/finance-mock-data";
 import type { FinanceData, FinanceSummary } from "@/lib/finance-data";
 
 type Tab = "tills" | "mpesa" | "bank" | "expenses" | "income";
@@ -19,11 +19,11 @@ type ExpenseForm = {
 };
 
 const emptySummary: FinanceSummary = {
-  totalIncome: mockIncomeRecords.reduce((sum, item) => sum + item.amount, 0),
-  totalExpenses: mockExpenses.filter((item) => item.status === "Approved").reduce((sum, item) => sum + item.amount, 0),
-  cashBalance: mockTillSummaries.reduce((sum, item) => sum + item.expectedCash, 0),
-  mpesaBalance: mockMpesaRecords.filter((item) => item.status === "Completed").reduce((sum, item) => sum + item.amount, 0),
-  bankBalance: mockBankRecords.filter((item) => item.status === "Completed").reduce((sum, item) => sum + item.amount, 0),
+  totalIncome: 0,
+  totalExpenses: 0,
+  cashBalance: 0,
+  mpesaBalance: 0,
+  bankBalance: 0,
   creditDebtTotal: 0,
   profitEstimate: 0,
 };
@@ -48,7 +48,7 @@ function formFromExpense(expense?: ExpenseRecord): ExpenseForm {
     amount: expense ? String(expense.amount) : "",
     paymentMethod: expense?.paymentMethod ?? "Cash",
     branchId: expense?.branchId ?? "",
-    recordedBy: expense?.recordedBy ?? "Grace Achieng",
+    recordedBy: expense?.recordedBy ?? "Owner",
     date: dateInputValue(),
     status: expense?.status ?? "Approved",
   };
@@ -63,11 +63,11 @@ export function FinancePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [summary, setSummary] = useState<FinanceSummary>(emptySummary);
-  const [tillRows, setTillRows] = useState<TillSummary[]>(mockTillSummaries);
-  const [mpesaRows, setMpesaRows] = useState<LedgerRecord[]>(mockMpesaRecords);
-  const [bankRows, setBankRows] = useState<LedgerRecord[]>(mockBankRecords);
-  const [expenseRows, setExpenseRows] = useState<ExpenseRecord[]>(mockExpenses);
-  const [incomeRows, setIncomeRows] = useState<LedgerRecord[]>(mockIncomeRecords);
+  const [tillRows, setTillRows] = useState<TillSummary[]>([]);
+  const [mpesaRows, setMpesaRows] = useState<LedgerRecord[]>([]);
+  const [bankRows, setBankRows] = useState<LedgerRecord[]>([]);
+  const [expenseRows, setExpenseRows] = useState<ExpenseRecord[]>([]);
+  const [incomeRows, setIncomeRows] = useState<LedgerRecord[]>([]);
   const [branches, setBranches] = useState<BranchOption[]>([]);
   const [editing, setEditing] = useState<ExpenseRecord | "add" | null>(null);
   const [form, setForm] = useState<ExpenseForm>(formFromExpense());

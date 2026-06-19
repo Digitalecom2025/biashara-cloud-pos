@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { branches as mockBranches, staffUsers as mockStaffUsers, type Branch, type BranchStatus, type StaffStatus, type StaffUser } from "@/lib/organization-mock-data";
 import { customers as mockCustomers, debtors as mockDebtors, type Customer, type CustomerStatus, type CustomerType, type Debtor } from "@/lib/customer-mock-data";
@@ -18,6 +19,8 @@ import {
 } from "@/lib/inventory-mock-data";
 
 const DEMO_BUSINESS_SLUG = "nairobi-cbd-store";
+const BUSINESS_COOKIE = "biashara_business_id";
+const SESSION_TYPE_COOKIE = "biashara_session_type";
 
 export type PlatformBusinessStatus = "Active" | "Trial" | "Suspended" | "Expired";
 
@@ -139,9 +142,105 @@ function trialDaysRemaining(value?: Date | null) {
   return Math.max(0, Math.ceil((value.getTime() - Date.now()) / (24 * 60 * 60 * 1000)));
 }
 
+export async function getBusinessContext() {
+  try {
+    const cookieStore = await cookies();
+    const sessionType = cookieStore.get(SESSION_TYPE_COOKIE)?.value;
+    const businessId = cookieStore.get(BUSINESS_COOKIE)?.value;
+    if (sessionType === "business" && businessId) return { businessId, isDemo: false };
+    if (sessionType === "demo") {
+      const business = await prisma.business.findUnique({ where: { slug: DEMO_BUSINESS_SLUG }, select: { id: true } });
+      return { businessId: business?.id ?? null, isDemo: true };
+    }
+  } catch {
+    // Static generation and non-request contexts do not have cookies.
+  }
+
+  return { businessId: null, isDemo: false };
+}
+
 export async function getDemoBusinessId() {
+  const context = await getBusinessContext();
+  if (context.businessId) return context.businessId;
   const business = await prisma.business.findUnique({ where: { slug: DEMO_BUSINESS_SLUG }, select: { id: true } });
   return business?.id;
+}
+
+function startOfToday() {
+  const date = new Date();
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+function startOfWeek() {
+  const date = startOfToday();
+  date.setDate(date.getDate() - 6);
+  return date;
+}
+
+export async function getDashboardForPage() {
+  const context = await getBusinessContext();
+  const empty = {
+    businessName: "Your business",
+    industryMode: "Retail",
+    todaySales: 0,
+    mpesaSales: 0,
+    cashSales: 0,
+    creditSales: 0,
+    stockValue: 0,
+    debtorsBalance: 0,
+    productsCount: 0,
+    customersCount: 0,
+    suppliersCount: 0,
+    branchesCount: 0,
+    weeklySales: 0,
+    lowStockItems: [] as Array<{ name: string; warehouse: string; stock: number }>,
+    recentActivity: [] as Array<{ action: string; detail: string; time: string; type: string }>,
+  };
+  if (!context.businessId) return empty;
+
+  const today = startOfToday();
+  const weekStart = startOfWeek();
+  const business = await prisma.business.findUnique({ where: { id: context.businessId }, select: { name: true, industryMode: true } });
+  if (!business) return empty;
+
+  const [salesToday, salesWeek, products, customers, suppliersCount, branchesCount, lowProducts, auditLogs] = await Promise.all([
+    prisma.sale.findMany({ where: { businessId: context.businessId, createdAt: { gte: today } }, select: { total: true, due: true, paymentMethod: true } }),
+    prisma.sale.findMany({ where: { businessId: context.businessId, createdAt: { gte: weekStart } }, select: { total: true } }),
+    prisma.product.findMany({ where: { businessId: context.businessId, status: { notIn: ["inactive", "Inactive"] } }, select: { name: true, stock: true, reorderLevel: true, warehouse: true, purchasePrice: true } }),
+    prisma.customer.findMany({ where: { businessId: context.businessId, status: { notIn: ["inactive", "Inactive"] } }, select: { debtBalance: true } }),
+    prisma.supplier.count({ where: { businessId: context.businessId, status: { notIn: ["inactive", "Inactive"] } } }),
+    prisma.branch.count({ where: { businessId: context.businessId, status: { notIn: ["inactive", "Inactive"] } } }),
+    prisma.product.findMany({ where: { businessId: context.businessId, status: { notIn: ["inactive", "Inactive"] } }, orderBy: { stock: "asc" }, take: 5 }),
+    prisma.auditLog.findMany({ where: { businessId: context.businessId }, orderBy: { createdAt: "desc" }, take: 5 }),
+  ]);
+
+  const todaySales = salesToday.reduce((sum, sale) => sum + Number(sale.total), 0);
+  return {
+    ...empty,
+    businessName: business.name,
+    industryMode: business.industryMode,
+    todaySales,
+    mpesaSales: salesToday.filter((sale) => sale.paymentMethod.toLowerCase().includes("pesa")).reduce((sum, sale) => sum + Number(sale.total), 0),
+    cashSales: salesToday.filter((sale) => sale.paymentMethod.toLowerCase().includes("cash")).reduce((sum, sale) => sum + Number(sale.total), 0),
+    creditSales: salesToday.reduce((sum, sale) => sum + Number(sale.due), 0),
+    stockValue: products.reduce((sum, product) => sum + Number(product.purchasePrice) * product.stock, 0),
+    debtorsBalance: customers.reduce((sum, customer) => sum + Number(customer.debtBalance), 0),
+    productsCount: products.length,
+    customersCount: customers.length,
+    suppliersCount,
+    branchesCount,
+    weeklySales: salesWeek.reduce((sum, sale) => sum + Number(sale.total), 0),
+    lowStockItems: lowProducts
+      .filter((product) => product.stock <= product.reorderLevel)
+      .map((product) => ({ name: product.name, warehouse: product.warehouse, stock: product.stock })),
+    recentActivity: auditLogs.map((log) => ({
+      action: log.action,
+      detail: log.details,
+      time: formatDateTime(log.createdAt),
+      type: log.entity.toLowerCase().includes("sale") ? "sale" : "alert",
+    })),
+  };
 }
 
 export function mapProductForPage(product: {
@@ -190,19 +289,21 @@ export function mapProductForPage(product: {
 }
 
 export async function getProductsForPage(): Promise<Product[]> {
+  const context = await getBusinessContext();
   try {
-    const businessId = await getDemoBusinessId();
-    if (!businessId) return mockProducts;
+    const businessId = context.businessId;
+    if (!businessId) return context.isDemo ? mockProducts : [];
     const dbProducts = await prisma.product.findMany({ where: { businessId, status: { notIn: ["Inactive", "inactive"] } }, orderBy: { name: "asc" } });
-    if (dbProducts.length === 0) return mockProducts;
+    if (dbProducts.length === 0) return context.isDemo ? mockProducts : [];
     return dbProducts.map(mapProductForPage);
   } catch (error) {
     console.warn("Falling back to mock products", error);
-    return mockProducts;
+    return context.isDemo ? mockProducts : [];
   }
 }
 
 export async function getSalesProductsForPage(): Promise<SalesProduct[]> {
+  const context = await getBusinessContext();
   try {
     const products = await getProductsForPage();
     return products.map((product) => ({
@@ -218,7 +319,7 @@ export async function getSalesProductsForPage(): Promise<SalesProduct[]> {
     }));
   } catch (error) {
     console.warn("Falling back to mock sales products", error);
-    return mockSalesProducts;
+    return context.isDemo ? mockSalesProducts : [];
   }
 }
 
@@ -250,22 +351,24 @@ export function mapCustomerForPage(customer: {
 }
 
 export async function getCustomersForPage(): Promise<Customer[]> {
+  const context = await getBusinessContext();
   try {
-    const businessId = await getDemoBusinessId();
-    if (!businessId) return mockCustomers;
+    const businessId = context.businessId;
+    if (!businessId) return context.isDemo ? mockCustomers : [];
     const dbCustomers = await prisma.customer.findMany({ where: { businessId, status: { notIn: ["inactive", "Inactive"] } }, orderBy: { name: "asc" } });
-    if (dbCustomers.length === 0) return mockCustomers;
+    if (dbCustomers.length === 0) return context.isDemo ? mockCustomers : [];
     return dbCustomers.map(mapCustomerForPage);
   } catch (error) {
     console.warn("Falling back to mock customers", error);
-    return mockCustomers;
+    return context.isDemo ? mockCustomers : [];
   }
 }
 
 export async function getDebtorsForPage(): Promise<Debtor[]> {
+  const context = await getBusinessContext();
   try {
-    const businessId = await getDemoBusinessId();
-    if (!businessId) return mockDebtors;
+    const businessId = context.businessId;
+    if (!businessId) return context.isDemo ? mockDebtors : [];
     const dbCustomers = await prisma.customer.findMany({
       where: { businessId, debtBalance: { gt: 0 }, status: { notIn: ["inactive", "Inactive"] } },
       include: {
@@ -274,7 +377,7 @@ export async function getDebtorsForPage(): Promise<Debtor[]> {
       },
       orderBy: { updatedAt: "desc" },
     });
-    if (dbCustomers.length === 0) return mockDebtors;
+    if (dbCustomers.length === 0) return context.isDemo ? mockDebtors : [];
 
     const today = new Date();
     return dbCustomers.map((customer, index) => {
@@ -301,21 +404,22 @@ export async function getDebtorsForPage(): Promise<Debtor[]> {
     });
   } catch (error) {
     console.warn("Falling back to mock debtors", error);
-    return mockDebtors;
+    return context.isDemo ? mockDebtors : [];
   }
 }
 
 export async function getRecentSalesForPage(): Promise<RecentSale[]> {
+  const context = await getBusinessContext();
   try {
-    const businessId = await getDemoBusinessId();
-    if (!businessId) return mockRecentSales;
+    const businessId = context.businessId;
+    if (!businessId) return context.isDemo ? mockRecentSales : [];
     const sales = await prisma.sale.findMany({
       where: { businessId },
       include: { customer: true, cashier: true, branch: true },
       orderBy: { createdAt: "desc" },
       take: 20,
     });
-    if (sales.length === 0) return mockRecentSales;
+    if (sales.length === 0) return context.isDemo ? mockRecentSales : [];
     return sales.map((sale) => ({
       id: sale.id,
       invoice: sale.invoiceNumber,
@@ -331,7 +435,7 @@ export async function getRecentSalesForPage(): Promise<RecentSale[]> {
     }));
   } catch (error) {
     console.warn("Falling back to mock recent sales", error);
-    return mockRecentSales;
+    return context.isDemo ? mockRecentSales : [];
   }
 }
 
@@ -362,29 +466,31 @@ export function mapSupplierForPage(supplier: {
 }
 
 export async function getSuppliersForPage(): Promise<Supplier[]> {
+  const context = await getBusinessContext();
   try {
-    const businessId = await getDemoBusinessId();
-    if (!businessId) return mockSuppliers;
+    const businessId = context.businessId;
+    if (!businessId) return context.isDemo ? mockSuppliers : [];
     const dbSuppliers = await prisma.supplier.findMany({ where: { businessId, status: { notIn: ["inactive", "Inactive"] } }, orderBy: { name: "asc" } });
-    if (dbSuppliers.length === 0) return mockSuppliers;
+    if (dbSuppliers.length === 0) return context.isDemo ? mockSuppliers : [];
     return dbSuppliers.map(mapSupplierForPage);
   } catch (error) {
     console.warn("Falling back to mock suppliers", error);
-    return mockSuppliers;
+    return context.isDemo ? mockSuppliers : [];
   }
 }
 
 export async function getPurchasesForPage(): Promise<Purchase[]> {
+  const context = await getBusinessContext();
   try {
-    const businessId = await getDemoBusinessId();
-    if (!businessId) return mockPurchases;
+    const businessId = context.businessId;
+    if (!businessId) return context.isDemo ? mockPurchases : [];
     const purchases = await prisma.purchase.findMany({
       where: { businessId },
       include: { supplier: true, items: true },
       orderBy: { purchaseDate: "desc" },
       take: 50,
     });
-    if (purchases.length === 0) return mockPurchases;
+    if (purchases.length === 0) return context.isDemo ? mockPurchases : [];
     return purchases.map((purchase) => ({
       id: purchase.id,
       invoice: purchase.invoiceNumber,
@@ -401,11 +507,12 @@ export async function getPurchasesForPage(): Promise<Purchase[]> {
     }));
   } catch (error) {
     console.warn("Falling back to mock purchases", error);
-    return mockPurchases;
+    return context.isDemo ? mockPurchases : [];
   }
 }
 
 export async function getWarehouseProductsForPage(): Promise<WarehouseProduct[]> {
+  const context = await getBusinessContext();
   try {
     const products = await getProductsForPage();
     return products.map((product) => ({
@@ -426,14 +533,15 @@ export async function getWarehouseProductsForPage(): Promise<WarehouseProduct[]>
     }));
   } catch (error) {
     console.warn("Falling back to mock warehouse products", error);
-    return mockWarehouseProducts;
+    return context.isDemo ? mockWarehouseProducts : [];
   }
 }
 
 export async function getWarehousesForPage(): Promise<Warehouse[]> {
+  const context = await getBusinessContext();
   try {
     const products = await getWarehouseProductsForPage();
-    if (products.length === 0) return mockWarehouses;
+    if (products.length === 0) return context.isDemo ? mockWarehouses : [];
     return Array.from(new Set(products.map((product) => product.warehouse))).map((warehouseName, index) => {
       const warehouseProducts = products.filter((product) => product.warehouse === warehouseName);
       const lowStock = warehouseProducts.some((product) => product.status !== "Healthy");
@@ -450,21 +558,22 @@ export async function getWarehousesForPage(): Promise<Warehouse[]> {
     });
   } catch (error) {
     console.warn("Falling back to mock warehouses", error);
-    return mockWarehouses;
+    return context.isDemo ? mockWarehouses : [];
   }
 }
 
 export async function getStockAdjustmentsForPage(): Promise<StockAdjustment[]> {
+  const context = await getBusinessContext();
   try {
-    const businessId = await getDemoBusinessId();
-    if (!businessId) return mockStockAdjustments;
+    const businessId = context.businessId;
+    if (!businessId) return context.isDemo ? mockStockAdjustments : [];
     const movements = await prisma.stockMovement.findMany({
       where: { businessId, type: { in: ["adjustment", "damage", "correction"] } },
       include: { product: true },
       orderBy: { createdAt: "desc" },
       take: 50,
     });
-    if (movements.length === 0) return mockStockAdjustments;
+    if (movements.length === 0) return context.isDemo ? mockStockAdjustments : [];
     return movements.map((movement) => ({
       id: movement.reference ?? movement.id,
       product: movement.product.name,
@@ -478,21 +587,22 @@ export async function getStockAdjustmentsForPage(): Promise<StockAdjustment[]> {
     }));
   } catch (error) {
     console.warn("Falling back to mock stock adjustments", error);
-    return mockStockAdjustments;
+    return context.isDemo ? mockStockAdjustments : [];
   }
 }
 
 export async function getTransfersForPage(): Promise<StockTransfer[]> {
+  const context = await getBusinessContext();
   try {
-    const businessId = await getDemoBusinessId();
-    if (!businessId) return mockStockTransfers;
+    const businessId = context.businessId;
+    if (!businessId) return context.isDemo ? mockStockTransfers : [];
     const movements = await prisma.stockMovement.findMany({
       where: { businessId, type: { in: ["transfer_in", "transfer_out"] } },
       include: { product: true },
       orderBy: { createdAt: "desc" },
       take: 100,
     });
-    if (movements.length === 0) return mockStockTransfers;
+    if (movements.length === 0) return context.isDemo ? mockStockTransfers : [];
 
     const groups = new Map<string, typeof movements>();
     for (const movement of movements) {
@@ -521,24 +631,25 @@ export async function getTransfersForPage(): Promise<StockTransfer[]> {
     });
   } catch (error) {
     console.warn("Falling back to mock transfers", error);
-    return mockStockTransfers;
+    return context.isDemo ? mockStockTransfers : [];
   }
 }
 
 export async function getBranchesForPage(): Promise<Branch[]> {
+  const context = await getBusinessContext();
   try {
-    const businessId = await getDemoBusinessId();
-    if (!businessId) return mockBranches;
+    const businessId = context.businessId;
+    if (!businessId) return context.isDemo ? mockBranches : [];
     const dbBranches = await prisma.branch.findMany({
       where: { businessId, status: { notIn: ["inactive", "Inactive"] } },
       include: { users: true, products: true, sales: true },
       orderBy: { name: "asc" },
     });
-    if (dbBranches.length === 0) return mockBranches;
+    if (dbBranches.length === 0) return context.isDemo ? mockBranches : [];
     return dbBranches.map(mapBranchForPage);
   } catch (error) {
     console.warn("Falling back to mock branches", error);
-    return mockBranches;
+    return context.isDemo ? mockBranches : [];
   }
 }
 
@@ -573,19 +684,20 @@ export function mapBranchForPage(branch: {
 }
 
 export async function getUsersForPage(): Promise<StaffUser[]> {
+  const context = await getBusinessContext();
   try {
-    const businessId = await getDemoBusinessId();
-    if (!businessId) return mockStaffUsers;
+    const businessId = context.businessId;
+    if (!businessId) return context.isDemo ? mockStaffUsers : [];
     const dbUsers = await prisma.user.findMany({
       where: { businessId, status: { notIn: ["inactive", "Inactive"] } },
       include: { branch: true },
       orderBy: { name: "asc" },
     });
-    if (dbUsers.length === 0) return mockStaffUsers;
+    if (dbUsers.length === 0) return context.isDemo ? mockStaffUsers : [];
     return dbUsers.map(mapUserForPage);
   } catch (error) {
     console.warn("Falling back to mock users", error);
-    return mockStaffUsers;
+    return context.isDemo ? mockStaffUsers : [];
   }
 }
 

@@ -22,9 +22,13 @@ export type BusinessSession = {
 };
 
 const BUSINESS_SESSION_KEY = "biashara.businessSession";
+const BUSINESS_COOKIE = "biashara_business_id";
+const SESSION_TYPE_COOKIE = "biashara_session_type";
 
 export function saveBusinessSession(session: BusinessSession) {
   window.localStorage.setItem(BUSINESS_SESSION_KEY, JSON.stringify(session));
+  document.cookie = `${BUSINESS_COOKIE}=${encodeURIComponent(session.businessId)}; path=/; max-age=${60 * 60 * 24 * 14}; SameSite=Lax`;
+  document.cookie = `${SESSION_TYPE_COOKIE}=business; path=/; max-age=${60 * 60 * 24 * 14}; SameSite=Lax`;
 }
 
 export function getBusinessSession(): BusinessSession | null {
@@ -44,6 +48,8 @@ export function clearBusinessSession() {
   if (typeof window === "undefined") return;
   window.localStorage.removeItem(BUSINESS_SESSION_KEY);
   window.sessionStorage.removeItem(BUSINESS_SESSION_KEY);
+  document.cookie = `${BUSINESS_COOKIE}=; path=/; max-age=0; SameSite=Lax`;
+  document.cookie = `${SESSION_TYPE_COOKIE}=; path=/; max-age=0; SameSite=Lax`;
 }
 
 export function sidebarItemsForBusinessRole(role?: string | null): SidebarItem[] {

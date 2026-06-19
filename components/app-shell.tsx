@@ -182,7 +182,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span>Main branch</span>
             <Store size={13} className="text-[#22C55E]" />
           </div>
-          <p className="truncate text-xs font-semibold text-[#F6FFF8]">Nairobi CBD Store</p>
+          <p className="truncate text-xs font-semibold text-[#F6FFF8]">{businessSession?.branchName ?? session?.demoUserBranch ?? "Main Branch"}</p>
         </div>
 
         <nav className="sidebar-scroll mt-4 flex-1 overflow-y-auto px-3 pb-5" aria-label="Main navigation">
@@ -261,10 +261,6 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Zap size={15} />
               <span>Setup 72%</span>
             </button>
-
-            <span className="hidden rounded-xl border border-[#16A34A]/20 bg-[#16A34A]/8 px-3 py-2.5 text-[10px] font-black uppercase tracking-wider text-[#0F8C42] 2xl:inline-flex">
-              Trial Workspace: Local business data
-            </span>
 
             <PwaControls />
 

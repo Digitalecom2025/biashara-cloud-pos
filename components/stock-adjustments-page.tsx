@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { AlertTriangle, Boxes, ChevronDown, CirclePlus, ClipboardCheck, MinusCircle, MoreHorizontal, Plus, Search, X } from "lucide-react";
-import { stockAdjustments as mockStockAdjustments, warehouses as mockWarehouses, type AdjustmentStatus, type AdjustmentType, type StockAdjustment, type Warehouse } from "@/lib/inventory-mock-data";
-import { products as mockProducts, type Product } from "@/lib/mock-data";
+import type { AdjustmentStatus, AdjustmentType, StockAdjustment, Warehouse } from "@/lib/inventory-mock-data";
+import type { Product } from "@/lib/mock-data";
 
 type AdjustmentFormState = {
   productId: string;
@@ -19,13 +19,13 @@ function defaultForm(products: Product[], warehouses: Warehouse[]): AdjustmentFo
   return { productId: products[0]?.id ? String(products[0].id) : "", type: "Add", quantity: "1", reason: "", warehouse: warehouses[0]?.name ?? "Main Warehouse", notes: "", adjustedBy: "Inventory team" };
 }
 
-export function StockAdjustmentsPage({ initialAdjustments = mockStockAdjustments, initialProducts = mockProducts, initialWarehouses = mockWarehouses }: { initialAdjustments?: StockAdjustment[]; initialProducts?: Product[]; initialWarehouses?: Warehouse[] }) {
+export function StockAdjustmentsPage({ initialAdjustments = [], initialProducts = [], initialWarehouses = [] }: { initialAdjustments?: StockAdjustment[]; initialProducts?: Product[]; initialWarehouses?: Warehouse[] }) {
   const [query, setQuery] = useState("");
   const [type, setType] = useState("All types");
   const [open, setOpen] = useState(false);
-  const [adjustments, setAdjustments] = useState<StockAdjustment[]>(initialAdjustments.length > 0 ? initialAdjustments : mockStockAdjustments);
-  const [products, setProducts] = useState<Product[]>(initialProducts.length > 0 ? initialProducts : mockProducts);
-  const [warehouses] = useState<Warehouse[]>(initialWarehouses.length > 0 ? initialWarehouses : mockWarehouses);
+  const [adjustments, setAdjustments] = useState<StockAdjustment[]>(initialAdjustments);
+  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [warehouses] = useState<Warehouse[]>(initialWarehouses);
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState("");
   const [error, setError] = useState("");

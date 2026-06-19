@@ -14,8 +14,8 @@ import {
   WalletCards,
   X,
 } from "lucide-react";
-import { purchaseReturns, purchases as mockPurchases, suppliers as mockSuppliers, type Purchase, type PurchaseStatus, type Supplier } from "@/lib/purchasing-mock-data";
-import { products as mockProducts, type Product } from "@/lib/mock-data";
+import type { Purchase, PurchaseStatus, Supplier } from "@/lib/purchasing-mock-data";
+import type { Product } from "@/lib/mock-data";
 
 type PurchaseItemForm = {
   productId: string;
@@ -54,9 +54,9 @@ function defaultForm(supplierId = "", productId = ""): PurchaseFormState {
 }
 
 export function PurchasesPage({
-  initialPurchases = mockPurchases,
-  initialSuppliers = mockSuppliers,
-  initialProducts = mockProducts,
+  initialPurchases = [],
+  initialSuppliers = [],
+  initialProducts = [],
 }: {
   initialPurchases?: Purchase[];
   initialSuppliers?: Supplier[];
@@ -65,9 +65,9 @@ export function PurchasesPage({
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("All statuses");
   const [supplier, setSupplier] = useState("All suppliers");
-  const [purchases, setPurchases] = useState<Purchase[]>(initialPurchases.length > 0 ? initialPurchases : mockPurchases);
-  const [suppliers, setSuppliers] = useState<Supplier[]>(initialSuppliers.length > 0 ? initialSuppliers : mockSuppliers);
-  const [products, setProducts] = useState<Product[]>(initialProducts.length > 0 ? initialProducts : mockProducts);
+  const [purchases, setPurchases] = useState<Purchase[]>(initialPurchases);
+  const [suppliers, setSuppliers] = useState<Supplier[]>(initialSuppliers);
+  const [products, setProducts] = useState<Product[]>(initialProducts);
   const [addOpen, setAddOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState("");
@@ -83,7 +83,7 @@ export function PurchasesPage({
     });
   }, [query, status, supplier, purchases]);
   const totals = purchases.reduce((result, purchase) => ({ total: result.total + purchase.totalAmount, paid: result.paid + purchase.paidAmount, balance: result.balance + purchase.balanceDue }), { total: 0, paid: 0, balance: 0 });
-  const returnTotal = purchaseReturns.reduce((sum, item) => sum + item.total, 0);
+  const returnTotal = 0;
 
   function showFeedback(message: string) {
     setFeedback(message);
@@ -154,7 +154,7 @@ export function PurchasesPage({
         <SummaryCard icon={ShoppingBag} label="Total purchases" value={formatCurrency(totals.total)} note={`${purchases.length} purchase invoices`} />
         <SummaryCard icon={CircleDollarSign} label="Paid purchases" value={formatCurrency(totals.paid)} note="Settled supplier payments" />
         <SummaryCard icon={WalletCards} label="Supplier balance" value={formatCurrency(totals.balance)} note="Outstanding amount payable" danger />
-        <SummaryCard icon={ArrowDownLeft} label="Purchase returns" value={formatCurrency(returnTotal)} note={`${purchaseReturns.length} returns recorded`} gold />
+        <SummaryCard icon={ArrowDownLeft} label="Purchase returns" value={formatCurrency(returnTotal)} note="0 returns recorded" gold />
       </section>
       <section className="mt-5 overflow-hidden rounded-2xl border border-[#DDEAE0] bg-white shadow-sm shadow-[#12311F]/5">
         <div className="grid gap-3 border-b border-[#E8F0EA] p-4 lg:grid-cols-[minmax(0,1fr)_170px_230px]">

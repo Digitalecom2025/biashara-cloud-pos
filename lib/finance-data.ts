@@ -1,6 +1,6 @@
 import { bankRecords as mockBankRecords, incomeRecords as mockIncomeRecords, mpesaRecords as mockMpesaRecords, paymentTypes as mockPaymentTypes, tillSummaries as mockTillSummaries } from "@/lib/finance-mock-data";
 import type { ExpenseRecord, LedgerRecord, PaymentType, TillSummary } from "@/lib/finance-mock-data";
-import { getDemoBusinessId } from "@/lib/db-data";
+import { getBusinessContext, getDemoBusinessId } from "@/lib/db-data";
 import { prisma } from "@/lib/prisma";
 
 export type FinanceSummary = {
@@ -135,23 +135,24 @@ async function loadFinanceRows(businessId: string) {
 }
 
 export async function getFinanceSummaryData(): Promise<FinanceData> {
-  const businessId = await getDemoBusinessId();
+  const context = await getBusinessContext();
+  const businessId = context.businessId;
   if (!businessId) {
     return {
       summary: {
-        totalIncome: mockIncomeRecords.reduce((sum, item) => sum + item.amount, 0),
+        totalIncome: context.isDemo ? mockIncomeRecords.reduce((sum, item) => sum + item.amount, 0) : 0,
         totalExpenses: 0,
-        cashBalance: mockTillSummaries.reduce((sum, item) => sum + item.expectedCash, 0),
-        mpesaBalance: mockMpesaRecords.reduce((sum, item) => sum + item.amount, 0),
-        bankBalance: mockBankRecords.reduce((sum, item) => sum + item.amount, 0),
+        cashBalance: context.isDemo ? mockTillSummaries.reduce((sum, item) => sum + item.expectedCash, 0) : 0,
+        mpesaBalance: context.isDemo ? mockMpesaRecords.reduce((sum, item) => sum + item.amount, 0) : 0,
+        bankBalance: context.isDemo ? mockBankRecords.reduce((sum, item) => sum + item.amount, 0) : 0,
         creditDebtTotal: 0,
         profitEstimate: 0,
       },
-      tillSummaries: mockTillSummaries,
-      mpesaRecords: mockMpesaRecords,
-      bankRecords: mockBankRecords,
+      tillSummaries: context.isDemo ? mockTillSummaries : [],
+      mpesaRecords: context.isDemo ? mockMpesaRecords : [],
+      bankRecords: context.isDemo ? mockBankRecords : [],
       expenses: [],
-      incomeRecords: mockIncomeRecords,
+      incomeRecords: context.isDemo ? mockIncomeRecords : [],
     };
   }
 
@@ -188,19 +189,17 @@ export async function getFinanceSummaryData(): Promise<FinanceData> {
     status: sale.due.toString() === "0" ? "Completed" : "Pending",
   }));
 
-  const tillSummaries: TillSummary[] = [
-    {
-      id: "till-db-01",
-      till: "Till CBD-01",
-      branch: "Nairobi CBD Store",
-      cashier: "Mary Wanjiku",
-      openingFloat: 5000,
-      cashSales: cashBalance,
-      cashExpenses,
-      expectedCash: 5000 + cashBalance - cashExpenses,
-      status: "Open",
-    },
-  ];
+  const tillSummaries: TillSummary[] = cashBalance || cashExpenses ? [{
+    id: "till-db-01",
+    till: "Main till",
+    branch: payments[0]?.sale?.branch.name ?? "Main Branch",
+    cashier: payments[0]?.sale?.cashier.name ?? "Owner",
+    openingFloat: 0,
+    cashSales: cashBalance,
+    cashExpenses,
+    expectedCash: cashBalance - cashExpenses,
+    status: "Open",
+  }] : [];
 
   return {
     summary: {
@@ -221,8 +220,9 @@ export async function getFinanceSummaryData(): Promise<FinanceData> {
 }
 
 export async function getPaymentTypesForPage() {
-  const businessId = await getDemoBusinessId();
-  if (!businessId) return mockPaymentTypes.map((item) => ({ ...item, code: item.id }));
+  const context = await getBusinessContext();
+  const businessId = context.businessId;
+  if (!businessId) return context.isDemo ? mockPaymentTypes.map((item) => ({ ...item, code: item.id })) : [];
 
   const [settings, payments, sales] = await Promise.all([
     prisma.setting.findMany({ where: { businessId, key: { startsWith: "paymentType." } } }),

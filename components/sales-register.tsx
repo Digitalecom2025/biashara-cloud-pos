@@ -23,7 +23,7 @@ import {
   UserPlus,
   X,
 } from "lucide-react";
-import { customers as mockCustomers, type Customer } from "@/lib/customer-mock-data";
+import type { Customer } from "@/lib/customer-mock-data";
 import {
   getOfflineDeviceId,
   getOfflineSalesSummary,
@@ -34,7 +34,9 @@ import {
   OFFLINE_SALES_EVENT,
   saveOfflineSale,
 } from "@/lib/offline-sales";
-import { recentSales as mockRecentSales, salesProducts as mockSalesProducts, type RecentSale, type SalesProduct } from "@/lib/sales-mock-data";
+import { getBusinessSession } from "@/lib/business-session";
+import { getDemoSession } from "@/lib/demo-auth";
+import type { RecentSale, SalesProduct } from "@/lib/sales-mock-data";
 
 type PaymentMethod = "Cash" | "M-Pesa" | "Bank" | "Credit / Debt";
 type CartItem = SalesProduct & { quantity: number };
@@ -58,6 +60,13 @@ const DEMO_BRANCH_ID = "main-branch";
 const DEMO_CASHIER_ID = "james-mwangi";
 const DEMO_CASHIER_NAME = "James Mwangi";
 const DEMO_BRANCH_NAME = "Nairobi CBD Store";
+const DEFAULT_SESSION_META = {
+  businessId: DEMO_BUSINESS_ID,
+  branchId: DEMO_BRANCH_ID,
+  cashierId: DEMO_CASHIER_ID,
+  cashierName: DEMO_CASHIER_NAME,
+  branchName: DEMO_BRANCH_NAME,
+};
 
 const paymentMethods = [
   { label: "Cash" as const, icon: Banknote },
@@ -86,18 +95,18 @@ function formatReceiptDate(value: string) {
 }
 
 export function SalesRegister({
-  initialProducts = mockSalesProducts,
-  initialCustomers = mockCustomers,
-  initialSales = mockRecentSales,
+  initialProducts = [],
+  initialCustomers = [],
+  initialSales = [],
 }: {
   initialProducts?: SalesProduct[];
   initialCustomers?: Customer[];
   initialSales?: RecentSale[];
 }) {
   const walkInCustomer = initialCustomers.find((customer) => customer.name.toLowerCase().includes("walk-in")) ?? initialCustomers[0];
-  const [products, setProducts] = useState<SalesProduct[]>(initialProducts.length > 0 ? initialProducts : mockSalesProducts);
-  const [customers, setCustomers] = useState<Customer[]>(initialCustomers.length > 0 ? initialCustomers : mockCustomers);
-  const [sales, setSales] = useState<RecentSale[]>(initialSales.length > 0 ? initialSales : mockRecentSales);
+  const [products, setProducts] = useState<SalesProduct[]>(initialProducts);
+  const [customers, setCustomers] = useState<Customer[]>(initialCustomers);
+  const [sales, setSales] = useState<RecentSale[]>(initialSales);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All");
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -113,6 +122,7 @@ export function SalesRegister({
   const [pendingOfflineSales, setPendingOfflineSales] = useState(0);
   const [simulateOfflineMode, setSimulateOfflineModeState] = useState(false);
   const [online, setOnline] = useState(true);
+  const [sessionMeta, setSessionMeta] = useState(DEFAULT_SESSION_META);
 
   const categories = ["All", ...Array.from(new Set(products.map((product) => product.category)))];
   const selectedCustomer = customers.find((customer) => customer.id === selectedCustomerId) ?? walkInCustomer;
@@ -159,6 +169,25 @@ export function SalesRegister({
     const timer = window.setTimeout(() => {
       setOnline(navigator.onLine);
       setSimulateOfflineModeState(getSimulateOfflineMode());
+      const businessSession = getBusinessSession();
+      const demoSession = getDemoSession();
+      if (businessSession) {
+        setSessionMeta({
+          businessId: businessSession.businessId,
+          branchId: businessSession.branchName || "main-branch",
+          cashierId: businessSession.userId,
+          cashierName: businessSession.userName,
+          branchName: businessSession.branchName || "Main Branch",
+        });
+      } else if (demoSession) {
+        setSessionMeta({
+          businessId: DEMO_BUSINESS_ID,
+          branchId: demoSession.demoUserBranch || DEMO_BRANCH_ID,
+          cashierId: demoSession.demoUserEmail,
+          cashierName: demoSession.demoUserName,
+          branchName: demoSession.demoUserBranch || DEMO_BRANCH_NAME,
+        });
+      }
       void refreshOfflineSummary();
     }, 0);
 
@@ -266,9 +295,9 @@ export function SalesRegister({
 
     await saveOfflineSale({
       localId: makeOfflineSaleId(),
-      businessId: DEMO_BUSINESS_ID,
-      branchId: DEMO_BRANCH_ID,
-      cashierId: DEMO_CASHIER_ID,
+      businessId: sessionMeta.businessId,
+      branchId: sessionMeta.branchId,
+      cashierId: sessionMeta.cashierId,
       customerId: selectedCustomer?.name.toLowerCase().includes("walk-in") ? undefined : String(selectedCustomer?.id ?? ""),
       customerName: selectedCustomer?.name ?? "Walk-in Customer",
       localInvoiceNumber,
@@ -297,8 +326,8 @@ export function SalesRegister({
       total,
       paid,
       due,
-      cashier: DEMO_CASHIER_NAME,
-      branch: DEMO_BRANCH_NAME,
+      cashier: sessionMeta.cashierName,
+      branch: sessionMeta.branchName,
       date: now,
       syncStatus: "Pending Sync",
     });
@@ -413,7 +442,7 @@ export function SalesRegister({
           <p className="mt-1 text-sm text-[#789083]">Create a sale, collect payment and issue a receipt.</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <span className="rounded-xl border border-[#DDEAE0] bg-white px-3 py-2.5 text-xs font-bold text-[#60766B]">Branch: Nairobi CBD</span>
+          <span className="rounded-xl border border-[#DDEAE0] bg-white px-3 py-2.5 text-xs font-bold text-[#60766B]">Branch: {sessionMeta.branchName}</span>
           <span className="rounded-xl border border-[#DDEAE0] bg-white px-3 py-2.5 text-xs font-bold text-[#60766B]">Till: Main Counter</span>
           <span className="rounded-xl border border-[#D4A017]/35 bg-[#FFF9E8] px-3 py-2.5 text-xs font-black text-[#8A670C]">Pending offline sales: {pendingOfflineSales}</span>
           {simulateOfflineMode && <span className="rounded-xl border border-[#D4A017]/35 bg-[#D4A017]/12 px-3 py-2.5 text-xs font-black text-[#8A670C]">Offline Test Mode</span>}
@@ -478,8 +507,8 @@ export function SalesRegister({
             <div className="grid min-h-52 place-items-center p-8 text-center">
               <div>
                 <PackageSearch className="mx-auto text-[#9AAEA3]" size={30} />
-                <p className="mt-3 text-sm font-black text-[#173324]">No matching products</p>
-                <p className="mt-1 text-xs text-[#789083]">Try another product or category.</p>
+                <p className="mt-3 text-sm font-black text-[#173324]">{products.length === 0 ? "No products yet" : "No matching products"}</p>
+                <p className="mt-1 text-xs text-[#789083]">{products.length === 0 ? "Add products before recording your first sale." : "Try another product or category."}</p>
               </div>
             </div>
           )}
@@ -611,7 +640,7 @@ export function SalesRegister({
                   <td className="px-3 py-3 text-[#0F8C42]">{formatCurrency(sale.paid)}</td>
                   <td className="px-3 py-3 text-[#EF4444]">{formatCurrency(sale.due)}</td>
                   <td className="px-3 py-3">{sale.cashier}</td>
-                  <td className="px-3 py-3">{sale.branch ?? "Nairobi CBD Store"}</td>
+                  <td className="px-3 py-3">{sale.branch ?? "Main Branch"}</td>
                   <td className="px-3 py-3">{sale.date}</td>
                   <td className="px-4 py-3"><StatusBadge status={sale.status} /></td>
                   <td className="px-4 py-3">
@@ -626,6 +655,7 @@ export function SalesRegister({
             </tbody>
           </table>
         </div>
+        {sales.length === 0 && <div className="grid min-h-40 place-items-center border-t border-[#E8F0EA] p-6 text-center"><div><ReceiptText className="mx-auto text-[#9AAEA3]" size={30} /><p className="mt-3 text-sm font-black text-[#173324]">No sales yet</p><p className="mt-1 text-xs text-[#789083]">Open the sales register to record your first sale.</p></div></div>}
       </section>
 
       {receipt && <ReceiptModal receipt={receipt} onClose={() => setReceipt(null)} />}

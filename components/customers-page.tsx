@@ -17,7 +17,7 @@ import {
   WalletCards,
   X,
 } from "lucide-react";
-import { customers as mockCustomers, type Customer, type CustomerStatus, type CustomerType } from "@/lib/customer-mock-data";
+import type { Customer, CustomerStatus, CustomerType } from "@/lib/customer-mock-data";
 
 type CustomerFormState = {
   name: string;
@@ -47,10 +47,10 @@ function formatCurrency(value: number) {
   return new Intl.NumberFormat("en-KE", { style: "currency", currency: "KES", maximumFractionDigits: 0 }).format(value);
 }
 
-export function CustomersPage({ initialCustomers = mockCustomers }: { initialCustomers?: Customer[] }) {
+export function CustomersPage({ initialCustomers = [] }: { initialCustomers?: Customer[] }) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("All statuses");
-  const [customers, setCustomers] = useState<Customer[]>(initialCustomers.length > 0 ? initialCustomers : mockCustomers);
+  const [customers, setCustomers] = useState<Customer[]>(initialCustomers);
   const [selectedId, setSelectedId] = useState(customers[0]?.id ?? "");
   const [dialog, setDialog] = useState<CustomerDialogState | null>(null);
   const [loading, setLoading] = useState(false);
@@ -192,7 +192,7 @@ export function CustomersPage({ initialCustomers = mockCustomers }: { initialCus
             ))}
           </div>
 
-          {filteredCustomers.length === 0 && <div className="grid min-h-56 place-items-center p-8 text-center"><div><Users className="mx-auto text-[#9AAEA3]" size={32} /><p className="mt-3 text-sm font-black text-[#173324]">No matching customers</p><p className="mt-1 text-xs text-[#789083]">Adjust the search or status filter.</p></div></div>}
+          {filteredCustomers.length === 0 && <div className="grid min-h-56 place-items-center p-8 text-center"><div><Users className="mx-auto text-[#9AAEA3]" size={32} /><p className="mt-3 text-sm font-black text-[#173324]">{customers.length === 0 ? "No customers yet" : "No matching customers"}</p><p className="mt-1 text-xs text-[#789083]">{customers.length === 0 ? "Add your first customer or continue without one." : "Adjust the search or status filter."}</p></div></div>}
           <footer className="border-t border-[#E8F0EA] p-4 text-xs text-[#789083]">Showing <b className="text-[#173324]">{filteredCustomers.length}</b> of <b className="text-[#173324]">{customers.length}</b> customers</footer>
         </article>
 

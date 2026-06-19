@@ -14,7 +14,7 @@ import {
   Trash2,
   Upload,
 } from "lucide-react";
-import { products as mockProducts, type Product } from "@/lib/mock-data";
+import type { Product } from "@/lib/mock-data";
 
 type ProductFormState = {
   name: string;
@@ -68,10 +68,10 @@ function formatCurrency(value: number) {
   }).format(value);
 }
 
-export function ProductList({ initialProducts = mockProducts }: { initialProducts?: Product[] }) {
+export function ProductList({ initialProducts = [] }: { initialProducts?: Product[] }) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All categories");
-  const [products, setProducts] = useState<Product[]>(initialProducts.length > 0 ? initialProducts : mockProducts);
+  const [products, setProducts] = useState<Product[]>(initialProducts);
   const [dialog, setDialog] = useState<ProductDialogState | null>(null);
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState("");
@@ -328,8 +328,8 @@ export function ProductList({ initialProducts = mockProducts }: { initialProduct
           <div className="grid min-h-56 place-items-center p-8 text-center">
             <div>
               <PackagePlus className="mx-auto text-[#9AAEA3]" size={32} />
-              <p className="mt-3 text-sm font-black text-[#173324]">No matching products</p>
-              <p className="mt-1 text-xs text-[#789083]">Adjust the search or category filter.</p>
+              <p className="mt-3 text-sm font-black text-[#173324]">{products.length === 0 ? "No products yet" : "No matching products"}</p>
+              <p className="mt-1 text-xs text-[#789083]">{products.length === 0 ? "Add your first product to start selling." : "Adjust the search or category filter."}</p>
             </div>
           </div>
         )}

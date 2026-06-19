@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { CalendarClock, ChevronDown, CircleDollarSign, Download, FileText, HandCoins, History, MoreHorizontal, ReceiptText, Search, Users, X } from "lucide-react";
-import { customers as mockCustomers, debtors as mockDebtors, type Customer, type Debtor } from "@/lib/customer-mock-data";
+import type { Customer, Debtor } from "@/lib/customer-mock-data";
 
 type PaymentFormState = {
   customerId: string;
@@ -29,11 +29,11 @@ function formatDateTime(value: string) {
   return new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date(value));
 }
 
-export function DebtorsPage({ initialDebtors = mockDebtors, initialCustomers = mockCustomers }: { initialDebtors?: Debtor[]; initialCustomers?: Customer[] }) {
+export function DebtorsPage({ initialDebtors = [], initialCustomers = [] }: { initialDebtors?: Debtor[]; initialCustomers?: Customer[] }) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("All statuses");
-  const [debtors, setDebtors] = useState<Debtor[]>(initialDebtors.length > 0 ? initialDebtors : mockDebtors);
-  const [customers, setCustomers] = useState<Customer[]>(initialCustomers.length > 0 ? initialCustomers : mockCustomers);
+  const [debtors, setDebtors] = useState<Debtor[]>(initialDebtors);
+  const [customers, setCustomers] = useState<Customer[]>(initialCustomers);
   const [paymentDebtor, setPaymentDebtor] = useState<Debtor | null>(null);
   const [historyDebtor, setHistoryDebtor] = useState<Debtor | null>(null);
   const [history, setHistory] = useState<PaymentHistory[]>([]);
@@ -127,7 +127,7 @@ export function DebtorsPage({ initialDebtors = mockDebtors, initialCustomers = m
         {loading && <div className="border-b border-[#E8F0EA] bg-[#FFF9E8] px-4 py-2 text-xs font-bold text-[#8A670C]">Updating debtor balances...</div>}
         <div className="hidden overflow-x-auto lg:block"><table className="w-full min-w-[1280px] border-collapse text-left"><thead><tr className="bg-[#F8FBF8] text-[10px] font-black uppercase tracking-[0.13em] text-[#789083]"><th className="px-4 py-3.5">Customer</th><th className="px-3 py-3.5">Phone</th><th className="px-3 py-3.5">Invoice</th><th className="px-3 py-3.5">Original amount</th><th className="px-3 py-3.5">Paid amount</th><th className="px-3 py-3.5">Balance due</th><th className="px-3 py-3.5">Due date</th><th className="px-3 py-3.5">Days overdue</th><th className="px-3 py-3.5">Status</th><th className="px-4 py-3.5 text-right">Actions</th></tr></thead><tbody>{filteredDebtors.map((debtor) => <DebtorRow key={debtor.id} debtor={debtor} onPay={() => setPaymentDebtor(debtor)} onHistory={() => openHistory(debtor)} />)}</tbody></table></div>
         <div className="grid gap-3 p-3 lg:hidden">{filteredDebtors.map((debtor) => <DebtorCard key={debtor.id} debtor={debtor} onPay={() => setPaymentDebtor(debtor)} onHistory={() => openHistory(debtor)} />)}</div>
-        {filteredDebtors.length === 0 && <div className="grid min-h-56 place-items-center p-8 text-center"><div><Users className="mx-auto text-[#9AAEA3]" size={32} /><p className="mt-3 text-sm font-black text-[#173324]">No matching debtors</p><p className="mt-1 text-xs text-[#789083]">Adjust the search or status filter.</p></div></div>}
+        {filteredDebtors.length === 0 && <div className="grid min-h-56 place-items-center p-8 text-center"><div><Users className="mx-auto text-[#9AAEA3]" size={32} /><p className="mt-3 text-sm font-black text-[#173324]">{debtors.length === 0 ? "No debtors yet" : "No matching debtors"}</p><p className="mt-1 text-xs text-[#789083]">{debtors.length === 0 ? "Credit sales will appear here." : "Adjust the search or status filter."}</p></div></div>}
         <footer className="border-t border-[#E8F0EA] p-4 text-xs text-[#789083]">Showing <b className="text-[#173324]">{filteredDebtors.length}</b> of <b className="text-[#173324]">{debtors.length}</b> outstanding invoices</footer>
       </section>
       {paymentDebtor && <PaymentModal debtor={paymentDebtor} customers={customers} loading={loading} error={error} onClose={() => setPaymentDebtor(null)} onSave={recordPayment} />}

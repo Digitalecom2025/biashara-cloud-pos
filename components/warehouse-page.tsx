@@ -2,16 +2,16 @@
 
 import { useMemo, useState } from "react";
 import { Boxes, ChevronDown, CircleDollarSign, MapPin, PackageSearch, Search, Store, Warehouse as WarehouseIcon } from "lucide-react";
-import { warehouses as mockWarehouses, warehouseProducts as mockWarehouseProducts, type ProductStockStatus, type Warehouse, type WarehouseProduct, type WarehouseStatus } from "@/lib/inventory-mock-data";
+import type { ProductStockStatus, Warehouse, WarehouseProduct, WarehouseStatus } from "@/lib/inventory-mock-data";
 
 function formatCurrency(value: number) { return new Intl.NumberFormat("en-KE", { style: "currency", currency: "KES", maximumFractionDigits: 0 }).format(value); }
 
-export function WarehousePage({ initialWarehouses = mockWarehouses, initialProducts = mockWarehouseProducts }: { initialWarehouses?: Warehouse[]; initialProducts?: WarehouseProduct[] }) {
+export function WarehousePage({ initialWarehouses = [], initialProducts = [] }: { initialWarehouses?: Warehouse[]; initialProducts?: WarehouseProduct[] }) {
   const [warehouse, setWarehouse] = useState("All warehouses");
   const [stockStatus, setStockStatus] = useState("All statuses");
   const [query, setQuery] = useState("");
-  const warehouses = initialWarehouses.length > 0 ? initialWarehouses : mockWarehouses;
-  const warehouseProducts = initialProducts.length > 0 ? initialProducts : mockWarehouseProducts;
+  const warehouses = initialWarehouses;
+  const warehouseProducts = initialProducts;
 
   const filteredProducts = useMemo(() => {
     const normalized = query.trim().toLowerCase();

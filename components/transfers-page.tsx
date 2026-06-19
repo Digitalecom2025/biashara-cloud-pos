@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { ArrowLeftRight, Ban, CheckCircle2, ChevronDown, Clock3, MoreHorizontal, Plus, Search, Truck, X } from "lucide-react";
-import { stockTransfers as mockTransfers, warehouses as mockWarehouses, type StockTransfer, type TransferStatus, type Warehouse } from "@/lib/inventory-mock-data";
-import { products as mockProducts, type Product } from "@/lib/mock-data";
+import type { StockTransfer, TransferStatus, Warehouse } from "@/lib/inventory-mock-data";
+import type { Product } from "@/lib/mock-data";
 
 type TransferFormState = {
   productId: string;
@@ -18,13 +18,13 @@ function defaultForm(products: Product[], warehouses: Warehouse[]): TransferForm
   return { productId: products[0]?.id ? String(products[0].id) : "", quantity: "1", from: warehouses[0]?.name ?? "Main Warehouse", to: warehouses[1]?.name ?? "Nairobi CBD Store", requestedBy: "Inventory team", notes: "" };
 }
 
-export function TransfersPage({ initialTransfers = mockTransfers, initialProducts = mockProducts, initialWarehouses = mockWarehouses }: { initialTransfers?: StockTransfer[]; initialProducts?: Product[]; initialWarehouses?: Warehouse[] }) {
+export function TransfersPage({ initialTransfers = [], initialProducts = [], initialWarehouses = [] }: { initialTransfers?: StockTransfer[]; initialProducts?: Product[]; initialWarehouses?: Warehouse[] }) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("All statuses");
   const [open, setOpen] = useState(false);
-  const [transfers, setTransfers] = useState<StockTransfer[]>(initialTransfers.length > 0 ? initialTransfers : mockTransfers);
-  const [products, setProducts] = useState<Product[]>(initialProducts.length > 0 ? initialProducts : mockProducts);
-  const [warehouses] = useState<Warehouse[]>(initialWarehouses.length > 0 ? initialWarehouses : mockWarehouses);
+  const [transfers, setTransfers] = useState<StockTransfer[]>(initialTransfers);
+  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [warehouses] = useState<Warehouse[]>(initialWarehouses);
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState("");
   const [error, setError] = useState("");
