@@ -15,6 +15,7 @@ import {
   Upload,
 } from "lucide-react";
 import type { Product } from "@/lib/mock-data";
+import { exportToCsv } from "@/lib/export";
 
 type ProductFormState = {
   name: string;
@@ -174,6 +175,24 @@ export function ProductList({ initialProducts = [] }: { initialProducts?: Produc
     }
   }
 
+  function exportProducts() {
+    const ok = exportToCsv("leadsstacks-products.csv", filteredProducts.map((product) => ({
+      name: product.name,
+      code: product.code,
+      category: product.category,
+      warehouse: product.warehouse,
+      unit: product.unit,
+      purchasePrice: product.purchasePrice,
+      salePrice: product.salePrice,
+      stock: product.stock,
+      reorderLevel: product.reorderLevel ?? 0,
+      rack: product.rack,
+      shelf: product.shelf,
+      status: product.status ?? "active",
+    })));
+    showFeedback(ok ? "Product CSV exported." : "No products to export.");
+  }
+
   return (
     <div className="mx-auto max-w-[1700px]">
       <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-end">
@@ -183,10 +202,10 @@ export function ProductList({ initialProducts = [] }: { initialProducts?: Produc
           <p className="mt-1 text-sm text-[#789083]">Manage stock details, prices and warehouse placement.</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button onClick={() => showFeedback("Import placeholder. Bulk import will be connected later.")} className="flex items-center gap-2 rounded-xl border border-[#DDEAE0] bg-white px-3.5 py-2.5 text-xs font-bold text-[#60766B] hover:bg-[#F8FBF8]">
-            <Upload size={15} /> Import
+          <button disabled title="Bulk import coming soon" className="flex cursor-not-allowed items-center gap-2 rounded-xl border border-[#DDEAE0] bg-[#F5FAF6] px-3.5 py-2.5 text-xs font-bold text-[#9AAEA3]">
+            <Upload size={15} /> Import coming soon
           </button>
-          <button onClick={() => showFeedback("Export placeholder. Product export will be connected later.")} className="flex items-center gap-2 rounded-xl border border-[#DDEAE0] bg-white px-3.5 py-2.5 text-xs font-bold text-[#60766B] hover:bg-[#F8FBF8]">
+          <button onClick={exportProducts} className="flex items-center gap-2 rounded-xl border border-[#DDEAE0] bg-white px-3.5 py-2.5 text-xs font-bold text-[#60766B] hover:bg-[#F8FBF8]">
             <Download size={15} /> Export
           </button>
           <button onClick={openAddDialog} className="flex items-center gap-2 rounded-xl bg-[#16A34A] px-4 py-2.5 text-xs font-black text-white shadow-lg shadow-[#16A34A]/15 hover:bg-[#12883E]">
@@ -227,8 +246,8 @@ export function ProductList({ initialProducts = [] }: { initialProducts?: Produc
               </select>
               <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#789083]" size={14} />
             </label>
-            <button className="flex items-center justify-center gap-2 rounded-xl border border-[#DDEAE0] bg-white px-3.5 py-2.5 text-xs font-bold text-[#60766B] hover:bg-[#F8FBF8]">
-              <Filter size={14} /> More filters
+            <button disabled title="Advanced filters coming soon" className="flex cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-[#DDEAE0] bg-[#F5FAF6] px-3.5 py-2.5 text-xs font-bold text-[#9AAEA3]">
+              <Filter size={14} /> More filters soon
             </button>
           </div>
           <div className="flex items-center gap-3 text-xs text-[#789083]">
@@ -288,7 +307,7 @@ export function ProductList({ initialProducts = [] }: { initialProducts?: Produc
                     <td className="px-3 py-3">{product.shelf}</td>
                     <td className="px-4 py-3">
                       <div className="flex justify-end gap-1">
-                        <button aria-label={`View ${product.name}`} className="grid h-8 w-8 place-items-center rounded-lg text-[#789083] hover:bg-[#16A34A]/10 hover:text-[#16A34A]"><Eye size={15} /></button>
+                        <button onClick={() => showFeedback(`${product.name}: ${product.stock} ${product.unit} in ${product.warehouse}.`)} aria-label={`View ${product.name}`} className="grid h-8 w-8 place-items-center rounded-lg text-[#789083] hover:bg-[#16A34A]/10 hover:text-[#16A34A]"><Eye size={15} /></button>
                         <button onClick={() => openEditDialog(product)} aria-label={`Edit ${product.name}`} className="grid h-8 w-8 place-items-center rounded-lg text-[#789083] hover:bg-[#D4A017]/10 hover:text-[#A57809]"><Pencil size={14} /></button>
                         <button onClick={() => deactivateProduct(product)} aria-label={`Deactivate ${product.name}`} className="grid h-8 w-8 place-items-center rounded-lg text-[#789083] hover:bg-[#EF4444]/10 hover:text-[#EF4444]"><Trash2 size={14} /></button>
                       </div>
@@ -337,9 +356,9 @@ export function ProductList({ initialProducts = [] }: { initialProducts?: Produc
         <footer className="flex flex-col justify-between gap-3 border-t border-[#E8F0EA] p-4 text-xs text-[#789083] sm:flex-row sm:items-center">
           <span>Showing <b className="text-[#173324]">{filteredProducts.length}</b> of <b className="text-[#173324]">{products.length}</b> products</span>
           <div className="flex gap-1">
-            <button className="rounded-lg border border-[#DDEAE0] px-3 py-2 font-bold text-[#9AAEA3]">Previous</button>
+            <button disabled title="Pagination is not needed until more products are loaded" className="cursor-not-allowed rounded-lg border border-[#DDEAE0] px-3 py-2 font-bold text-[#9AAEA3]">Previous</button>
             <button className="rounded-lg bg-[#16A34A] px-3 py-2 font-black text-white">1</button>
-            <button className="rounded-lg border border-[#DDEAE0] px-3 py-2 font-bold text-[#60766B]">Next</button>
+            <button disabled title="Pagination is not needed until more products are loaded" className="cursor-not-allowed rounded-lg border border-[#DDEAE0] px-3 py-2 font-bold text-[#9AAEA3]">Next</button>
           </div>
         </footer>
       </section>

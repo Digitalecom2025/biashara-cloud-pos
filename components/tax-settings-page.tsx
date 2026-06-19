@@ -76,15 +76,15 @@ export function TaxSettingsPage() {
       <div className="mb-6">
         <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#16A34A]">Compliance settings</p>
         <h2 className="mt-1 text-2xl font-black text-[#10271B] md:text-3xl">Tax Settings</h2>
-        <p className="mt-1 text-sm text-[#789083]">Configure VAT, invoice numbering and tax integration placeholders.</p>
+        <p className="mt-1 text-sm text-[#789083]">Configure VAT, invoice numbering and tax integration readiness.</p>
         {(feedback || error) && <p className={`mt-2 text-xs font-bold ${error ? "text-[#EF4444]" : "text-[#16A34A]"}`}>{error || feedback}</p>}
       </div>
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Summary icon={Calculator} label="VAT rate" value={`${settings.vatRate}%`} note={settings.vatEnabled ? `${settings.mode} pricing` : "VAT disabled"} />
-        <Summary icon={ReceiptText} label="Tax invoices" value={`${invoices}`} note={`${settings.invoicePrefix} numbering placeholder`} />
+        <Summary icon={ReceiptText} label="Tax invoices" value={`${invoices}`} note={`${settings.invoicePrefix} numbering configured`} />
         <Summary icon={Landmark} label="VAT collected" value={money(collected)} note="Mock tax ledger total" />
-        <Summary icon={ShieldCheck} label="eTIMS status" value={settings.etimsStatus} note="Integration placeholder" gold />
+        <Summary icon={ShieldCheck} label="eTIMS status" value={settings.etimsStatus} note="Integration coming soon" gold />
       </section>
 
       <section className="mt-5 grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
@@ -98,11 +98,11 @@ export function TaxSettingsPage() {
             <Field label="VAT rate" type="number" value={String(settings.vatRate)} onChange={(vatRate) => setSettings((current) => ({ ...current, vatRate: Number(vatRate) }))} />
             <label><span className="text-[10px] font-black uppercase tracking-wider text-[#789083]">Tax pricing mode</span><select value={settings.mode} onChange={(event) => setSettings((current) => ({ ...current, mode: event.target.value as TaxSettings["mode"] }))} className="mt-2 w-full rounded-xl border border-[#DDEAE0] px-3 py-3 text-xs font-bold text-[#173324] outline-none focus:border-[#16A34A]"><option value="inclusive">Tax inclusive</option><option value="exclusive">Tax exclusive</option></select></label>
             <Field label="Tax invoice prefix" value={settings.invoicePrefix} onChange={(invoicePrefix) => setSettings((current) => ({ ...current, invoicePrefix }))} />
-            <Field label="Next invoice number placeholder" value="0002849" onChange={() => undefined} disabled />
+            <Field label="Next invoice number" value="0002849" onChange={() => undefined} disabled />
             <Field label="Business PIN optional" value={settings.businessPin} onChange={(businessPin) => setSettings((current) => ({ ...current, businessPin }))} />
             <label><span className="text-[10px] font-black uppercase tracking-wider text-[#789083]">eTIMS integration status</span><select value={settings.etimsStatus} onChange={(event) => setSettings((current) => ({ ...current, etimsStatus: event.target.value }))} className="mt-2 w-full rounded-xl border border-[#DDEAE0] px-3 py-3 text-xs font-bold text-[#173324] outline-none focus:border-[#16A34A]"><option>Not connected</option><option>Pending setup</option><option>Connected</option></select></label>
             <div className="rounded-xl border border-[#D4A017]/35 bg-[#FFF9E8] p-3">
-              <p className="text-xs font-black text-[#8A670C]">eTIMS integration placeholder</p>
+              <p className="text-xs font-black text-[#8A670C]">eTIMS integration coming soon</p>
               <p className="mt-1 text-[11px] leading-5 text-[#9A7108]">API credentials and fiscal submission will be connected in a later backend phase.</p>
             </div>
             <button disabled={saving} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#16A34A] py-3 text-xs font-black text-white disabled:opacity-60"><Save size={15} />{saving ? "Saving..." : "Save tax settings"}</button>

@@ -239,9 +239,9 @@ export async function Dashboard() {
           <p className="mt-4 text-xs leading-5 text-[#B8C7BD]">
             Add your first products, customers and payment methods to finish business setup.
           </p>
-          <button className="mt-5 rounded-xl bg-[#D4A017] px-4 py-2.5 text-xs font-black text-[#07120D] hover:bg-[#E4B432]">
+          <Link href="/settings" className="mt-5 inline-flex rounded-xl bg-[#D4A017] px-4 py-2.5 text-xs font-black text-[#07120D] hover:bg-[#E4B432]">
             Continue setup
-          </button>
+          </Link>
         </article>
       </section>
     </div>

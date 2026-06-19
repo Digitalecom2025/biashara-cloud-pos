@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronDown, Download, FileText, HandCoins, MoreHorizontal, Search, Truck, Users, WalletCards, X } from "lucide-react";
-import { exportToCsv, type ExportRow } from "@/lib/export";
+import { exportReportToPdf, exportToCsv, type ExportRow } from "@/lib/export";
 import { partyReportCategories } from "@/lib/report-mock-data";
 import type { PartySummary } from "@/lib/report-data";
 
@@ -95,8 +95,34 @@ export function PartyReportsPage() {
     }
   }
 
-  function pdfPlaceholder() {
-    setFeedback("PDF statement export coming soon.");
+  function downloadPdf() {
+    const rows = filtered.map((party) => ({
+      "Party name": party.name,
+      "Party type": party.type,
+      Phone: party.phone,
+      "Total transactions": party.transactions,
+      "Total amount": party.totalAmount,
+      "Paid amount": party.paidAmount,
+      Balance: party.balance,
+      "Last transaction": party.lastTransaction,
+      Status: party.status,
+    }));
+    if (rows.length === 0) {
+      setFeedback("No rows to export.");
+      window.setTimeout(() => setFeedback(""), 2500);
+      return;
+    }
+    exportReportToPdf({
+      filename: "leadsstacks-party-report.pdf",
+      title: "Party report",
+      summary: {
+        customerBalances: summary.totalCustomerBalances,
+        supplierBalances: summary.totalSupplierBalances,
+        overdueCustomers: summary.overdueCustomers,
+      },
+      rows,
+    });
+    setFeedback("Party PDF exported.");
     window.setTimeout(() => setFeedback(""), 2500);
   }
 
@@ -135,7 +161,7 @@ export function PartyReportsPage() {
         </div>
         <div>
           <div className="flex flex-wrap gap-2">
-            <button onClick={pdfPlaceholder} className="flex w-fit items-center gap-2 rounded-xl border border-[#DDEAE0] bg-white px-4 py-3 text-xs font-black text-[#60766B]"><Download size={15} />Download PDF</button>
+            <button onClick={downloadPdf} className="flex w-fit items-center gap-2 rounded-xl border border-[#DDEAE0] bg-white px-4 py-3 text-xs font-black text-[#60766B]"><Download size={15} />Download PDF</button>
             <button onClick={downloadCsv} className="flex w-fit items-center gap-2 rounded-xl bg-[#16A34A] px-4 py-3 text-xs font-black text-white"><Download size={15} />Export CSV</button>
           </div>
           {feedback && <p className="mt-2 text-right text-[11px] font-bold text-[#16A34A]">{feedback}</p>}

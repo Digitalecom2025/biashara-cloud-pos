@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Boxes, ChartNoAxesCombined, ChevronDown, CircleDollarSign, FileSpreadsheet, FileText, HandCoins, MoreHorizontal, ReceiptText, Search, TrendingUp, WalletCards } from "lucide-react";
-import { exportToCsv, type ExportRow } from "@/lib/export";
+import { exportReportToPdf, exportToCsv, type ExportRow } from "@/lib/export";
 import { reportCategories } from "@/lib/report-mock-data";
 import type { ReportSummary, ReportTable } from "@/lib/report-data";
 
@@ -114,8 +114,24 @@ export function ReportsPage() {
   const branchOptions = useMemo(() => ["All branches", ...Array.from(new Set(table.rows.map((row) => String(row.Branch ?? "")).filter(Boolean)))], [table.rows]);
   const userOptions = useMemo(() => ["All users", ...Array.from(new Set(table.rows.map((row) => String(row.Cashier ?? row["Recorded by"] ?? "")).filter(Boolean)))], [table.rows]);
 
-  function pdfPlaceholder() {
-    setFeedback("PDF export coming soon.");
+  function downloadPdf() {
+    if (filteredRows.length === 0) {
+      setFeedback("No rows to export.");
+      window.setTimeout(() => setFeedback(""), 2500);
+      return;
+    }
+    exportReportToPdf({
+      filename: selectedReport.filename,
+      title: reportType,
+      summary: {
+        todaySales: summary.todaySales,
+        monthlySales: summary.monthlySales,
+        stockValue: summary.stockValue,
+        expenses: summary.totalExpenses,
+      },
+      rows: filteredRows as ExportRow[],
+    });
+    setFeedback("PDF exported.");
     window.setTimeout(() => setFeedback(""), 2500);
   }
 
@@ -136,7 +152,7 @@ export function ReportsPage() {
         </div>
         <div>
           <div className="flex flex-wrap gap-2">
-            <button onClick={pdfPlaceholder} className="flex items-center gap-2 rounded-xl border border-[#DDEAE0] bg-white px-3.5 py-3 text-xs font-black text-[#60766B]"><FileText size={15} />Download PDF</button>
+            <button onClick={downloadPdf} className="flex items-center gap-2 rounded-xl border border-[#DDEAE0] bg-white px-3.5 py-3 text-xs font-black text-[#60766B]"><FileText size={15} />Download PDF</button>
             <button onClick={downloadCsv} className="flex items-center gap-2 rounded-xl bg-[#16A34A] px-3.5 py-3 text-xs font-black text-white"><FileSpreadsheet size={15} />Export CSV</button>
           </div>
           {feedback && <p className="mt-2 text-right text-[11px] font-bold text-[#16A34A]">{feedback}</p>}

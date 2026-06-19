@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { ArrowDownLeft, Banknote, ChevronDown, CircleDollarSign, FileSpreadsheet, FileText, Landmark, Pencil, Plus, Search, Smartphone, Trash2, TrendingUp, WalletCards, X } from "lucide-react";
 import type { ExpenseRecord, LedgerRecord, TillSummary } from "@/lib/finance-mock-data";
 import type { FinanceData, FinanceSummary } from "@/lib/finance-data";
+import { exportReportToPdf, exportToCsv, type ExportRow } from "@/lib/export";
 
 type Tab = "tills" | "mpesa" | "bank" | "expenses" | "income";
 type BranchOption = { id: string; name: string };
@@ -152,8 +153,69 @@ export function FinancePage() {
     }
   }
 
-  const placeholderExport = (label: string) => {
-    setFeedback(`${label} export is a placeholder for now.`);
+  function currentExportRows(): ExportRow[] {
+    if (tab === "tills") {
+      return tillRows.map((row) => ({
+        till: row.till,
+        branch: row.branch,
+        cashier: row.cashier,
+        openingFloat: row.openingFloat,
+        cashSales: row.cashSales,
+        cashExpenses: row.cashExpenses,
+        expectedCash: row.expectedCash,
+        status: row.status,
+      }));
+    }
+    if (tab === "expenses") {
+      return expenseRows.map((row) => ({
+        id: row.id,
+        category: row.category,
+        description: row.description,
+        amount: row.amount,
+        paymentMethod: row.paymentMethod,
+        branch: row.branch,
+        recordedBy: row.recordedBy,
+        date: row.date,
+        status: row.status,
+      }));
+    }
+    const rows = tab === "mpesa" ? mpesaRows : tab === "bank" ? bankRows : incomeRows;
+    return rows.map((row) => ({
+      id: row.id,
+      reference: row.reference,
+      description: row.description,
+      amount: row.amount,
+      branch: row.branch,
+      recordedBy: row.recordedBy,
+      date: row.date,
+      status: row.status,
+    }));
+  }
+
+  const exportFinanceCsv = () => {
+    const ok = exportToCsv(`leadsstacks-finance-${tab}.csv`, currentExportRows());
+    setFeedback(ok ? "Finance CSV exported." : "No finance rows to export.");
+    window.setTimeout(() => setFeedback(""), 2500);
+  };
+
+  const exportFinancePdf = () => {
+    const rows = currentExportRows();
+    if (rows.length === 0) {
+      setFeedback("No finance rows to export.");
+      window.setTimeout(() => setFeedback(""), 2500);
+      return;
+    }
+    exportReportToPdf({
+      filename: `leadsstacks-finance-${tab}.pdf`,
+      title: `Finance ${tab} report`,
+      summary: {
+        income: summary.totalIncome,
+        expenses: summary.totalExpenses,
+        profitEstimate: summary.profitEstimate,
+      },
+      rows,
+    });
+    setFeedback("Finance PDF exported.");
     window.setTimeout(() => setFeedback(""), 2500);
   };
 
@@ -167,8 +229,8 @@ export function FinancePage() {
         </div>
         <div>
           <div className="flex flex-wrap gap-2">
-            <button onClick={() => placeholderExport("PDF")} className="flex w-fit items-center gap-2 rounded-xl border border-[#DDEAE0] bg-white px-4 py-3 text-xs font-black text-[#60766B]"><FileText size={15} />Download PDF</button>
-            <button onClick={() => placeholderExport("CSV")} className="flex w-fit items-center gap-2 rounded-xl border border-[#DDEAE0] bg-white px-4 py-3 text-xs font-black text-[#60766B]"><FileSpreadsheet size={15} />Export CSV</button>
+            <button onClick={exportFinancePdf} className="flex w-fit items-center gap-2 rounded-xl border border-[#DDEAE0] bg-white px-4 py-3 text-xs font-black text-[#60766B]"><FileText size={15} />Download PDF</button>
+            <button onClick={exportFinanceCsv} className="flex w-fit items-center gap-2 rounded-xl border border-[#DDEAE0] bg-white px-4 py-3 text-xs font-black text-[#60766B]"><FileSpreadsheet size={15} />Export CSV</button>
             <button onClick={() => openForm()} className="flex w-fit items-center gap-2 rounded-xl bg-[#16A34A] px-4 py-3 text-xs font-black text-white"><Plus size={15} />Add Expense</button>
           </div>
           {(feedback || error) && <p className={`mt-2 text-right text-[11px] font-bold ${error ? "text-[#EF4444]" : "text-[#16A34A]"}`}>{error || feedback}</p>}

@@ -166,7 +166,7 @@ export function PurchasesPage({
         <div className="hidden overflow-x-auto lg:block">
           <table className="w-full min-w-[1240px] border-collapse text-left">
             <thead><tr className="bg-[#F8FBF8] text-[10px] font-black uppercase tracking-[0.13em] text-[#789083]"><th className="px-4 py-3.5">Invoice</th><th className="px-3 py-3.5">Supplier</th><th className="px-3 py-3.5">Purchase date</th><th className="px-3 py-3.5">Items</th><th className="px-3 py-3.5">Total amount</th><th className="px-3 py-3.5">Paid amount</th><th className="px-3 py-3.5">Balance due</th><th className="px-3 py-3.5">Payment</th><th className="px-3 py-3.5">Status</th><th className="px-4 py-3.5 text-right">Actions</th></tr></thead>
-            <tbody>{filteredPurchases.map((purchase) => <PurchaseRow key={purchase.id} purchase={purchase} onView={() => showFeedback(`Purchase ${purchase.invoice} detail placeholder. Full view is available through /api/purchases/${purchase.id}.`)} />)}</tbody>
+            <tbody>{filteredPurchases.map((purchase) => <PurchaseRow key={purchase.id} purchase={purchase} onView={() => showFeedback(`${purchase.invoice}: ${purchase.itemsCount} item(s), ${formatCurrency(purchase.totalAmount)} total, ${formatCurrency(purchase.balanceDue)} balance.`)} />)}</tbody>
           </table>
         </div>
         <div className="grid gap-3 p-3 lg:hidden">{filteredPurchases.map((purchase) => <PurchaseCard key={purchase.id} purchase={purchase} />)}</div>

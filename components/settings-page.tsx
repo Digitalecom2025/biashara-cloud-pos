@@ -106,11 +106,6 @@ export function SettingsPage() {
     }
   }
 
-  function backupPlaceholder() {
-    setFeedback("Backup/export will be implemented later.");
-    window.setTimeout(() => setFeedback(""), 2400);
-  }
-
   const industryPreview = getIndustryOpsConfig(form.industryMode);
 
   return (
@@ -132,7 +127,7 @@ export function SettingsPage() {
         <div className="space-y-5">
           <Panel icon={Building2} title="Business profile" note="Identity shown on receipts and reports.">
             <div className="grid gap-4 sm:grid-cols-[130px_1fr]">
-              <button onClick={() => setFeedback("Business logo URL can be pasted in the field beside this placeholder.")} className="grid min-h-28 place-items-center rounded-xl border border-dashed border-[#C9DACC] bg-[#F8FBF8] text-center text-[#789083]"><span><ImageIcon size={22} className="mx-auto" /><b className="mt-2 block text-[10px]">Business logo</b><span className="mt-1 block text-[9px]">URL placeholder</span></span></button>
+              <button onClick={() => setFeedback("Paste the business logo URL in the field beside this card, then save settings.")} className="grid min-h-28 place-items-center rounded-xl border border-dashed border-[#C9DACC] bg-[#F8FBF8] text-center text-[#789083]"><span><ImageIcon size={22} className="mx-auto" /><b className="mt-2 block text-[10px]">Business logo</b><span className="mt-1 block text-[9px]">Paste URL beside this card</span></span></button>
               <div className="grid gap-3 sm:grid-cols-2">
                 <Field label="Business name" value={form.name} onChange={(name) => update({ name })} />
                 <Field label="Phone number" value={form.phone} onChange={(phone) => update({ phone })} />
@@ -205,8 +200,8 @@ export function SettingsPage() {
           </Panel>
 
           <Panel icon={CloudDownload} title="Backup and data" note="Backend export will be connected in a later phase.">
-            <p className="rounded-xl bg-[#FFF9E8] p-3 text-[11px] leading-5 text-[#8A670C]">Backup/export will be implemented later. This button is intentionally a placeholder for now.</p>
-            <button onClick={backupPlaceholder} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-[#DDEAE0] py-3 text-xs font-black text-[#60766B]"><CloudDownload size={15} />Download data archive</button>
+            <p className="rounded-xl bg-[#FFF9E8] p-3 text-[11px] leading-5 text-[#8A670C]">Backup/export is planned for a later production hardening step.</p>
+            <button disabled title="Data archive export coming soon" className="mt-3 flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-[#DDEAE0] bg-[#F5FAF6] py-3 text-xs font-black text-[#9AAEA3]"><CloudDownload size={15} />Data archive coming soon</button>
           </Panel>
 
           <Panel icon={Smartphone} title="Mobile App Experience" note="Installable web app foundation for business users.">

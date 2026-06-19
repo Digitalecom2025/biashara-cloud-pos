@@ -257,22 +257,25 @@ export function AppShell({ children }: { children: ReactNode }) {
               />
             </label>
 
-            <button className="hidden items-center gap-2 rounded-xl border border-[#D4A017]/35 bg-[#FFF9E8] px-3 py-2.5 text-xs font-bold text-[#8A670C] hover:bg-[#FFF2C9] sm:flex">
+            <Link href="/settings" className="hidden items-center gap-2 rounded-xl border border-[#D4A017]/35 bg-[#FFF9E8] px-3 py-2.5 text-xs font-bold text-[#8A670C] hover:bg-[#FFF2C9] sm:flex">
               <Zap size={15} />
               <span>Setup 72%</span>
-            </button>
+            </Link>
 
             <PwaControls />
 
-            <button
+            <a
+              href="mailto:admin@integratedrevenue.co.ke?subject=LeadsStacks%20POS%20Support"
               aria-label="Help"
               className="hidden h-10 w-10 place-items-center rounded-xl border border-[#DDEAE0] text-[#60766B] hover:bg-[#F5FAF6] md:grid"
             >
               <CircleHelp size={18} />
-            </button>
+            </a>
 
             <button
               aria-label="Notifications"
+              disabled
+              title="Notifications coming soon"
               className="relative grid h-10 w-10 place-items-center rounded-xl border border-[#DDEAE0] text-[#60766B] hover:bg-[#F5FAF6]"
             >
               <Bell size={18} />

@@ -283,7 +283,7 @@ function CustomerProfile({ customer, onFeedback }: { customer: Customer; onFeedb
       <div className="grid grid-cols-2 gap-px bg-[#E8F0EA]">
         <ProfileStat icon={ShoppingBag} label="Purchases" value={formatCurrency(customer.totalPurchases)} /><ProfileStat icon={WalletCards} label="Balance" value={formatCurrency(customer.debtBalance)} danger={customer.debtBalance > 0} />
       </div>
-      <div className="space-y-2 p-4"><button onClick={() => onFeedback("Full profile placeholder. Detailed profile will be connected later.")} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#16A34A] py-3 text-xs font-black text-white hover:bg-[#12883E]">View full profile <ArrowUpRight size={14} /></button><button onClick={() => onFeedback("Customer statement placeholder. PDF export will be connected later.")} className="w-full rounded-xl border border-[#DDEAE0] py-3 text-xs font-black text-[#60766B]">Customer statement</button></div>
+      <div className="space-y-2 p-4"><button disabled title="Detailed customer profile coming soon" className="flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-[#CBD8CF] py-3 text-xs font-black text-white">Profile coming soon <ArrowUpRight size={14} /></button><button disabled title="Customer PDF statements coming soon" className="w-full cursor-not-allowed rounded-xl border border-[#DDEAE0] bg-[#F5FAF6] py-3 text-xs font-black text-[#9AAEA3]">Statement coming soon</button></div>
     </aside>
   );
 }

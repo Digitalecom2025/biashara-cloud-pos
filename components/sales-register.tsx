@@ -403,7 +403,7 @@ export function SalesRegister({
   async function viewSale(sale: RecentSale) {
     setError("");
     if (!sale.id) {
-      showFeedback("Mock sale detail placeholder. Database sale details are available for saved sales.");
+      showFeedback("This sale is not linked to a saved database record yet.", "warning");
       return;
     }
 
@@ -561,7 +561,7 @@ export function SalesRegister({
           <div className="border-t border-[#E8F0EA] p-3">
             <div className="flex items-center justify-between">
               <p className="text-xs font-black text-[#173324]">Customer</p>
-              <button onClick={() => showFeedback("Add customer placeholder. Use Customers page for full customer creation.")} className="flex items-center gap-1 text-[10px] font-black text-[#16A34A]"><UserPlus size={13} /> Add customer</button>
+              <Link href="/customers" className="flex items-center gap-1 text-[10px] font-black text-[#16A34A]"><UserPlus size={13} /> Add customer</Link>
             </div>
             <label className="relative mt-2 block">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9AAEA3]" size={14} />
@@ -609,9 +609,9 @@ export function SalesRegister({
             <h3 className="font-black text-[#173324]">Recent sales</h3>
             <p className="mt-0.5 text-xs text-[#789083]">Completed transactions from today&apos;s register.</p>
           </div>
-          <button onClick={() => showFeedback("Full sales report shortcut will be connected later.")} className="flex w-fit items-center gap-2 rounded-lg border border-[#DDEAE0] px-3 py-2 text-[11px] font-bold text-[#60766B]">
+          <Link href="/reports" className="flex w-fit items-center gap-2 rounded-lg border border-[#DDEAE0] px-3 py-2 text-[11px] font-bold text-[#60766B]">
             View all sales <ChevronDown size={14} />
-          </button>
+          </Link>
         </div>
         <div className="table-scroll overflow-x-auto">
           <table className="w-full min-w-[1260px] border-collapse text-left">
@@ -712,7 +712,7 @@ function ReceiptModal({ receipt, onClose }: { receipt: Receipt; onClose: () => v
           </div>
           <p className="mt-4 text-center text-[10px] font-bold text-[#789083]">Thank you for shopping with us.</p>
           <div className="mt-4 grid grid-cols-2 gap-2">
-            <button onClick={() => window.alert("Print placeholder. Receipt printing will be connected later.")} className="flex items-center justify-center gap-2 rounded-xl border border-[#DDEAE0] py-3 text-xs font-black text-[#60766B]"><Printer size={15} /> Print receipt</button>
+            <button onClick={() => window.print()} className="flex items-center justify-center gap-2 rounded-xl border border-[#DDEAE0] py-3 text-xs font-black text-[#60766B]"><Printer size={15} /> Print receipt</button>
             <button onClick={onClose} className="rounded-xl bg-[#16A34A] py-3 text-xs font-black text-white hover:bg-[#12883E]">New sale</button>
           </div>
         </div>
