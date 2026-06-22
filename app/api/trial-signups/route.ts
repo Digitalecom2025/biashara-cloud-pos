@@ -28,6 +28,19 @@ function slugify(value: string) {
   return `${base || "trial-business"}-${Date.now().toString().slice(-6)}`;
 }
 
+function resolvePackages(value: string) {
+  const normalized = value.toLowerCase();
+  if (!value || normalized === "not sure yet") return { selectedPlan: "Growth", trialPackage: "Growth", enterpriseInterest: false };
+  if (["enterprise", "custom", "custom / enterprise", "premium"].includes(normalized)) {
+    return { selectedPlan: "Enterprise", trialPackage: "Business", enterpriseInterest: true };
+  }
+  if (["lite", "growth", "business"].includes(normalized)) {
+    const plan = value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+    return { selectedPlan: plan, trialPackage: plan, enterpriseInterest: false };
+  }
+  return { selectedPlan: "Growth", trialPackage: "Growth", enterpriseInterest: false };
+}
+
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as TrialSignupInput;
   const fullName = text(body.fullName);
@@ -57,6 +70,8 @@ export async function POST(request: Request) {
   }
 
   const now = new Date();
+  const trialEndsAt = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+  const { selectedPlan, trialPackage, enterpriseInterest } = resolvePackages(preferredPackage);
   const businessId = `biz_trial_${randomUUID()}`;
   const branchId = `branch_trial_${randomUUID()}`;
   const userId = `user_trial_${randomUUID()}`;
@@ -81,18 +96,21 @@ export async function POST(request: Request) {
           email,
           location: "Trial signup",
           industryMode: businessType,
-          packagePlan: preferredPackage || "Trial",
-          status: "pending_approval",
-          approvalStatus: "pending_approval",
-          onboardingStatus: "pending_approval",
-          selectedPlan: preferredPackage,
+          packagePlan: trialPackage,
+          status: "active",
+          approvalStatus: "auto_approved",
+          approvedAt: now,
+          approvedBy: "website_signup",
+          onboardingStatus: enterpriseInterest ? "enterprise_request" : "trial_active",
+          selectedPlan,
+          trialPackage,
           contactPerson: fullName,
           signupSource: "website_signup",
-          subscriptionStatus: "pending_approval",
-          trialStartedAt: null,
-          trialEndsAt: null,
-          subscriptionStartedAt: null,
-          subscriptionEndsAt: null,
+          subscriptionStatus: "trial",
+          trialStartedAt: now,
+          trialEndsAt,
+          subscriptionStartedAt: now,
+          subscriptionEndsAt: trialEndsAt,
           branches: {
             create: {
               id: branchId,
@@ -100,7 +118,7 @@ export async function POST(request: Request) {
               location: "Trial location",
               phone,
               managerName: fullName,
-              status: "Active",
+              status: "active",
             },
           },
           users: {
@@ -112,17 +130,19 @@ export async function POST(request: Request) {
               phone,
               passwordHash,
               role: "OWNER",
-              status: "pending_approval",
+              status: "active",
+              approvedAt: now,
             },
           },
           subscriptions: {
             create: {
               id: subscriptionId,
-              packagePlan: preferredPackage || "Trial",
-              status: "pending_approval",
-              startDate: null,
-              renewalDate: null,
-              trialEndsAt: null,
+              packagePlan: trialPackage,
+              trialPackage,
+              status: "trial",
+              startDate: now,
+              renewalDate: trialEndsAt,
+              trialEndsAt,
               amount: 0,
             },
           },
@@ -141,10 +161,12 @@ export async function POST(request: Request) {
           id: auditId,
           businessId,
           userId,
-          action: "Trial request submitted",
+          action: "Trial account auto-approved",
           entity: "Business",
           entityId: businessId,
-          details: `Pending approval signup for ${businessName} by ${fullName}. Preferred package: ${preferredPackage}.`,
+          details: enterpriseInterest
+            ? `Enterprise interest saved for ${businessName}. Business trial activated on Business package while sales consultation is pending.`
+            : `14-day trial activated for ${businessName} by ${fullName}. Package: ${trialPackage}.`,
           createdAt: now,
         },
       });
@@ -158,9 +180,9 @@ export async function POST(request: Request) {
           email: email || null,
           businessType,
           usersCount,
-          preferredPackage,
+          preferredPackage: selectedPlan,
           message: message || null,
-          status: "pending_approval",
+          status: enterpriseInterest ? "enterprise_request" : "trial_created",
           createdAt: now,
           updatedAt: now,
         },
@@ -172,11 +194,38 @@ export async function POST(request: Request) {
         businessId,
         userId,
         subscriptionId,
-        trialEndsAt: null,
-        selectedPlan: preferredPackage,
-        redirectTo: "/login",
+        trialEndsAt: trialEndsAt.toISOString(),
+        selectedPlan,
+        trialPackage,
+        redirectTo: "/dashboard",
+        user: {
+          id: userId,
+          name: fullName,
+          email,
+          phone,
+          role: "OWNER",
+          branchName: "Main Branch",
+        },
+        business: {
+          id: businessId,
+          name: businessName,
+          status: "active",
+          packagePlan: trialPackage,
+          selectedPlan,
+        },
+        subscription: {
+          id: subscriptionId,
+          status: "trial",
+          packagePlan: trialPackage,
+          trialPackage,
+          trialEndsAt: trialEndsAt.toISOString(),
+        },
+        permissions: ["all"],
+        trialDaysRemaining: 14,
       },
-      message: "Your trial request has been received. Our team will review and approve your account before your 14-day trial starts.",
+      message: enterpriseInterest
+        ? "Your 14-day free trial is active on the Business package. Enterprise setup requires consultation, and our team will contact you."
+        : "Your 14-day free trial is active. You can now start adding products, customers and sales.",
     }, { status: 201 });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Trial signup could not be created." }, { status: 400 });

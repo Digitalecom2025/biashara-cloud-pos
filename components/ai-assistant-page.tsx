@@ -110,7 +110,7 @@ export function AiAssistantPage() {
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_390px] xl:items-end">
           <div>
             <p className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-[#D4A017]">
-              <Sparkles size={15} /> Premium insights
+              <Sparkles size={15} /> Enterprise insights
             </p>
             <h2 className="mt-3 text-3xl font-black tracking-tight md:text-4xl">AI Business Assistant</h2>
             <p className="mt-3 max-w-3xl text-sm leading-6 text-[#B8C7BD]">
@@ -130,9 +130,9 @@ export function AiAssistantPage() {
                 <Crown size={18} />
               </span>
               <div>
-                <h3 className="text-sm font-black text-[#F6FFF8]">Premium feature notice</h3>
+                <h3 className="text-sm font-black text-[#F6FFF8]">Enterprise feature notice</h3>
                 <p className="mt-1 text-xs leading-5 text-[#E9D7A0]">
-                  AI Business Assistant is available on Premium and Custom plans. This demo still shows local insights. {limitedPlan ? "Lite/Growth users get limited AI insights and can upgrade for forecasts, AI SMS suggestions, and debtor follow-ups." : "Premium/Custom unlocks full AI insights, forecasts, AI SMS suggestions, and debtor follow-ups."}
+                  AI Business Assistant is available on Business and Enterprise plans. This page still shows local rule-based insights. {limitedPlan ? "Lite/Growth users get limited AI insights and can upgrade for forecasts, AI SMS suggestions, and debtor follow-ups." : "Business/Enterprise unlocks fuller AI insights, forecasts, AI SMS suggestions, and debtor follow-ups."}
                 </p>
               </div>
             </div>
@@ -167,7 +167,7 @@ export function AiAssistantPage() {
           </span>
           <div>
             <h3 className="font-black text-[#173324]">Coming Soon</h3>
-            <p className="text-xs text-[#789083]">Future AI capabilities planned for the premium assistant.</p>
+            <p className="text-xs text-[#789083]">Future AI capabilities planned for the advanced assistant.</p>
           </div>
         </div>
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

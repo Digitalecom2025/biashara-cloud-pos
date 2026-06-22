@@ -58,6 +58,7 @@ type AdminSummary = {
   selectedPackages: number;
   recentSignups: number;
   monthlyRecurringRevenue: number;
+  enterpriseRequests: number;
 };
 
 type AdminData = { summary: AdminSummary; rows: AdminBusinessRow[] };
@@ -66,7 +67,7 @@ type ActionResponse = { success?: boolean; message?: string; error?: string; bus
 
 const sidebarItems: Array<{ id: AdminTab | "logout"; label: string; href?: string; icon: LucideIcon }> = [
   { id: "overview", label: "Overview", href: "/super-admin", icon: Gauge },
-  { id: "pending", label: "Pending Approvals", href: "/super-admin/pending-approvals", icon: UserCheck },
+  { id: "pending", label: "New Signups", href: "/super-admin/pending-approvals", icon: UserCheck },
   { id: "businesses", label: "Businesses", href: "/super-admin/businesses", icon: Building2 },
   { id: "trials", label: "Trials", href: "/super-admin/trials", icon: CalendarClock },
   { id: "subscriptions", label: "Subscriptions", href: "/super-admin/subscriptions", icon: WalletCards },
@@ -75,8 +76,8 @@ const sidebarItems: Array<{ id: AdminTab | "logout"; label: string; href?: strin
   { id: "logout", label: "Logout", icon: LogOut },
 ];
 
-const packageOptions = ["Lite", "Growth", "Business", "Premium", "Custom"];
-const allPackageOptions = ["Trial", "Lite", "Growth", "Business", "Premium", "Custom"];
+const packageOptions = ["Lite", "Growth", "Business", "Enterprise"];
+const allPackageOptions = ["Trial", "Lite", "Growth", "Business", "Enterprise"];
 const statusFilters = ["All", "Pending Approval", "Trial Active", "Active Paid", "Expired Trial", "Suspended"];
 
 function formatDate(value?: string | null) {
@@ -207,7 +208,9 @@ export function SuperAdminPage({ initialTab = "overview" }: { initialTab?: Admin
 
   const rows = useMemo(() => data?.rows ?? [], [data]);
   const rowsForTab = useMemo(() => {
-    if (activeTab === "pending") return rows.filter((row) => displayStatus(row) === "Pending Approval");
+    if (activeTab === "pending") {
+      return rows.slice(0, 25);
+    }
     if (activeTab === "trials") return rows.filter((row) => ["Trial Active", "Expired Trial"].includes(displayStatus(row)));
     if (activeTab === "subscriptions") return rows.filter((row) => ["Trial Active", "Active Paid", "Expired Trial", "Suspended"].includes(displayStatus(row)));
     if (activeTab === "suspended") return rows.filter((row) => displayStatus(row) === "Suspended");
@@ -323,13 +326,13 @@ function OverviewCards({ summary }: { summary?: AdminSummary }) {
   return (
     <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
       <Summary icon={Building2} label="Total businesses" value={summary?.totalBusinesses ?? 0} />
-      <Summary icon={UserCheck} label="Pending approvals" value={summary?.pendingApprovals ?? 0} gold />
+      <Summary icon={UserCheck} label="New signups this week" value={summary?.recentSignups ?? 0} gold />
       <Summary icon={CalendarClock} label="Active trials" value={summary?.activeTrials ?? 0} gold />
       <Summary icon={CheckCircle2} label="Active paid clients" value={summary?.activePaidAccounts ?? 0} />
       <Summary icon={AlertTriangle} label="Expired trials" value={summary?.expiredTrials ?? 0} danger />
       <Summary icon={ShieldCheck} label="Suspended accounts" value={summary?.suspendedAccounts ?? 0} danger />
       <Summary icon={Crown} label="MRR estimate" value={formatMoney(summary?.monthlyRecurringRevenue ?? 0)} />
-      <Summary icon={Users} label="New signups this week" value={summary?.recentSignups ?? 0} />
+      <Summary icon={Users} label="Enterprise requests" value={summary?.enterpriseRequests ?? 0} />
     </section>
   );
 }
@@ -365,7 +368,7 @@ function AdminTable({
 }) {
   const title =
     activeTab === "pending"
-      ? "Pending Trial Requests"
+      ? "New Signups"
       : activeTab === "trials"
       ? "Trial Management"
       : activeTab === "subscriptions"
@@ -375,7 +378,7 @@ function AdminTable({
       : "Businesses";
   const emptyMessage =
     activeTab === "pending"
-      ? "No pending approvals yet."
+      ? "No new signups this week."
       : activeTab === "trials"
       ? "No active trials yet."
       : activeTab === "suspended"
@@ -390,7 +393,7 @@ function AdminTable({
         <div className="flex flex-col justify-between gap-3 xl:flex-row xl:items-center">
           <div>
             <h2 className="font-black text-[#173324]">{title}</h2>
-            <p className="text-xs text-[#789083]">Approve trials, manage package status and monitor client accounts.</p>
+            <p className="text-xs text-[#789083]">Monitor new signups, manage packages, extend trials and suspend accounts when needed.</p>
           </div>
           <button onClick={onRefresh} className="flex w-fit items-center gap-2 rounded-xl border border-[#DDEAE0] px-4 py-3 text-xs font-black text-[#60766B]">
             <RefreshCw size={14} /> Refresh
@@ -422,7 +425,7 @@ function AdminTable({
           <div className="rounded-2xl border border-dashed border-[#DDEAE0] bg-[#F8FBF8] p-6 text-center">
             <p className="text-sm font-black text-[#173324]">{emptyMessage}</p>
             <p className="mt-1 text-xs text-[#789083]">
-              Super Admin now shows database records only. New public signups will appear here after `/signup` creates a pending approval.
+              Super Admin now shows database records only. New public signups will appear here after `/signup` creates an active trial.
             </p>
           </div>
         </div>

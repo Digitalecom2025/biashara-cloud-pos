@@ -1,4 +1,4 @@
-export type PlanName = "Lite" | "Growth" | "Business" | "Premium" | "Custom / Enterprise";
+export type PlanName = "Lite" | "Growth" | "Business" | "Enterprise";
 
 export type PlanConfig = {
   name: PlanName;
@@ -43,24 +43,14 @@ export const packagePlans: PlanConfig[] = [
     limits: ["2 branches", "10 users", "2,000 products", "Branches", "HRM/User roles", "Warehouse", "Transfers", "Party reports", "Tax settings", "Advanced reports"],
   },
   {
-    name: "Premium",
-    price: 5000,
-    note: "For established multi-branch businesses",
-    branchLimit: 5,
-    userLimit: 25,
-    productLimit: 10000,
-    reportLimit: null,
-    limits: ["5 branches", "25 users", "10,000 products", "Rewards", "SMS Marketing placeholder", "Advanced reports", "Priority support", "Backup/download data placeholder", "AI Assistant access placeholder"],
-  },
-  {
-    name: "Custom / Enterprise",
+    name: "Enterprise",
     price: null,
-    note: "Quoted package for advanced operations",
+    note: "Contact sales for advanced operations",
     branchLimit: null,
     userLimit: null,
     productLimit: null,
     reportLimit: null,
-    limits: ["Custom branches", "Custom users", "Custom products", "Offline sync", "M-Pesa API", "eTIMS", "WhatsApp", "AI", "Custom workflows"],
+    limits: ["Custom branches", "Custom users", "Custom products", "Offline sync", "M-Pesa API", "eTIMS", "WhatsApp", "Custom workflows"],
   },
 ];
 

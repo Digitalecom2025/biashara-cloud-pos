@@ -160,7 +160,7 @@ export function SettingsPage() {
           </Panel>
 
           <Panel icon={Crown} title="Package / subscription" note="Current POS package and renewal controls.">
-            <div className="grid gap-3 sm:grid-cols-3"><Info label="Current package" value={form.packagePlan} /><Info label="Monthly fee" value={form.packagePlan === "Premium" ? "Ksh 5,000" : form.packagePlan === "Growth" ? "Ksh 1,500" : form.packagePlan === "Lite" ? "Ksh 700" : form.packagePlan === "Custom / Enterprise" ? "Quoted" : "Ksh 3,000"} /><Info label="Manage" value="Subscriptions page" /></div>
+            <div className="grid gap-3 sm:grid-cols-3"><Info label="Current package" value={form.packagePlan} /><Info label="Monthly fee" value={form.packagePlan === "Enterprise" || form.packagePlan === "Custom / Enterprise" || form.packagePlan === "Custom" ? "Quoted" : form.packagePlan === "Growth" ? "Ksh 1,500" : form.packagePlan === "Lite" ? "Ksh 700" : "Ksh 3,000"} /><Info label="Manage" value="Subscriptions page" /></div>
             <div className="mt-3 flex flex-wrap gap-2"><Link href="/subscriptions" className="rounded-xl bg-[#16A34A] px-4 py-3 text-xs font-black text-white">Manage subscription</Link></div>
           </Panel>
 

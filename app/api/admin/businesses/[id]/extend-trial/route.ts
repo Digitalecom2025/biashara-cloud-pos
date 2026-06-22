@@ -46,17 +46,18 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
         subscriptionStatus: "trial",
         packagePlan,
         selectedPlan: packagePlan,
+        trialPackage: packagePlan,
       },
     });
 
     if (subscription) {
       await tx.subscription.update({
         where: { id: subscription.id },
-        data: { status: "trial", packagePlan, trialEndsAt, renewalDate: trialEndsAt, amount: 0 },
+        data: { status: "trial", packagePlan, trialPackage: packagePlan, trialEndsAt, renewalDate: trialEndsAt, amount: 0 },
       });
     } else {
       await tx.subscription.create({
-        data: { businessId: id, status: "trial", packagePlan, startDate: now, trialEndsAt, renewalDate: trialEndsAt, amount: 0 },
+        data: { businessId: id, status: "trial", packagePlan, trialPackage: packagePlan, startDate: now, trialEndsAt, renewalDate: trialEndsAt, amount: 0 },
       });
     }
 

@@ -26,6 +26,7 @@ model Business {
   subscriptionEndsAt DateTime?
   subscriptionStatus String?
   selectedPlan   String?
+  trialPackage   String?
   onboardingStatus String?
   signupSource   String?
   contactPerson  String?
@@ -342,6 +343,7 @@ model Subscription {
   id          String   @id @default(cuid())
   businessId  String
   packagePlan String   @default("Trial")
+  trialPackage String?
   status      String   @default("pending_approval")
   startDate   DateTime?
   renewalDate DateTime?

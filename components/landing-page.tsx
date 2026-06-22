@@ -9,7 +9,6 @@ import {
   CheckCircle2,
   Cloud,
   CreditCard,
-  Crown,
   Hammer,
   Leaf,
   Pill,
@@ -152,14 +151,7 @@ const packages: Array<{
     icon: Users,
   },
   {
-    name: "Premium",
-    price: "Ksh 5,000/month",
-    note: "More users, priority support and advanced business controls.",
-    bestFor: "Businesses that need more users, priority support and advanced controls.",
-    icon: Crown,
-  },
-  {
-    name: "Custom / Enterprise",
+    name: "Enterprise",
     price: "Quoted",
     note: "Special workflows, custom setup and selected advanced integrations.",
     bestFor: "Businesses that need special workflows, integrations or custom setup.",
@@ -171,7 +163,7 @@ const freeTrialBullets = [
   "No payment required",
   "Start with your products, users and payment methods",
   "Test sales, stock, customers, debtors and reports",
-  "Choose Lite, Growth, Business, Premium or Custom later",
+  "Choose Lite, Growth, Business or Enterprise later",
 ];
 
 const businessTypes = [
@@ -187,8 +179,7 @@ const businessTypes = [
 ];
 
 function signupHref(packageName: string) {
-  const normalized = packageName === "Custom / Enterprise" ? "Custom" : packageName;
-  return `/signup?package=${encodeURIComponent(normalized)}`;
+  return `/signup?package=${encodeURIComponent(packageName)}`;
 }
 
 export function LandingPage() {
@@ -354,7 +345,7 @@ export function LandingPage() {
 
       <section className="mx-auto max-w-[1480px] px-4 py-16 md:px-7" id="packages">
         <SectionIntro eyebrow="Packages" title="Choose a Package That Fits Your Business" note="Start with a free trial. If you already know what you need, choose a package and we will prepare your setup." />
-        <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+        <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {packages.map((plan) => (
             <article key={plan.name} className={`relative rounded-3xl border p-5 shadow-sm shadow-[#12311F]/5 ${plan.recommended ? "border-[#16A34A]/50 bg-[#16A34A]/[0.045]" : "border-[#DDEAE0] bg-white"}`}>
               {plan.recommended && <span className="absolute right-4 top-4 rounded-full bg-[#16A34A] px-3 py-1 text-[9px] font-black uppercase tracking-wider text-white">Recommended</span>}
@@ -365,9 +356,9 @@ export function LandingPage() {
               <p className="mt-2 text-xl font-black text-[#12311F]">{plan.price}</p>
               <p className="mt-3 text-xs leading-5 text-[#789083]">{plan.note}</p>
               <p className="mt-3 rounded-xl bg-[#F8FBF8] p-3 text-[11px] font-bold leading-5 text-[#60766B]">Best for: {plan.bestFor}</p>
-              {plan.name === "Custom / Enterprise" ? (
+              {plan.name === "Enterprise" ? (
                 <div className="mt-5 grid gap-2">
-                  <Link href={signupHref(plan.name)} className="inline-flex justify-center rounded-xl bg-[#12311F] px-4 py-3 text-xs font-black text-white hover:bg-[#0E2418]">Start Trial</Link>
+                  <Link href={signupHref(plan.name)} className="inline-flex justify-center rounded-xl bg-[#12311F] px-4 py-3 text-xs font-black text-white hover:bg-[#0E2418]">Request Enterprise Setup</Link>
                   <a href="#request-setup" className="inline-flex justify-center rounded-xl border border-[#D4A017]/35 bg-[#FFF9E8] px-4 py-3 text-xs font-black text-[#8A670C] hover:bg-[#FFF2C9]">Talk to Support</a>
                 </div>
               ) : (

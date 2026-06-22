@@ -37,7 +37,7 @@ const businessTypes = [
   "Other",
 ];
 
-const preferredPackages = ["Not sure yet", "Lite", "Growth", "Business", "Premium", "Custom"];
+const preferredPackages = ["Not sure yet", "Lite", "Growth", "Business", "Enterprise"];
 
 const valuePoints: Array<[string, LucideIcon]> = [
   ["Secure business account access", ShieldCheck],
@@ -179,17 +179,55 @@ export function LoginPage() {
         body: JSON.stringify(signupForm),
       });
       const payload = (await response.json()) as {
-        data?: { businessId: string; trialEndsAt: string | null; selectedPlan: string };
+        data?: {
+          businessId: string;
+          trialEndsAt: string | null;
+          selectedPlan: string;
+          user: { id: string; name: string; email: string; role: string; branchName: string };
+          business: { id: string; name: string; status: string; packagePlan: string; selectedPlan: string };
+          subscription: { status: string; packagePlan: string; trialEndsAt: string | null };
+          permissions: string[];
+          trialDaysRemaining: number;
+          redirectTo?: string;
+        };
         error?: string;
         message?: string;
       };
       if (!response.ok || !payload.data) throw new Error(payload.error ?? "Trial account could not be created.");
 
-      setSuccess(payload.message ?? "Your trial request has been received. Our team will review and approve your account before your 14-day trial starts.");
+      const session: BusinessSession = {
+        businessLoggedIn: true,
+        userId: payload.data.user.id,
+        businessId: payload.data.business.id,
+        businessName: payload.data.business.name,
+        businessStatus: payload.data.business.status,
+        userName: payload.data.user.name,
+        userEmail: payload.data.user.email,
+        userRole: payload.data.user.role,
+        branchName: payload.data.user.branchName,
+        till: "Office",
+        subscriptionStatus: payload.data.subscription.status,
+        packagePlan: payload.data.subscription.packagePlan,
+        selectedPlan: payload.data.business.selectedPlan,
+        trialEndsAt: payload.data.subscription.trialEndsAt,
+        trialDaysRemaining: payload.data.trialDaysRemaining,
+        permissions: payload.data.permissions,
+      };
+      saveBusinessSession(session);
+      if (payload.data.subscription.trialEndsAt) {
+        saveTrialPreview({
+          businessId: payload.data.business.id,
+          businessName: payload.data.business.name,
+          fullName: payload.data.user.name,
+          selectedPlan: payload.data.business.selectedPlan,
+          status: "trial",
+          trialStartedAt: new Date().toISOString(),
+          trialEndsAt: payload.data.subscription.trialEndsAt,
+        });
+      }
+      setSuccess(payload.message ?? "Your 14-day free trial is active. You can now start adding products, customers and sales.");
       setSignupForm(initialSignupForm);
-      setActiveTab("signin");
-      setEmail(signupForm.email);
-      setPassword("");
+      router.replace(payload.data.redirectTo || "/dashboard");
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "Trial account could not be created.");
     } finally {

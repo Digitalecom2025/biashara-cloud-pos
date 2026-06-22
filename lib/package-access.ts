@@ -1,4 +1,4 @@
-export type PackageName = "Trial" | "Lite" | "Growth" | "Business" | "Premium" | "Custom";
+export type PackageName = "Trial" | "Lite" | "Growth" | "Business" | "Enterprise";
 
 export type PackageLimitConfig = {
   name: PackageName;
@@ -52,18 +52,8 @@ export const packageAccess: Record<PackageName, PackageLimitConfig> = {
     aiInsights: "Preview insights",
     lockedFeatures: ["M-Pesa API", "eTIMS", "WhatsApp"],
   },
-  Premium: {
-    name: "Premium",
-    users: 25,
-    branches: 5,
-    products: 10000,
-    reports: "Advanced reports",
-    offlineSync: "Included on selected setup",
-    aiInsights: "Included",
-    lockedFeatures: ["Custom workflows"],
-  },
-  Custom: {
-    name: "Custom",
+  Enterprise: {
+    name: "Enterprise",
     users: "Custom",
     branches: "Custom",
     products: "Custom",
@@ -75,6 +65,6 @@ export const packageAccess: Record<PackageName, PackageLimitConfig> = {
 };
 
 export function getPackageAccess(plan?: string | null) {
-  const normalized = plan === "Custom / Enterprise" ? "Custom" : plan;
+  const normalized = plan === "Custom / Enterprise" || plan === "Custom" || plan === "Premium" ? "Enterprise" : plan;
   return packageAccess[(normalized as PackageName) || "Trial"] ?? packageAccess.Trial;
 }

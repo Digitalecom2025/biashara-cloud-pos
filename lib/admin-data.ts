@@ -34,22 +34,23 @@ export type AdminSummary = {
   selectedPackages: number;
   recentSignups: number;
   monthlyRecurringRevenue: number;
+  enterpriseRequests: number;
 };
 
 export const packageAmounts: Record<string, number> = {
   Lite: 700,
   Growth: 1500,
   Business: 3000,
-  Premium: 5000,
-  Custom: 0,
+  Enterprise: 0,
   Trial: 0,
   "Not sure yet": 0,
-  "Custom / Enterprise": 0,
 };
 
 export function normalizePackagePlan(plan?: string | null) {
   if (!plan) return "Trial";
-  return plan === "Custom / Enterprise" ? "Custom" : plan;
+  if (["Custom / Enterprise", "Custom", "Premium"].includes(plan)) return "Enterprise";
+  if (plan === "Not sure yet") return "Growth";
+  return plan;
 }
 
 function normalizeStatus(value?: string | null) {
@@ -129,6 +130,7 @@ export async function getAdminBusinesses() {
     suspendedAccounts: rows.filter((row) => row.subscriptionStatus === "suspended").length,
     selectedPackages: rows.filter((row) => row.packageSelected && row.packageSelected !== "Trial" && row.packageSelected !== "Not sure yet").length,
     recentSignups: rows.filter((row) => new Date(row.createdAt).getTime() >= sevenDaysAgo).length,
+    enterpriseRequests: rows.filter((row) => row.packageSelected === "Enterprise").length,
     monthlyRecurringRevenue: rows
       .filter((row) => row.subscriptionStatus === "active")
       .reduce((total, row) => total + (row.amount || packageAmounts[row.packageSelected] || 0), 0),

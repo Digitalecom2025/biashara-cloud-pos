@@ -6,9 +6,7 @@ const packageAmounts: Record<string, number> = {
   Lite: 700,
   Growth: 1500,
   Business: 3000,
-  Premium: 5000,
-  Custom: 0,
-  "Custom / Enterprise": 0,
+  Enterprise: 0,
 };
 
 function text(value: unknown) {
@@ -16,7 +14,7 @@ function text(value: unknown) {
 }
 
 function normalizePackage(value: string) {
-  if (value === "Custom / Enterprise") return "Custom";
+  if (value === "Custom / Enterprise" || value === "Custom" || value === "Premium") return "Enterprise";
   return value;
 }
 
@@ -30,7 +28,6 @@ export async function PATCH(request: Request) {
   if (!packagePlan || !validPlans.includes(packagePlan)) return NextResponse.json({ error: "Package plan is required." }, { status: 400 });
 
   const now = new Date();
-  const renewalDate = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
   const amount = packageAmounts[packagePlan];
   const auditId = `audit_package_${randomUUID()}`;
 
@@ -42,31 +39,26 @@ export async function PATCH(request: Request) {
       const subscription = await tx.subscription.findFirst({ where: { businessId }, orderBy: { createdAt: "desc" }, select: { id: true } });
 
       if (subscription) {
-        await tx.$executeRaw`
-          UPDATE "Subscription"
-          SET "packagePlan" = ${packagePlan}, "status" = ${"active"}, "renewalDate" = ${renewalDate}, "amount" = ${amount}, "updatedAt" = ${now}
-          WHERE "id" = ${subscription.id}
-        `;
+        await tx.subscription.update({
+          where: { id: subscription.id },
+          data: { packagePlan, trialPackage: packagePlan, status: "trial", amount, updatedAt: now },
+        });
       } else {
-        await tx.$executeRaw`
-          INSERT INTO "Subscription"
-            ("id", "businessId", "packagePlan", "status", "startDate", "renewalDate", "trialEndsAt", "amount", "createdAt", "updatedAt")
-          VALUES
-            (${`sub_${randomUUID()}`}, ${businessId}, ${packagePlan}, ${"active"}, ${now}, ${renewalDate}, ${null}, ${amount}, ${now}, ${now})
-        `;
+        await tx.subscription.create({
+          data: { id: `sub_${randomUUID()}`, businessId, packagePlan, trialPackage: packagePlan, status: "trial", startDate: now, amount },
+        });
       }
 
-      await tx.$executeRaw`
-        UPDATE "Business"
-        SET "packagePlan" = ${packagePlan}, "selectedPlan" = ${packagePlan}, "status" = ${"active"}, "onboardingStatus" = ${"package_selected"}, "updatedAt" = ${now}
-        WHERE "id" = ${businessId}
-      `;
+      await tx.business.update({
+        where: { id: businessId },
+        data: { packagePlan, selectedPlan: packagePlan, trialPackage: packagePlan, status: "active", onboardingStatus: "trial_active", subscriptionStatus: "trial", updatedAt: now },
+      });
 
       await tx.$executeRaw`
         INSERT INTO "AuditLog"
           ("id", "businessId", "userId", "action", "entity", "entityId", "details", "createdAt")
         VALUES
-          (${auditId}, ${businessId}, ${null}, ${"Trial package selected"}, ${"Subscription"}, ${businessId}, ${`Package selected: ${packagePlan}. Payment confirmation will be handled manually.`}, ${now})
+          (${auditId}, ${businessId}, ${null}, ${"Trial package changed"}, ${"Subscription"}, ${businessId}, ${`Trial package changed to: ${packagePlan}. Trial dates were not reset.`}, ${now})
       `;
     });
 
@@ -74,11 +66,10 @@ export async function PATCH(request: Request) {
       data: {
         businessId,
         packagePlan,
-        status: "active",
+        status: "trial",
         amount,
-        renewalDate: renewalDate.toISOString(),
       },
-      message: "Package selected. Payment confirmation will be handled manually for now.",
+      message: packagePlan === "Enterprise" ? "Enterprise interest saved. Our team will contact you for setup." : "Trial package updated. Your trial date has not been reset.",
     });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Package could not be selected." }, { status: 400 });

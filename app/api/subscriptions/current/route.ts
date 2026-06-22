@@ -23,14 +23,16 @@ export async function PATCH(request: Request) {
   try {
     await prisma.$transaction(async (tx) => {
       const existing = await tx.subscription.findFirst({ where: { businessId }, orderBy: { renewalDate: "desc" } });
+      const currentStatus = !existing || existing.status === "trial" ? "trial" : "active";
       if (existing) {
         await tx.subscription.update({
           where: { id: existing.id },
           data: {
             packagePlan: parsed.data.packagePlan,
+            trialPackage: currentStatus === "trial" ? parsed.data.packagePlan : existing.trialPackage,
             amount: parsed.data.amount,
             renewalDate: parsed.data.renewalDate,
-            status: "active",
+            status: currentStatus,
           },
         });
       } else {
@@ -38,17 +40,18 @@ export async function PATCH(request: Request) {
           data: {
             businessId,
             packagePlan: parsed.data.packagePlan,
+            trialPackage: parsed.data.packagePlan,
             amount: parsed.data.amount,
             renewalDate: parsed.data.renewalDate,
             startDate: new Date(),
-            status: "active",
+            status: "trial",
           },
         });
       }
 
       await tx.business.update({
         where: { id: businessId },
-        data: { packagePlan: parsed.data.packagePlan, status: "active" },
+        data: { packagePlan: parsed.data.packagePlan, trialPackage: parsed.data.packagePlan, status: "active", subscriptionStatus: currentStatus },
       });
 
       await tx.auditLog.create({

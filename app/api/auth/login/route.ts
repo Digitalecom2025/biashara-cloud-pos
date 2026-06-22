@@ -53,11 +53,15 @@ export async function POST(request: Request) {
   const subscriptionRawStatus = subscription?.status.toLowerCase();
 
   if (userStatus === "pending_approval" || businessStatus === "pending_approval" || subscriptionRawStatus === "pending_approval") {
-    return NextResponse.json({ error: "Your account is pending approval. We will notify you once your 14-day trial is activated." }, { status: 403 });
+    return NextResponse.json({ error: "Your old pending account needs activation. Please contact support." }, { status: 403 });
   }
 
   if (userStatus === "suspended" || businessStatus === "suspended" || subscriptionRawStatus === "suspended") {
     return NextResponse.json({ error: "Your account has been suspended. Please contact support." }, { status: 403 });
+  }
+
+  if (userStatus === "inactive" || businessStatus === "inactive" || subscriptionRawStatus === "inactive") {
+    return NextResponse.json({ error: "Your account is inactive. Please contact support." }, { status: 403 });
   }
 
   const subscriptionStatus = subscription ? getSubscriptionAccessStatus(subscription) : "active";

@@ -32,13 +32,13 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   await prisma.$transaction(async (tx) => {
     await tx.business.update({
       where: { id },
-      data: { packagePlan, selectedPlan: packagePlan },
+      data: { packagePlan, selectedPlan: packagePlan, trialPackage: packagePlan },
     });
 
     if (subscription) {
       await tx.subscription.update({
         where: { id: subscription.id },
-        data: { packagePlan, amount },
+        data: { packagePlan, trialPackage: packagePlan, amount },
       });
     }
 

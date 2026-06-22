@@ -8,9 +8,7 @@ const packageAmounts: Record<string, number> = {
   Lite: 700,
   Growth: 1500,
   Business: 3000,
-  Premium: 5000,
-  Custom: 0,
-  "Custom / Enterprise": 0,
+  Enterprise: 0,
 };
 
 function text(value: unknown) {
@@ -18,7 +16,8 @@ function text(value: unknown) {
 }
 
 function normalizePlan(value: string) {
-  return value === "Custom / Enterprise" ? "Custom" : value;
+  if (["Custom / Enterprise", "Custom", "Premium"].includes(value)) return "Enterprise";
+  return value;
 }
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
@@ -67,6 +66,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
         where: { id: currentSubscription.id },
         data: {
           packagePlan: nextPlan,
+          trialPackage: nextStatus === "trial" ? nextPlan : currentSubscription.trialPackage,
           status: nextStatus,
           renewalDate: nextRenewal,
           trialEndsAt: nextTrialEnd,
@@ -78,6 +78,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
         data: {
           businessId: id,
           packagePlan: nextPlan,
+          trialPackage: nextPlan,
           status: nextStatus,
           startDate: now,
           renewalDate: nextRenewal,
@@ -92,6 +93,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
       data: {
         packagePlan: nextPlan,
         selectedPlan: nextPlan,
+        trialPackage: nextPlan,
         status: nextStatus,
         trialEndsAt: nextTrialEnd,
         updatedAt: now,

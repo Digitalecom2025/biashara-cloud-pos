@@ -83,7 +83,7 @@ export function SubscriptionsPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ businessId: trialPreview.businessId, packagePlan: plan.name }),
         });
-        const json = (await response.json()) as { data?: { packagePlan: string; status: "active" }; error?: string; message?: string };
+        const json = (await response.json()) as { data?: { packagePlan: string; status: "trial" | "active" | "expired" }; error?: string; message?: string };
         if (!response.ok || !json.data) throw new Error(json.error ?? "Package could not be selected.");
         const next = updateTrialPreview({ selectedPlan: json.data.packagePlan, status: json.data.status });
         setTrialPreview(next);
@@ -136,14 +136,12 @@ export function SubscriptionsPage() {
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.17em] text-[#A57809]">Trial account</p>
               <h3 className="mt-1 text-xl font-black text-[#173324]">
-                {trialPreview.status === "active" ? `${trialPreview.selectedPlan} package selected` : trialExpired ? "14-day trial expired" : "14-day trial active"}
+                {trialExpired ? "14-day trial expired" : "14-day trial active"}
               </h3>
               <p className="mt-2 max-w-3xl text-xs leading-5 text-[#60766B]">
-                {trialPreview.status === "active"
-                  ? "Payment confirmation will be handled manually for now. Your selected package is saved against the trial business."
-                  : trialExpired
+                {trialExpired
                   ? "Choose a package to continue using LeadsStacks POS. Trial data remains available."
-                  : `${trialDaysRemaining} day${trialDaysRemaining === 1 ? "" : "s"} remaining. Trial ends on ${formatTrialEndDate(trialPreview.trialEndsAt)}.`}
+                  : `${trialDaysRemaining} day${trialDaysRemaining === 1 ? "" : "s"} remaining on the ${trialPreview.selectedPlan} package. Trial ends on ${formatTrialEndDate(trialPreview.trialEndsAt)}.`}
               </p>
             </div>
             <span className="rounded-full bg-[#12311F] px-3 py-2 text-[10px] font-black uppercase tracking-wider text-[#D4A017]">
@@ -204,12 +202,12 @@ export function SubscriptionsPage() {
       </section>
 
       <section className="mt-5">
-        <div><h3 className="font-black text-[#173324]">Choose a package</h3><p className="text-xs text-[#789083]">Select a package and save it. Payment billing is not implemented yet.</p></div>
-        <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+        <div><h3 className="font-black text-[#173324]">Choose a package</h3><p className="text-xs text-[#789083]">Switch your trial between Lite, Growth and Business. Enterprise requires sales setup.</p></div>
+        <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           {packagePlans.map((plan) => {
-            const isCurrent = trialPreview?.status === "active" ? trialPreview.selectedPlan === plan.name || (trialPreview.selectedPlan === "Custom" && plan.name === "Custom / Enterprise") : subscription?.packagePlan === plan.name;
+            const isCurrent = trialPreview ? trialPreview.selectedPlan === plan.name : subscription?.packagePlan === plan.name;
             const isSelected = selectedPlan === plan.name;
-            const chooseLabel = plan.name === "Custom / Enterprise" ? "Request Custom Quote" : `Choose ${plan.name}`;
+            const chooseLabel = plan.name === "Enterprise" ? "Contact Sales" : `Choose ${plan.name}`;
             return <article key={plan.name} className={`relative rounded-2xl border bg-white p-4 ${isSelected || isCurrent ? "border-[#16A34A] shadow-md shadow-[#16A34A]/10" : "border-[#DDEAE0]"}`}>{isCurrent && <span className="absolute right-3 top-3 rounded-full bg-[#16A34A]/10 px-2 py-1 text-[9px] font-black uppercase tracking-wider text-[#0F8C42]">Current</span>}<h4 className="text-sm font-black text-[#173324]">{plan.name}</h4><p className="mt-3 text-lg font-black text-[#173324]">{plan.price === null ? "Quoted" : money(plan.price)}{plan.price !== null && <span className="text-[10px] text-[#789083]"> / month</span>}</p><p className="mt-2 min-h-10 text-[11px] leading-5 text-[#789083]">{plan.note}</p><div className="mt-3 space-y-2">{plan.limits.map((limit) => <p key={limit} className="flex gap-2 text-[10px] font-bold text-[#60766B]"><Check size={13} className="shrink-0 text-[#16A34A]" />{limit}</p>)}</div><button disabled={saving || isCurrent} onClick={() => { setSelectedPlan(plan.name); void savePlan(plan.name); }} className={`mt-4 flex w-full items-center justify-center gap-1 rounded-xl py-2.5 text-[11px] font-black ${isCurrent ? "bg-[#E8F0EA] text-[#60766B]" : "bg-[#16A34A] text-white"} disabled:opacity-60`}>{isCurrent ? "Current package" : chooseLabel}<ChevronRight size={13} /></button></article>;
           })}
         </div>

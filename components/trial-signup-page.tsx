@@ -2,7 +2,10 @@
 
 import Link from "next/link";
 import { useEffect, useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import { ArrowRight, CheckCircle2, Clock3, LockKeyhole, ShieldCheck, Smartphone, type LucideIcon } from "lucide-react";
+import { saveBusinessSession, type BusinessSession } from "@/lib/business-session";
+import { saveTrialPreview } from "@/lib/trial-session";
 
 const businessTypes = [
   "Retail",
@@ -21,13 +24,13 @@ const businessTypes = [
   "Other",
 ];
 
-const preferredPackages = ["Not sure yet", "Lite", "Growth", "Business", "Premium", "Custom"];
+const preferredPackages = ["Not sure yet", "Lite", "Growth", "Business", "Enterprise"];
 
 const signupBenefits: Array<[string, LucideIcon]> = [
   ["14 days to test your business workflow", Clock3],
   ["Works on desktop, tablet and phone", Smartphone],
   ["Products, users and package selection in one setup", ShieldCheck],
-  ["Account access is prepared during onboarding", LockKeyhole],
+  ["Account access starts immediately after signup", LockKeyhole],
 ];
 
 type TrialForm = {
@@ -64,6 +67,7 @@ function packageFromQuery() {
 }
 
 export function TrialSignupPage() {
+  const router = useRouter();
   const [form, setForm] = useState<TrialForm>(initialForm);
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState("");
@@ -112,15 +116,58 @@ export function TrialSignupPage() {
         body: JSON.stringify(form),
       });
       const payload = (await response.json()) as {
-        data?: { businessId: string; userId: string; trialEndsAt: string | null; selectedPlan: string; redirectTo: string };
+        data?: {
+          businessId: string;
+          userId: string;
+          trialEndsAt: string | null;
+          selectedPlan: string;
+          trialPackage: string;
+          redirectTo: string;
+          user: { id: string; name: string; email: string; role: string; branchName: string };
+          business: { id: string; name: string; status: string; packagePlan: string; selectedPlan: string };
+          subscription: { status: string; packagePlan: string; trialEndsAt: string | null };
+          permissions: string[];
+          trialDaysRemaining: number;
+        };
         message?: string;
         error?: string;
       };
 
       if (!response.ok || !payload.data) throw new Error(payload.error ?? "Trial account could not be created.");
 
-      setFeedback(payload.message ?? "Your trial request has been received. Our team will review and approve your account before your 14-day trial starts.");
+      const session: BusinessSession = {
+        businessLoggedIn: true,
+        userId: payload.data.user.id,
+        businessId: payload.data.business.id,
+        businessName: payload.data.business.name,
+        businessStatus: payload.data.business.status,
+        userName: payload.data.user.name,
+        userEmail: payload.data.user.email,
+        userRole: payload.data.user.role,
+        branchName: payload.data.user.branchName,
+        till: "Office",
+        subscriptionStatus: payload.data.subscription.status,
+        packagePlan: payload.data.subscription.packagePlan,
+        selectedPlan: payload.data.business.selectedPlan,
+        trialEndsAt: payload.data.subscription.trialEndsAt,
+        trialDaysRemaining: payload.data.trialDaysRemaining,
+        permissions: payload.data.permissions,
+      };
+      saveBusinessSession(session);
+      if (payload.data.subscription.trialEndsAt) {
+        saveTrialPreview({
+          businessId: payload.data.business.id,
+          businessName: payload.data.business.name,
+          fullName: payload.data.user.name,
+          selectedPlan: payload.data.business.selectedPlan,
+          status: "trial",
+          trialStartedAt: new Date().toISOString(),
+          trialEndsAt: payload.data.subscription.trialEndsAt,
+        });
+      }
+      setFeedback(payload.message ?? "Your 14-day free trial is active. You can now start adding products, customers and sales.");
       setForm({ ...initialForm, preferredPackage: queryPackage ?? "Not sure yet" });
+      router.replace(payload.data.redirectTo || "/dashboard");
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "Trial account could not be created.");
     } finally {
@@ -186,8 +233,8 @@ export function TrialSignupPage() {
               {error || feedback}
               {feedback && (
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <Link href="/login" className="rounded-lg bg-[#12311F] px-3 py-2 text-[11px] font-black text-white">Go to Login</Link>
-                  <Link href="/subscriptions" className="rounded-lg border border-[#16A34A]/30 bg-white px-3 py-2 text-[11px] font-black text-[#0F8C42]">View packages after login</Link>
+                  <Link href="/dashboard" className="rounded-lg bg-[#12311F] px-3 py-2 text-[11px] font-black text-white">Go to Dashboard</Link>
+                  <Link href="/login" className="rounded-lg border border-[#16A34A]/30 bg-white px-3 py-2 text-[11px] font-black text-[#0F8C42]">Go to Login</Link>
                 </div>
               )}
             </div>

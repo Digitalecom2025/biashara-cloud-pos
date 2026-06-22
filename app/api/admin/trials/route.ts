@@ -13,7 +13,7 @@ export async function GET(request: Request) {
   return NextResponse.json({
     data: {
       summary: data.summary,
-      rows: data.rows.filter((row) => ["pending_approval", "pending", "new", "trial", "expired"].includes(row.subscriptionStatus) || ["pending_approval", "pending", "new"].includes(row.approvalStatus)),
+      rows: data.rows.filter((row) => ["trial", "expired"].includes(row.subscriptionStatus)),
     },
   }, { headers: { "Cache-Control": "no-store" } });
 }
