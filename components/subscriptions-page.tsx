@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Check, ChevronRight, Crown, Gauge, ReceiptText } from "lucide-react";
 import { packagePlans, planByName, type PlanConfig, type PlanName } from "@/lib/subscription-plans";
-import { getPackageAccess } from "@/lib/package-access";
+import { featureLabels, getPackageAccess } from "@/lib/package-access";
 import { formatTrialEndDate, getTrialDaysRemaining, isTrialExpired } from "@/lib/trial";
 import { getTrialPreview, updateTrialPreview, type TrialPreviewSession } from "@/lib/trial-session";
 
@@ -73,6 +73,11 @@ export function SubscriptionsPage() {
 
   async function savePlan(planName: PlanName) {
     const plan = planByName(planName);
+    if (plan.name === "Enterprise") {
+      setError("");
+      setFeedback("Enterprise setup requires consultation. Contact sales and continue using Lite, Growth or Business during trial.");
+      return;
+    }
     setSaving(true);
     setError("");
     setFeedback("");
@@ -88,7 +93,7 @@ export function SubscriptionsPage() {
         const next = updateTrialPreview({ selectedPlan: json.data.packagePlan, status: json.data.status });
         setTrialPreview(next);
         setSelectedPlan(plan.name);
-        setFeedback(json.message ?? "Package selected. Payment confirmation will be handled manually for now.");
+        setFeedback(json.message ?? "Trial package updated. Your trial date has not been reset.");
         return;
       }
 
@@ -114,7 +119,7 @@ export function SubscriptionsPage() {
 
   const currentPlan = subscription?.plan ?? planByName(selectedPlan);
   const history = subscription?.paymentHistory ?? [];
-  const trialAccess = getPackageAccess(trialPreview?.status === "trial" ? "Trial" : trialPreview?.selectedPlan);
+  const trialAccess = getPackageAccess(trialPreview?.selectedPlan ?? subscription?.packagePlan);
   const trialExpired = trialPreview ? isTrialExpired(trialPreview.trialEndsAt) || trialPreview.status === "expired" : false;
   const trialDaysRemaining = trialPreview ? getTrialDaysRemaining(trialPreview.trialEndsAt) : 0;
 
@@ -152,12 +157,12 @@ export function SubscriptionsPage() {
             <TrialLimit label="Users" value={`${trialAccess.users}`} />
             <TrialLimit label="Branches" value={`${trialAccess.branches}`} />
             <TrialLimit label="Products" value={`${trialAccess.products}`} />
-            <TrialLimit label="Offline sync" value={trialAccess.offlineSync} />
+            <TrialLimit label="Reports" value={trialAccess.reports} />
           </div>
-          {trialAccess.lockedFeatures.length > 0 && (
+          {Object.entries(trialAccess.features).filter(([, active]) => !active).length > 0 && (
             <div className="mt-4 flex flex-wrap gap-2">
-              {trialAccess.lockedFeatures.map((feature) => (
-                <span key={feature} className="rounded-full border border-[#D4A017]/30 bg-white px-3 py-1.5 text-[10px] font-black text-[#8A670C]">{feature} locked</span>
+              {Object.entries(trialAccess.features).filter(([, active]) => !active).map(([feature]) => (
+                <span key={feature} className="rounded-full border border-[#D4A017]/30 bg-white px-3 py-1.5 text-[10px] font-black text-[#8A670C]">{featureLabels[feature as keyof typeof featureLabels]} locked</span>
               ))}
             </div>
           )}

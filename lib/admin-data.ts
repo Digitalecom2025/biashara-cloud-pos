@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { getBranchLimit, getProductLimit, getUserLimit } from "@/lib/package-access";
 import { getTrialDaysRemaining, isTrialExpired } from "@/lib/trial";
 
 export type AdminBusinessRow = {
@@ -9,6 +10,10 @@ export type AdminBusinessRow = {
   email: string;
   businessType: string;
   packageSelected: string;
+  trialPackage: string;
+  userLimit: string;
+  branchLimit: string;
+  productLimit: string;
   subscriptionStatus: string;
   approvalStatus: string;
   businessStatus: string;
@@ -59,6 +64,10 @@ function normalizeStatus(value?: string | null) {
   return value;
 }
 
+function limitText(value: number | "Unlimited") {
+  return typeof value === "number" ? value.toLocaleString() : value;
+}
+
 export async function getAdminBusinesses() {
   const businesses = await prisma.business.findMany({
     orderBy: { createdAt: "desc" },
@@ -80,6 +89,7 @@ export async function getAdminBusinesses() {
     const daysRemaining = getTrialDaysRemaining(trialEndsAt);
     const expiredTrial = subscription?.status === "trial" && isTrialExpired(trialEndsAt);
     const packageSelected = normalizePackagePlan(business.selectedPlan ?? subscription?.packagePlan ?? request?.preferredPackage ?? business.packagePlan);
+    const trialPackage = normalizePackagePlan(business.trialPackage ?? subscription?.trialPackage ?? packageSelected);
     const hasPendingApproval =
       business.status === "pending_approval" ||
       business.approvalStatus === "pending_approval" ||
@@ -104,6 +114,10 @@ export async function getAdminBusinesses() {
       email: business.email || owner?.email || "",
       businessType: business.industryMode,
       packageSelected,
+      trialPackage,
+      userLimit: limitText(getUserLimit(packageSelected)),
+      branchLimit: limitText(getBranchLimit(packageSelected)),
+      productLimit: limitText(getProductLimit(packageSelected)),
       subscriptionStatus,
       approvalStatus,
       businessStatus: business.status,

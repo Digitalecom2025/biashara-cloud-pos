@@ -2,28 +2,6 @@
 
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
-import {
-  ArrowRight,
-  BarChart3,
-  Boxes,
-  CheckCircle2,
-  Cloud,
-  CreditCard,
-  Hammer,
-  Leaf,
-  Pill,
-  Settings,
-  ShieldCheck,
-  ShoppingBasket,
-  ShoppingCart,
-  Sparkles,
-  Store,
-  TrendingUp,
-  Utensils,
-  Users,
-  Wrench,
-  type LucideIcon,
-} from "lucide-react";
 
 const trustBullets = [
   "Sales, stock, customers and debtors",
@@ -36,35 +14,35 @@ const trustBullets = [
 const featureHighlights: Array<{
   title: string;
   note: string;
-  icon: LucideIcon;
+  badge: string;
   visualLabel: string;
   stats: string[];
 }> = [
   {
     title: "Sales & Stock",
     note: "Run fast checkout, track product movement and know when stock is running low.",
-    icon: ShoppingCart,
+    badge: "POS",
     visualLabel: "Sales and stock visual with cart, product box and inventory cards",
     stats: ["POS checkout", "Stock levels", "Low stock alerts"],
   },
   {
     title: "Customers & Debtors",
     note: "Keep customer records, monitor balances and follow up on debt without manual books.",
-    icon: Users,
+    badge: "CRM",
     visualLabel: "Customer profile, receipt and debtor ledger visual",
     stats: ["Customer profiles", "Debt balances", "Payment history"],
   },
   {
     title: "Reports",
     note: "See daily sales, product performance, payments, expenses and business summaries.",
-    icon: BarChart3,
+    badge: "RPT",
     visualLabel: "Daily sales report and analytics chart visual",
     stats: ["Sales reports", "Stock reports", "Owner summaries"],
   },
   {
     title: "Cloud Access",
     note: "Monitor your business from your phone, tablet or computer while staff continue selling.",
-    icon: Cloud,
+    badge: "CLD",
     visualLabel: "Phone, laptop and cloud access visual",
     stats: ["Remote view", "Branch visibility", "Secure access"],
   },
@@ -74,90 +52,92 @@ const industries: Array<{
   title: string;
   note: string;
   bestFor: string;
-  icon: LucideIcon;
+  badge: string;
 }> = [
   {
     title: "Restaurant / Cafe",
     note: "Track orders, sales, payments, customers and daily reports.",
     bestFor: "Food service",
-    icon: Utensils,
+    badge: "FD",
   },
   {
     title: "Hardware Store",
     note: "Manage stock, suppliers, purchases, sales and customer balances.",
     bestFor: "Building supplies",
-    icon: Hammer,
+    badge: "HW",
   },
   {
     title: "Mini-mart / Retail Shop",
     note: "Sell faster, track products, view stock and monitor daily sales.",
     bestFor: "Daily retail",
-    icon: ShoppingBasket,
+    badge: "RT",
   },
   {
     title: "Cosmetics / Beauty Shop",
     note: "Manage product variations, stock levels, customers and sales reports.",
     bestFor: "Beauty products",
-    icon: Sparkles,
+    badge: "BT",
   },
   {
     title: "Pharmacy / Chemist",
     note: "Track products, stock movement, sales and low-stock items.",
     bestFor: "Health retail",
-    icon: Pill,
+    badge: "PH",
   },
   {
     title: "Auto Spares",
     note: "Manage parts, stock, supplier purchases and customer payments.",
     bestFor: "Vehicle parts",
-    icon: Wrench,
+    badge: "AS",
   },
   {
     title: "Agrovet / Supplies",
     note: "Track products, stock, suppliers and customer purchases.",
     bestFor: "Agro supplies",
-    icon: Leaf,
+    badge: "AG",
   },
 ];
 
 const packages: Array<{
   name: string;
   price: string;
-  note: string;
-  bestFor: string;
-  icon: LucideIcon;
+  summary: string;
+  bullets: string[];
+  badge: string;
   recommended?: boolean;
 }> = [
   {
     name: "Lite",
     price: "Ksh 700/month",
-    note: "Basic sales and stock tracking for simple business operations.",
-    bestFor: "Small businesses starting with basic sales and stock tracking.",
-    icon: Store,
+    summary: "Admin with 5 users, basic features: POS, Inventory, Finance/Accounts & Standard Reports.",
+    bullets: ["Admin + 5 users", "1 branch", "100 products", "POS, inventory and finance", "Standard reports"],
+    badge: "LT",
   },
   {
     name: "Growth",
     price: "Ksh 1,500/month or Ksh 4,500 quarterly",
-    note: "Customers, debtors, suppliers, purchases and reports for growing teams.",
-    bestFor: "Small shops, restaurants and hardware stores that need customers, debtors, suppliers and reports.",
-    icon: TrendingUp,
+    summary: "Admin with 7 users, all features in Lite plus MPESA Integration, Advanced reports with AI.",
+    bullets: ["Admin + 7 users", "2 branches", "500 products", "M-Pesa integration ready", "Advanced reports with AI"],
+    badge: "GR",
     recommended: true,
   },
   {
     name: "Business",
     price: "Ksh 3,000/month",
-    note: "Staff roles, branches, stock movement and advanced reporting controls.",
-    bestFor: "Businesses with staff, roles, branches, stock movement and advanced reports.",
-    icon: Users,
+    summary: "Admin with 10 users, all features in Growth plus CRM, eTIMS and Ultra reports with AI.",
+    bullets: ["Admin + 10 users", "Unlimited branches", "1,000 products", "CRM and eTIMS ready", "Ultra reports with AI"],
+    badge: "BS",
   },
   {
     name: "Enterprise",
     price: "Quoted",
-    note: "Special workflows, custom setup and selected advanced integrations.",
-    bestFor: "Businesses that need special workflows, integrations or custom setup.",
-    icon: Settings,
+    summary: "Admin with unlimited users, all features in Business plus lead capturing, Integrated Social Media chats and growth-focused reports with AI.",
+    bullets: ["Unlimited users", "Unlimited branches", "Custom workflows", "Lead capture and social chats", "Growth reports with AI"],
+    badge: "EN",
   },
 ];
+
+const packageSummaryClassName = "mt-3 text-xs leading-5 text-[#789083]";
 
 const freeTrialBullets = [
   "No payment required",
@@ -262,7 +242,7 @@ export function LandingPage() {
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link href="/signup" className="inline-flex items-center gap-2 rounded-2xl bg-[#16A34A] px-5 py-4 text-sm font-black text-white shadow-xl shadow-[#16A34A]/20 hover:bg-[#12883E]">
-                Start Free 14-Day Trial <ArrowRight size={17} />
+                Start Free 14-Day Trial <span aria-hidden="true">→</span>
               </Link>
               <Link href="/login" className="inline-flex items-center gap-2 rounded-2xl border border-[#D4A017]/45 bg-[#D4A017]/12 px-5 py-4 text-sm font-black text-[#F7D783] hover:bg-[#D4A017]/16">
                 Sign In
@@ -277,7 +257,7 @@ export function LandingPage() {
             <div className="mt-8 grid gap-3 sm:grid-cols-2">
               {trustBullets.map((item) => (
                 <p key={item} className="flex items-center gap-2 text-sm font-semibold text-[#E8F7EC]">
-                  <CheckCircle2 size={16} className="text-[#22C55E]" /> {item}
+                  <CheckMark /> {item}
                 </p>
               ))}
             </div>
@@ -293,15 +273,15 @@ export function LandingPage() {
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
               {freeTrialBullets.map((item) => (
                 <p key={item} className="flex items-center gap-2 rounded-xl border border-[#E8F0EA] bg-[#F8FBF8] p-3 text-xs font-black text-[#60766B]">
-                  <CheckCircle2 size={15} className="shrink-0 text-[#16A34A]" /> {item}
+                  <CheckMark /> {item}
                 </p>
               ))}
             </div>
             <Link href="/signup" className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-[#16A34A] px-5 py-4 text-sm font-black text-white shadow-lg shadow-[#16A34A]/15 hover:bg-[#12883E]">
-              Start Free 14-Day Trial <ArrowRight size={16} />
+              Start Free 14-Day Trial <span aria-hidden="true">→</span>
             </Link>
           </div>
-          <VisualPanel icon={ShieldCheck} title="Business onboarding" label="Business onboarding visual showing products, users, cashiers and package selection" items={["Add business profile", "Load products", "Create users/cashiers", "Select package"]} />
+          <VisualPanel badge="SET" title="Business onboarding" label="Business onboarding visual showing products, users, cashiers and package selection" items={["Add business profile", "Load products", "Create users/cashiers", "Select package"]} />
         </div>
       </section>
 
@@ -310,10 +290,10 @@ export function LandingPage() {
         <div className="mt-8 grid gap-5 lg:grid-cols-2">
           {featureHighlights.map((feature) => (
             <article key={feature.title} className="grid gap-4 rounded-3xl border border-[#DDEAE0] bg-white p-5 shadow-sm shadow-[#12311F]/5 md:grid-cols-[0.9fr_1.1fr]">
-              <VisualPanel icon={feature.icon} title={feature.title} label={feature.visualLabel} items={feature.stats} compact />
+              <VisualPanel badge={feature.badge} title={feature.title} label={feature.visualLabel} items={feature.stats} compact />
               <div className="flex flex-col justify-center">
                 <span className="grid h-11 w-11 place-items-center rounded-xl bg-[#16A34A]/10 text-[#16A34A]">
-                  <feature.icon size={20} />
+                  <span className="text-[10px] font-black">{feature.badge}</span>
                 </span>
                 <h3 className="mt-4 text-xl font-black text-[#173324]">{feature.title}</h3>
                 <p className="mt-2 text-sm leading-7 text-[#789083]">{feature.note}</p>
@@ -330,7 +310,7 @@ export function LandingPage() {
             {industries.map((industry) => (
               <article key={industry.title} className="rounded-3xl border border-[#DDEAE0] bg-white p-5 shadow-sm shadow-[#12311F]/5">
                 <div role="img" aria-label={`${industry.title} POS setup illustration`} className="grid h-20 w-20 place-items-center rounded-2xl border border-[#D4A017]/25 bg-[#FFF9E8] text-[#A57809]">
-                  <industry.icon size={32} />
+                  <span className="text-xl font-black">{industry.badge}</span>
                 </div>
                 <h3 className="mt-4 text-sm font-black text-[#173324]">{industry.title}</h3>
                 <p className="mt-2 min-h-12 text-xs leading-5 text-[#789083]">{industry.note}</p>
@@ -350,12 +330,19 @@ export function LandingPage() {
             <article key={plan.name} className={`relative rounded-3xl border p-5 shadow-sm shadow-[#12311F]/5 ${plan.recommended ? "border-[#16A34A]/50 bg-[#16A34A]/[0.045]" : "border-[#DDEAE0] bg-white"}`}>
               {plan.recommended && <span className="absolute right-4 top-4 rounded-full bg-[#16A34A] px-3 py-1 text-[9px] font-black uppercase tracking-wider text-white">Recommended</span>}
               <div role="img" aria-label={`${plan.name} package icon`} className="grid h-12 w-12 place-items-center rounded-2xl bg-[#12311F] text-[#D4A017]">
-                <plan.icon size={22} />
+                <span className="text-sm font-black">{plan.badge}</span>
               </div>
               <h3 className="mt-4 text-lg font-black text-[#173324]">{plan.name}</h3>
               <p className="mt-2 text-xl font-black text-[#12311F]">{plan.price}</p>
-              <p className="mt-3 text-xs leading-5 text-[#789083]">{plan.note}</p>
-              <p className="mt-3 rounded-xl bg-[#F8FBF8] p-3 text-[11px] font-bold leading-5 text-[#60766B]">Best for: {plan.bestFor}</p>
+              <p className={packageSummaryClassName}>{plan.summary}</p>
+              <div className="mt-4 grid gap-2">
+                {plan.bullets.map((bullet) => (
+                  <p key={bullet} className="flex items-start gap-2 text-[11px] font-bold leading-5 text-[#60766B]">
+                    <CheckMark small />
+                    {bullet}
+                  </p>
+                ))}
+              </div>
               {plan.name === "Enterprise" ? (
                 <div className="mt-5 grid gap-2">
                   <Link href={signupHref(plan.name)} className="inline-flex justify-center rounded-xl bg-[#12311F] px-4 py-3 text-xs font-black text-white hover:bg-[#0E2418]">Request Enterprise Setup</Link>
@@ -456,9 +443,9 @@ function HeroPreview() {
           <span className="rounded-xl bg-[#12311F] px-3 py-2 text-[10px] font-black text-[#22C55E]">Cloud POS</span>
         </div>
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          <PreviewCard icon={BarChart3} label="Today sales" value="KES 184K" />
-          <PreviewCard icon={CreditCard} label="M-Pesa" value="KES 126K" />
-          <PreviewCard icon={Boxes} label="Stock value" value="KES 4.8M" />
+          <PreviewCard badge="KES" label="Today sales" value="KES 184K" />
+          <PreviewCard badge="PAY" label="M-Pesa" value="KES 126K" />
+          <PreviewCard badge="INV" label="Stock value" value="KES 4.8M" />
         </div>
         <div className="mt-4 grid gap-3 lg:grid-cols-[1fr_0.9fr]">
           <div className="rounded-2xl border border-[#DDEAE0] bg-white p-4">
@@ -483,12 +470,12 @@ function HeroPreview() {
   );
 }
 
-function VisualPanel({ icon: Icon, title, label, items, compact }: { icon: LucideIcon; title: string; label: string; items: string[]; compact?: boolean }) {
+function VisualPanel({ badge, title, label, items, compact }: { badge: string; title: string; label: string; items: string[]; compact?: boolean }) {
   return (
     <div role="img" aria-label={label} className={`rounded-2xl border border-[#DDEAE0] bg-[#F8FBF8] ${compact ? "p-4" : "p-5"}`}>
       <div className="flex items-center justify-between">
         <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[#12311F] text-[#D4A017]">
-          <Icon size={22} />
+          <span className="text-xs font-black">{badge}</span>
         </span>
         <span className="rounded-full bg-[#16A34A]/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-[#0F8C42]">Cloud POS</span>
       </div>
@@ -504,13 +491,24 @@ function VisualPanel({ icon: Icon, title, label, items, compact }: { icon: Lucid
   );
 }
 
-function PreviewCard({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
+function PreviewCard({ badge, label, value }: { badge: string; label: string; value: string }) {
   return (
     <div className="rounded-2xl border border-[#DDEAE0] bg-white p-3">
-      <Icon size={17} className="text-[#16A34A]" />
+      <span className="inline-flex rounded-lg bg-[#16A34A]/10 px-2 py-1 text-[9px] font-black text-[#0F8C42]">{badge}</span>
       <p className="mt-3 text-[10px] font-black uppercase tracking-wider text-[#789083]">{label}</p>
       <p className="mt-1 text-sm font-black text-[#173324]">{value}</p>
     </div>
+  );
+}
+
+function CheckMark({ small }: { small?: boolean }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={`${small ? "mt-0.5 h-3.5 w-3.5 text-[9px]" : "h-4 w-4 text-[10px]"} grid shrink-0 place-items-center rounded-full bg-[#16A34A] font-black leading-none text-white`}
+    >
+      ✓
+    </span>
   );
 }
 

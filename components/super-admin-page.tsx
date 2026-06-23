@@ -33,6 +33,10 @@ type AdminBusinessRow = {
   email: string;
   businessType: string;
   packageSelected: string;
+  trialPackage: string;
+  userLimit: string;
+  branchLimit: string;
+  productLimit: string;
   subscriptionStatus: string;
   approvalStatus: string;
   businessStatus: string;
@@ -432,10 +436,10 @@ function AdminTable({
       ) : null}
 
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[1500px] text-left">
+        <table className="w-full min-w-[1720px] text-left">
           <thead>
             <tr className="bg-[#F8FBF8] text-[10px] font-black uppercase tracking-wider text-[#789083]">
-              {["Business name", "Contact", "Phone", "Email", "Business type", "Package", "Status", "Days", "Users/cashiers", "Renewal", "Amount", "Created", "Actions"].map((heading) => <th key={heading} className="px-4 py-3.5">{heading}</th>)}
+              {["Business name", "Contact", "Phone", "Email", "Business type", "Package", "Trial package", "Limits", "Status", "Days", "Users/cashiers", "Renewal", "Amount", "Created", "Actions"].map((heading) => <th key={heading} className="px-4 py-3.5">{heading}</th>)}
             </tr>
           </thead>
           <tbody>
@@ -452,6 +456,14 @@ function AdminTable({
                     <select value={selectedPlan} onChange={(event) => onPackageChange(row.id, event.target.value)} className="rounded-lg border border-[#DDEAE0] bg-white px-2 py-2 text-xs font-bold text-[#173324]">
                       {allPackageOptions.map((option) => <option key={option}>{option}</option>)}
                     </select>
+                  </td>
+                  <td className="px-4 py-3 font-bold text-[#173324]">{row.trialPackage}</td>
+                  <td className="px-4 py-3">
+                    <div className="grid gap-1 text-[10px] font-bold leading-4">
+                      <span>Users: {row.userLimit}</span>
+                      <span>Branches: {row.branchLimit}</span>
+                      <span>Products: {row.productLimit}</span>
+                    </div>
                   </td>
                   <td className="px-4 py-3"><Status row={row} /></td>
                   <td className="px-4 py-3 font-black">{row.daysRemaining}</td>
@@ -522,6 +534,10 @@ function DetailsPanel({ row, onClose }: { row: AdminBusinessRow; onClose: () => 
     ["Email", row.email],
     ["Business type", row.businessType],
     ["Preferred package", row.packageSelected],
+    ["Trial package", row.trialPackage],
+    ["User limit", row.userLimit],
+    ["Branch limit", row.branchLimit],
+    ["Product limit", row.productLimit],
     ["Users/cashiers", row.usersCount?.toString() ?? "Not set"],
     ["Signup date", formatDate(row.createdAt)],
     ["Current status", displayStatus(row)],

@@ -1,9 +1,8 @@
 export const subscriptionPlans = [
-  { name: "Lite", price: 700, note: "For a single till getting started", limits: ["2 users", "500 products", "1 branch", "Basic reports"], featured: false },
-  { name: "Growth", price: 1500, note: "For growing shops and restaurants", limits: ["6 users", "3,000 products", "2 branches", "Business reports"], featured: false },
-  { name: "Business", price: 3000, note: "For multi-team daily operations", limits: ["15 users", "10,000 products", "5 branches", "Advanced reports"], featured: true },
-  { name: "Premium", price: 5000, note: "For established multi-branch businesses", limits: ["40 users", "Unlimited products", "15 branches", "Advanced reports"], featured: false },
-  { name: "Custom / Enterprise", price: null, note: "Tailored package for larger operations", limits: ["Custom users", "Custom catalog", "Custom branches", "Dedicated support"], featured: false },
+  { name: "Lite", price: 700, note: "Admin with 5 users, basic POS, inventory, finance/accounts and standard reports", limits: ["Admin + 5 users", "100 products", "1 branch", "Standard reports"], featured: false },
+  { name: "Growth", price: 1500, note: "Admin with 7 users, Lite features plus M-Pesa integration and advanced reports with AI", limits: ["Admin + 7 users", "500 products", "2 branches", "Advanced reports"], featured: true },
+  { name: "Business", price: 3000, note: "Admin with 10 users, Growth features plus CRM, eTIMS and ultra reports with AI", limits: ["Admin + 10 users", "1,000 products", "Unlimited branches", "Ultra reports"], featured: false },
+  { name: "Enterprise", price: null, note: "Unlimited users with custom workflows, social chats and growth-focused reports with AI", limits: ["Unlimited users", "Custom workflows", "Unlimited branches", "Dedicated setup"], featured: false },
 ] as const;
 
 export const subscriptionUsage = [

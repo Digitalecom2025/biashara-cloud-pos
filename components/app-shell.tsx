@@ -17,6 +17,7 @@ import {
   Landmark,
   LayoutDashboard,
   LogOut,
+  Lock,
   Menu,
   MessageSquareText,
   Package,
@@ -52,6 +53,7 @@ import {
   sidebarItemsForBusinessRole,
   type BusinessSession,
 } from "@/lib/business-session";
+import { featureLabels, getLockedFeatureMessage, getUpgradeTarget, isFeatureActive, routeFeatureMap, type PackageFeature } from "@/lib/package-access";
 
 const icons = {
   ArrowLeftRight,
@@ -118,6 +120,9 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const currentPage =
     sidebarItems.find((item) => item.href === pathname)?.label ?? "Dashboard";
+  const businessPlan = businessSession?.selectedPlan ?? businessSession?.packagePlan ?? null;
+  const routeFeature = useMemo(() => getRouteFeature(pathname), [pathname]);
+  const packageLocked = Boolean(businessSession && routeFeature && !isFeatureActive(businessPlan, routeFeature));
 
   function logout() {
     clearDemoSession();
@@ -189,6 +194,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           {visibleSidebarItems.map((item) => {
             const Icon = icons[item.icon as keyof typeof icons];
             const active = item.href === pathname;
+            const feature = routeFeatureMap[item.href];
+            const locked = Boolean(businessSession && feature && !isFeatureActive(businessPlan, feature));
 
             return (
               <Link
@@ -202,7 +209,10 @@ export function AppShell({ children }: { children: ReactNode }) {
                 }`}
               >
                 <Icon size={16} strokeWidth={active ? 2.4 : 1.8} />
-                <span>{item.label}</span>
+                <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
+                  <span className="truncate">{item.label}</span>
+                  {locked && <span className="rounded-full border border-[#D4A017]/35 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider text-[#D4A017]">Lock</span>}
+                </span>
               </Link>
             );
           })}
@@ -299,9 +309,42 @@ export function AppShell({ children }: { children: ReactNode }) {
         </header>
 
         <main className="min-h-[calc(100vh-76px)] p-4 md:p-7">
-          {hasRouteAccess ? children : <AccessRestricted currentPage={currentPage} role={businessSession?.userRole ?? session?.demoUserTitle ?? "Business role"} />}
+          {!hasRouteAccess ? (
+            <AccessRestricted currentPage={currentPage} role={businessSession?.userRole ?? session?.demoUserTitle ?? "Business role"} />
+          ) : packageLocked && routeFeature ? (
+            <LockedFeaturePage feature={routeFeature} plan={businessPlan ?? "Lite"} />
+          ) : (
+            children
+          )}
         </main>
       </div>
+    </div>
+  );
+}
+
+function getRouteFeature(pathname: string): PackageFeature | undefined {
+  const exact = routeFeatureMap[pathname];
+  if (exact) return exact;
+  const firstSegment = `/${pathname.split("/").filter(Boolean)[0] ?? ""}`;
+  return routeFeatureMap[firstSegment];
+}
+
+function LockedFeaturePage({ feature, plan }: { feature: PackageFeature; plan: string }) {
+  const target = getUpgradeTarget(plan, feature);
+  return (
+    <div className="mx-auto grid min-h-[calc(100vh-140px)] max-w-3xl place-items-center">
+      <article className="rounded-3xl border border-[#DDEAE0] bg-white p-8 text-center shadow-sm shadow-[#12311F]/5">
+        <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-[#D4A017]/12 text-[#9A7108]">
+          <Lock size={24} />
+        </span>
+        <p className="mt-5 text-xs font-black uppercase tracking-[0.16em] text-[#D4A017]">{plan} package feature</p>
+        <h2 className="mt-2 text-2xl font-black tracking-tight text-[#173324]">{featureLabels[feature]} is locked</h2>
+        <p className="mt-3 text-sm leading-6 text-[#789083]">{getLockedFeatureMessage(plan, feature)}</p>
+        <div className="mt-6 flex flex-wrap justify-center gap-2">
+          <Link href="/subscriptions" className="rounded-xl bg-[#16A34A] px-4 py-3 text-xs font-black text-white hover:bg-[#12883E]">Upgrade to {target}</Link>
+          <Link href="/subscriptions" className="rounded-xl border border-[#DDEAE0] px-4 py-3 text-xs font-black text-[#60766B] hover:bg-[#F8FBF8]">View packages</Link>
+        </div>
+      </article>
     </div>
   );
 }
