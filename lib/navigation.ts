@@ -15,6 +15,7 @@ export const sidebarItems: SidebarItem[] = [
   { label: "Stock Adjustments", href: "/stock-adjustments", icon: "SlidersHorizontal" },
   { label: "Customers", href: "/customers", icon: "Users" },
   { label: "Suppliers", href: "/suppliers", icon: "Truck" },
+  { label: "Fleet", href: "/fleet", icon: "Truck" },
   { label: "Tax Settings", href: "/tax-settings", icon: "ReceiptText" },
   { label: "Due List / Debtors", href: "/debtors", icon: "HandCoins" },
   { label: "Finance & Accounts", href: "/finance", icon: "Landmark" },

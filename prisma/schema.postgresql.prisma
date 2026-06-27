@@ -423,3 +423,62 @@ model DemoRequest {
   @@index([status])
   @@index([createdAt])
 }
+model FleetVehicle {
+  id          String   @id @default(cuid())
+
+  businessId  String
+  branchId    String?
+
+  plateNumber String   @unique
+  vehicleName String
+  vehicleType String
+
+  make        String?
+  model       String?
+  year        Int?
+
+  driverId String?
+
+driver FleetDriver? @relation(fields: [driverId], references: [id])
+
+  fuelType    String?
+
+  mileage     Float    @default(0)
+
+  status      String   @default("Active")
+
+  notes       String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+model FleetDriver {
+  id          String   @id @default(cuid())
+
+  businessId  String
+  branchId    String?
+
+  fullName    String
+  phoneNumber String?
+  email       String?
+
+  licenseNumber String
+  licenseExpiry DateTime?
+
+  nationalId String?
+
+  address String?
+
+  emergencyContact String?
+
+  emergencyPhone String?
+
+  status String @default("Active")
+
+  notes String?
+
+  vehicles FleetVehicle[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
