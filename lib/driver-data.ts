@@ -1,9 +1,16 @@
-import { PrismaClient } from "@prisma/client";
+import { getBusinessContext } from "@/lib/db-data";
+import { prisma } from "@/lib/prisma";
 
-const prisma = new PrismaClient();
+async function fleetWhere() {
+  const context = await getBusinessContext();
+  if (!context.businessId) return {};
+  return { businessId: context.businessId };
+}
 
 export async function getDrivers() {
+  const where = await fleetWhere();
   return prisma.fleetDriver.findMany({
+    where,
     orderBy: {
       createdAt: "desc",
     },
@@ -11,9 +18,19 @@ export async function getDrivers() {
 }
 
 export async function getDriver(id: string) {
-  return prisma.fleetDriver.findUnique({
+  const where = await fleetWhere();
+  return prisma.fleetDriver.findFirst({
     where: {
       id,
+      ...where,
+    },
+    include: {
+      vehicles: true,
+      tripRecords: {
+        include: { vehicle: true },
+        orderBy: { departureTime: "desc" },
+        take: 5,
+      },
     },
   });
 }

@@ -1,171 +1,56 @@
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 
 import { createDriver } from "./actions";
 
-export default function NewDriverPage() {
+type Props = {
+  searchParams?: Promise<{ error?: string }>;
+};
+
+export default async function NewDriverPage({ searchParams }: Props) {
+  const error = (await searchParams)?.error;
+
   return (
-    <div className="mx-auto max-w-5xl space-y-6 p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="mx-auto max-w-5xl">
+      <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
-          <h1 className="text-3xl font-bold">
-            Add Driver
-          </h1>
-
-          <p className="mt-2 text-muted-foreground">
-            Register a new fleet driver.
-          </p>
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#16A34A]">Fleet drivers</p>
+          <h2 className="mt-1 text-2xl font-black tracking-tight text-[#10271B] md:text-3xl">Add Driver</h2>
+          <p className="mt-1 text-sm text-[#789083]">Register a driver for vehicle assignments and trip records.</p>
         </div>
-
-        <Link
-          href="/fleet/drivers"
-          className="rounded-lg border px-4 py-2 hover:bg-gray-100"
-        >
-          ← Back
-        </Link>
+        <Link href="/fleet/drivers" className="flex w-fit items-center gap-2 rounded-xl border border-[#DDEAE0] bg-white px-4 py-3 text-xs font-black text-[#60766B] hover:bg-[#F8FBF8]"><ArrowLeft size={15} /> Back</Link>
       </div>
 
-      {/* Form */}
+      {error && <div className="mb-4 rounded-xl border border-[#EF4444]/20 bg-[#EF4444]/10 px-4 py-3 text-xs font-bold text-[#EF4444]">{error}</div>}
 
-      <form action={createDriver} className="space-y-6">
-
-        <div className="grid gap-6 md:grid-cols-2">
-
-          <div>
-            <label className="mb-2 block font-medium">
-              Full Name
-            </label>
-
-            <input
-              name="fullName"
-              className="w-full rounded-lg border p-3"
-              placeholder="John Kamau"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block font-medium">
-              Phone Number
-            </label>
-
-            <input
-              name="phoneNumber"
-              className="w-full rounded-lg border p-3"
-              placeholder="+254712345678"
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block font-medium">
-              Email
-            </label>
-
-            <input
-              name="email"
-              type="email"
-              className="w-full rounded-lg border p-3"
-              placeholder="driver@email.com"
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block font-medium">
-              National ID
-            </label>
-
-            <input
-              name="nationalId"
-              className="w-full rounded-lg border p-3"
-              placeholder="12345678"
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block font-medium">
-              Driving Licence
-            </label>
-
-            <input
-              name="licenseNumber"
-              className="w-full rounded-lg border p-3"
-              placeholder="DL123456"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block font-medium">
-              Licence Expiry
-            </label>
-
-            <input
-              name="licenseExpiry"
-              type="date"
-              className="w-full rounded-lg border p-3"
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block font-medium">
-              Emergency Contact
-            </label>
-
-            <input
-              name="emergencyContact"
-              className="w-full rounded-lg border p-3"
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block font-medium">
-              Emergency Phone
-            </label>
-
-            <input
-              name="emergencyPhone"
-              className="w-full rounded-lg border p-3"
-            />
-          </div>
-
+      <form action={createDriver} className="rounded-2xl border border-[#DDEAE0] bg-white p-5 shadow-sm shadow-[#12311F]/5">
+        <div className="grid gap-4 md:grid-cols-2">
+          <Field name="fullName" label="Full name" placeholder="John Kamau" required />
+          <Field name="phoneNumber" label="Phone number" placeholder="+254712345678" />
+          <Field name="email" label="Email" type="email" placeholder="driver@email.com" />
+          <Field name="nationalId" label="National ID" placeholder="12345678" />
+          <Field name="licenseNumber" label="Driving licence" placeholder="DL123456" required />
+          <Field name="licenseExpiry" label="Licence expiry" type="date" />
+          <Field name="emergencyContact" label="Emergency contact" />
+          <Field name="emergencyPhone" label="Emergency phone" />
+          <label><span className="text-[10px] font-black uppercase tracking-wider text-[#789083]">Status</span><select name="status" className="mt-2 w-full rounded-xl border border-[#DDEAE0] bg-white px-3 py-3 text-xs font-bold text-[#173324] outline-none focus:border-[#16A34A]"><option>Active</option><option>Inactive</option></select></label>
+          <label className="md:col-span-2"><span className="text-[10px] font-black uppercase tracking-wider text-[#789083]">Address</span><textarea name="address" rows={3} className="mt-2 w-full rounded-xl border border-[#DDEAE0] px-3 py-3 text-xs font-bold text-[#173324] outline-none focus:border-[#16A34A]" /></label>
+          <label className="md:col-span-2"><span className="text-[10px] font-black uppercase tracking-wider text-[#789083]">Notes</span><textarea name="notes" rows={4} className="mt-2 w-full rounded-xl border border-[#DDEAE0] px-3 py-3 text-xs font-bold text-[#173324] outline-none focus:border-[#16A34A]" /></label>
         </div>
-
-        <div>
-
-          <label className="mb-2 block font-medium">
-            Address
-          </label>
-
-          <textarea
-            name="address"
-            rows={3}
-            className="w-full rounded-lg border p-3"
-          />
-
+        <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Link href="/fleet/drivers" className="rounded-xl border border-[#DDEAE0] px-4 py-3 text-center text-xs font-black text-[#60766B] hover:bg-[#F8FBF8]">Cancel</Link>
+          <button className="rounded-xl bg-[#16A34A] px-4 py-3 text-xs font-black text-white shadow-lg shadow-[#16A34A]/15 hover:bg-[#12883E]">Save driver</button>
         </div>
-
-        <div>
-
-          <label className="mb-2 block font-medium">
-            Notes
-          </label>
-
-          <textarea
-            name="notes"
-            rows={4}
-            className="w-full rounded-lg border p-3"
-          />
-
-        </div>
-
-        <button
-          type="submit"
-  className="inline-flex items-center rounded-lg bg-green-600 px-6 py-3 font-semibold text-white shadow hover:bg-green-700"
-        >
-          Save Driver
-        </button>
-
       </form>
     </div>
+  );
+}
+
+function Field({ name, label, type = "text", placeholder, required }: { name: string; label: string; type?: string; placeholder?: string; required?: boolean }) {
+  return (
+    <label>
+      <span className="text-[10px] font-black uppercase tracking-wider text-[#789083]">{label}{required ? " *" : ""}</span>
+      <input name={name} required={required} type={type} placeholder={placeholder} className="mt-2 w-full rounded-xl border border-[#DDEAE0] px-3 py-3 text-xs font-bold text-[#173324] outline-none placeholder:text-[#9AAEA3] focus:border-[#16A34A]" />
+    </label>
   );
 }

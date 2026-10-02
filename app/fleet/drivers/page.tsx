@@ -1,34 +1,24 @@
 import Link from "next/link";
-
-import { getDrivers } from "@/lib/driver-data";
+import { ArrowLeft } from "lucide-react";
 
 import DriverTable from "@/components/fleet/DriverTable";
+import { getDrivers } from "@/lib/driver-data";
 
 export default async function DriversPage() {
   const drivers = await getDrivers();
 
   return (
-    <div className="space-y-6 p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="mx-auto max-w-[1500px]">
+      <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
-          <h1 className="text-3xl font-bold">
-            Driver Management
-          </h1>
-
-          <p className="mt-2 text-muted-foreground">
-            Manage all company drivers, licences and assignments.
-          </p>
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#16A34A]">Fleet operations</p>
+          <h2 className="mt-1 text-2xl font-black tracking-tight text-[#10271B] md:text-3xl">Driver Management</h2>
+          <p className="mt-1 text-sm text-[#789083]">Manage driver contacts, licences and fleet assignments.</p>
         </div>
-
-        <Link
-           href="/fleet/drivers/new"
-  className="inline-flex items-center rounded-lg bg-green-600 px-5 py-2.5 font-semibold text-white shadow hover:bg-green-700"
-        >
-          ➕ Add Driver
+        <Link href="/fleet" className="flex w-fit items-center gap-2 rounded-xl border border-[#DDEAE0] bg-white px-4 py-3 text-xs font-black text-[#60766B] hover:bg-[#F8FBF8]">
+          <ArrowLeft size={15} /> Fleet dashboard
         </Link>
       </div>
-
       <DriverTable drivers={drivers} />
     </div>
   );

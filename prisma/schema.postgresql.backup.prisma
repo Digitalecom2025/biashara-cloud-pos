@@ -441,6 +441,8 @@ model FleetVehicle {
 
 driver FleetDriver? @relation(fields: [driverId], references: [id])
 
+  fuelRecords FleetFuelRecord[]
+  
   fuelType    String?
 
   mileage     Float    @default(0)
@@ -448,6 +450,8 @@ driver FleetDriver? @relation(fields: [driverId], references: [id])
   status      String   @default("Active")
 
   notes       String?
+
+fuelRecords FleetFuelRecord[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -479,6 +483,42 @@ model FleetDriver {
 
   vehicles FleetVehicle[]
 
+  fuelRecords FleetFuelRecord[]
+
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model FleetFuelRecord {
+  id String @id @default(cuid())
+
+  businessId String
+  branchId String?
+
+  vehicleId String
+  vehicle FleetVehicle @relation(fields: [vehicleId], references: [id])
+
+  driverId String?
+  driver FleetDriver? @relation(fields: [driverId], references: [id])
+
+  fuelStation String?
+
+  receiptNumber String?
+
+  fuelType String?
+
+  litres Float
+
+  pricePerLitre Float
+
+  totalCost Float
+
+  odometer Float
+
+  filledAt DateTime @default(now())
+
+  notes String?
+
+  createdAt DateTime @default(now())
+
   updatedAt DateTime @updatedAt
 }

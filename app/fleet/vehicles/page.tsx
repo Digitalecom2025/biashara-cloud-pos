@@ -1,3 +1,6 @@
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+
 import VehicleTable from "@/components/fleet/VehicleTable";
 import { getVehicles } from "@/lib/fleet-data";
 
@@ -5,26 +8,18 @@ export default async function VehiclesPage() {
   const vehicles = await getVehicles();
 
   return (
-    <div className="space-y-6 p-6">
-
-      <div className="flex items-center justify-between">
-
+    <div className="mx-auto max-w-[1700px]">
+      <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
-
-          <h1 className="text-3xl font-bold">
-            Fleet Vehicles
-          </h1>
-
-          <p className="text-gray-500">
-            View and manage all company vehicles.
-          </p>
-
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#16A34A]">Fleet operations</p>
+          <h2 className="mt-1 text-2xl font-black tracking-tight text-[#10271B] md:text-3xl">Fleet Vehicles</h2>
+          <p className="mt-1 text-sm text-[#789083]">View and manage company vehicles, mileage and driver assignments.</p>
         </div>
-
+        <Link href="/fleet" className="flex w-fit items-center gap-2 rounded-xl border border-[#DDEAE0] bg-white px-4 py-3 text-xs font-black text-[#60766B] hover:bg-[#F8FBF8]">
+          <ArrowLeft size={15} /> Fleet dashboard
+        </Link>
       </div>
-
       <VehicleTable vehicles={vehicles} />
-
     </div>
   );
 }

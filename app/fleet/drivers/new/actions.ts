@@ -1,48 +1,51 @@
 "use server";
 
-import { PrismaClient } from "@prisma/client";
 import { redirect } from "next/navigation";
 
-const prisma = new PrismaClient();
+import { getFleetBusinessId } from "@/lib/fleet-data";
+import { prisma } from "@/lib/prisma";
+
+function value(formData: FormData, key: string) {
+  return String(formData.get(key) ?? "").trim();
+}
+
+function fail(message: string): never {
+  redirect(`/fleet/drivers/new?error=${encodeURIComponent(message)}`);
+}
 
 export async function createDriver(formData: FormData) {
-  const fullName = String(formData.get("fullName") ?? "");
-  const phoneNumber = String(formData.get("phoneNumber") ?? "");
-  const email = String(formData.get("email") ?? "");
-  const nationalId = String(formData.get("nationalId") ?? "");
-  const licenseNumber = String(formData.get("licenseNumber") ?? "");
-  const licenseExpiry = formData.get("licenseExpiry")
-    ? new Date(String(formData.get("licenseExpiry")))
-    : null;
-  const emergencyContact = String(formData.get("emergencyContact") ?? "");
-  const emergencyPhone = String(formData.get("emergencyPhone") ?? "");
-  const address = String(formData.get("address") ?? "");
-  const notes = String(formData.get("notes") ?? "");
+  const businessId = await getFleetBusinessId();
+  if (!businessId) fail("Business context could not be found. Sign in again and retry.");
 
-  if (!fullName.trim()) {
-    throw new Error("Driver name is required.");
+  const fullName = value(formData, "fullName");
+  const licenseNumber = value(formData, "licenseNumber");
+  const licenseExpiryValue = value(formData, "licenseExpiry");
+  const licenseExpiry = licenseExpiryValue ? new Date(licenseExpiryValue) : null;
+
+  if (!fullName) fail("Driver name is required.");
+  if (!licenseNumber) fail("Licence number is required.");
+  if (licenseExpiryValue && Number.isNaN(licenseExpiry?.getTime())) fail("Enter a valid licence expiry date.");
+
+  try {
+    await prisma.fleetDriver.create({
+      data: {
+        businessId,
+        fullName,
+        phoneNumber: value(formData, "phoneNumber"),
+        email: value(formData, "email"),
+        nationalId: value(formData, "nationalId"),
+        licenseNumber,
+        licenseExpiry,
+        emergencyContact: value(formData, "emergencyContact"),
+        emergencyPhone: value(formData, "emergencyPhone"),
+        address: value(formData, "address"),
+        notes: value(formData, "notes"),
+        status: value(formData, "status") || "Active",
+      },
+    });
+  } catch {
+    fail("Driver could not be saved. Check the details and retry.");
   }
-
-  if (!licenseNumber.trim()) {
-    throw new Error("Licence number is required.");
-  }
-
-  await prisma.fleetDriver.create({
-    data: {
-      businessId: "demo-business",
-      fullName,
-      phoneNumber,
-      email,
-      nationalId,
-      licenseNumber,
-      licenseExpiry,
-      emergencyContact,
-      emergencyPhone,
-      address,
-      notes,
-      status: "Active",
-    },
-  });
 
   redirect("/fleet/drivers");
 }

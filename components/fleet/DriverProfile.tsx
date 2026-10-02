@@ -1,5 +1,4 @@
 type Driver = {
-  id: string;
   fullName: string;
   phoneNumber: string | null;
   email: string | null;
@@ -17,116 +16,41 @@ type DriverProfileProps = {
   driver: Driver;
 };
 
-export default function DriverProfile({
-  driver,
-}: DriverProfileProps) {
+function statusClass(status: string) {
+  return status === "Active" ? "bg-[#16A34A]/10 text-[#0F8C42]" : "bg-[#EF4444]/10 text-[#EF4444]";
+}
+
+export default function DriverProfile({ driver }: DriverProfileProps) {
   return (
-    <div className="rounded-xl border bg-white shadow-sm p-6 space-y-6">
-
-      <div className="border-b pb-4">
-        <h1 className="text-3xl font-bold">
-          {driver.fullName}
-        </h1>
-
-        <p className="text-gray-500 mt-1">
-          Fleet Driver Profile
-        </p>
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2">
-
-        <InfoCard
-          label="Phone Number"
-          value={driver.phoneNumber}
-        />
-
-        <InfoCard
-          label="Email"
-          value={driver.email}
-        />
-
-        <InfoCard
-          label="National ID"
-          value={driver.nationalId}
-        />
-
-        <InfoCard
-          label="Driving Licence"
-          value={driver.licenseNumber}
-        />
-
-        <InfoCard
-          label="Licence Expiry"
-          value={
-            driver.licenseExpiry
-              ? new Date(driver.licenseExpiry).toLocaleDateString()
-              : "-"
-          }
-        />
-
-        <InfoCard
-          label="Status"
-          value={driver.status}
-        />
-
-        <InfoCard
-          label="Emergency Contact"
-          value={driver.emergencyContact}
-        />
-
-        <InfoCard
-          label="Emergency Phone"
-          value={driver.emergencyPhone}
-        />
-
-      </div>
-
-      <div>
-
-        <h2 className="font-semibold mb-2">
-          Address
-        </h2>
-
-        <div className="rounded-lg border p-4">
-          {driver.address || "-"}
+    <section className="grid gap-5 lg:grid-cols-2">
+      <article className="rounded-2xl border border-[#DDEAE0] bg-white p-5 shadow-sm shadow-[#12311F]/5">
+        <div className="flex items-start justify-between">
+          <div><h3 className="font-black text-[#173324]">Driver information</h3><p className="mt-0.5 text-xs text-[#789083]">Contact and licence profile.</p></div>
+          <span className={`rounded-full px-2.5 py-1 text-[10px] font-black ${statusClass(driver.status)}`}>{driver.status}</span>
         </div>
-
-      </div>
-
-      <div>
-
-        <h2 className="font-semibold mb-2">
-          Notes
-        </h2>
-
-        <div className="rounded-lg border p-4">
-          {driver.notes || "-"}
+        <div className="mt-4 divide-y divide-[#EEF3EF]">
+          <InfoRow label="Phone number" value={driver.phoneNumber ?? "-"} />
+          <InfoRow label="Email" value={driver.email ?? "-"} />
+          <InfoRow label="National ID" value={driver.nationalId ?? "-"} />
+          <InfoRow label="Driving licence" value={driver.licenseNumber} />
+          <InfoRow label="Licence expiry" value={driver.licenseExpiry ? driver.licenseExpiry.toLocaleDateString("en-GB") : "-"} />
         </div>
+      </article>
 
-      </div>
-
-    </div>
+      <article className="rounded-2xl border border-[#DDEAE0] bg-white p-5 shadow-sm shadow-[#12311F]/5">
+        <h3 className="font-black text-[#173324]">Emergency and notes</h3>
+        <p className="mt-0.5 text-xs text-[#789083]">Support details for operations.</p>
+        <div className="mt-4 divide-y divide-[#EEF3EF]">
+          <InfoRow label="Emergency contact" value={driver.emergencyContact ?? "-"} />
+          <InfoRow label="Emergency phone" value={driver.emergencyPhone ?? "-"} />
+          <InfoRow label="Address" value={driver.address ?? "-"} />
+          <InfoRow label="Notes" value={driver.notes ?? "-"} />
+        </div>
+      </article>
+    </section>
   );
 }
 
-function InfoCard({
-  label,
-  value,
-}: {
-  label: string;
-  value: string | null;
-}) {
-  return (
-    <div className="rounded-lg border p-4">
-
-      <p className="text-sm text-gray-500">
-        {label}
-      </p>
-
-      <p className="mt-1 font-medium">
-        {value || "-"}
-      </p>
-
-    </div>
-  );
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return <div className="flex items-start justify-between gap-4 py-3 text-xs"><span className="font-semibold text-[#789083]">{label}</span><span className="max-w-[65%] text-right font-bold text-[#173324]">{value}</span></div>;
 }

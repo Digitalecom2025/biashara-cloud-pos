@@ -80,6 +80,14 @@ import {
   type PackageFeature,
 } from "@/lib/package-access";
 
+type DesktopSidebarMode =
+  | "expanded"
+  | "compact"
+  | "hidden";
+
+const SIDEBAR_MODE_STORAGE_KEY =
+  "leadsstacks.desktopSidebarMode";
+
 const icons = {
   ArrowLeftRight,
   BrainCircuit,
@@ -118,9 +126,12 @@ export function AppShell({
     useState(false);
 
   const [
-    desktopSidebarCollapsed,
-    setDesktopSidebarCollapsed,
-  ] = useState(false);
+    desktopSidebarMode,
+    setDesktopSidebarMode,
+  ] =
+    useState<DesktopSidebarMode>(
+      "expanded"
+    );
 
   const [session, setSession] =
     useState<DemoSession | null>(null);
@@ -147,7 +158,9 @@ export function AppShell({
     pathname === "/" ||
     pathname === "/login" ||
     pathname === "/signup" ||
-    pathname.startsWith("/super-admin");
+    pathname.startsWith(
+      "/super-admin"
+    );
 
   const protectedRoute =
     isProtectedClientRoute(pathname);
@@ -157,29 +170,30 @@ export function AppShell({
       return;
     }
 
-    const timer = window.setTimeout(() => {
-      const currentSession =
-        getDemoSession();
+    const timer = window.setTimeout(
+      () => {
+        const currentSession =
+          getDemoSession();
 
-      const currentBusinessSession =
-        getBusinessSession();
+        const currentBusinessSession =
+          getBusinessSession();
 
-      setSession(currentSession);
+        setSession(currentSession);
+        setBusinessSession(
+          currentBusinessSession
+        );
+        setAuthReady(true);
 
-      setBusinessSession(
-        currentBusinessSession
-      );
-
-      setAuthReady(true);
-
-      if (
-        !currentSession &&
-        !currentBusinessSession &&
-        protectedRoute
-      ) {
-        router.replace("/login");
-      }
-    }, 0);
+        if (
+          !currentSession &&
+          !currentBusinessSession &&
+          protectedRoute
+        ) {
+          router.replace("/login");
+        }
+      },
+      0
+    );
 
     return () => {
       window.clearTimeout(timer);
@@ -189,6 +203,32 @@ export function AppShell({
     protectedRoute,
     router,
   ]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(
+      () => {
+        const savedMode =
+          window.localStorage.getItem(
+            SIDEBAR_MODE_STORAGE_KEY
+          );
+
+        if (
+          savedMode === "expanded" ||
+          savedMode === "compact" ||
+          savedMode === "hidden"
+        ) {
+          setDesktopSidebarMode(
+            savedMode
+          );
+        }
+      },
+      0
+    );
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, []);
 
   const visibleSidebarItems =
     useMemo(() => {
@@ -271,7 +311,8 @@ export function AppShell({
   );
 
   const openGroupLabel =
-    openGroupOverride?.pathname === pathname
+    openGroupOverride?.pathname ===
+    pathname
       ? openGroupOverride.label
       : activeGroupLabel ??
         defaultGroupLabel;
@@ -318,6 +359,15 @@ export function AppShell({
       )
   );
 
+  const expandedDesktop =
+    desktopSidebarMode === "expanded";
+
+  const compactDesktop =
+    desktopSidebarMode === "compact";
+
+  const hiddenDesktop =
+    desktopSidebarMode === "hidden";
+
   function toggleGroup(
     groupLabel: string
   ) {
@@ -328,6 +378,23 @@ export function AppShell({
           ? null
           : groupLabel,
     });
+  }
+
+  function cycleDesktopSidebar() {
+    const nextMode =
+      desktopSidebarMode === "expanded"
+        ? "compact"
+        : desktopSidebarMode ===
+            "compact"
+          ? "hidden"
+          : "expanded";
+
+    setDesktopSidebarMode(nextMode);
+
+    window.localStorage.setItem(
+      SIDEBAR_MODE_STORAGE_KEY,
+      nextMode
+    );
   }
 
   function renderSidebarLink(
@@ -367,7 +434,7 @@ export function AppShell({
         onClick={() =>
           setSidebarOpen(false)
         }
-        className={`mb-0.5 flex items-center gap-3 rounded-lg px-3 py-[9px] text-[12px] font-semibold transition ${
+        className={`mb-0.5 flex items-center gap-3 rounded-xl px-3 py-2.5 text-[12px] font-semibold transition ${
           nested ? "ml-1" : ""
         } ${
           active
@@ -376,7 +443,7 @@ export function AppShell({
         }`}
       >
         <Icon
-          size={16}
+          size={17}
           strokeWidth={
             active ? 2.4 : 1.8
           }
@@ -392,6 +459,67 @@ export function AppShell({
               Lock
             </span>
           )}
+        </span>
+      </Link>
+    );
+  }
+
+  function renderCompactSidebarLink(
+    item: SidebarItem
+  ) {
+    const Icon =
+      icons[
+        item.icon as keyof typeof icons
+      ];
+
+    if (!Icon) {
+      return null;
+    }
+
+    const active = isRouteActive(
+      pathname,
+      item.href
+    );
+
+    const feature =
+      routeFeatureMap[item.href];
+
+    const locked = Boolean(
+      businessSession &&
+        feature &&
+        !isFeatureActive(
+          businessPlan,
+          feature
+        )
+    );
+
+    return (
+      <Link
+        key={item.href}
+        href={item.href}
+        aria-label={item.label}
+        title={item.label}
+        className={`group relative grid h-11 w-11 place-items-center rounded-xl transition ${
+          active
+            ? "bg-[#16A34A] text-white shadow-lg shadow-[#16A34A]/20"
+            : "text-[#9EB0A5] hover:bg-[#0E2418] hover:text-white"
+        }`}
+      >
+        <Icon
+          size={19}
+          strokeWidth={
+            active ? 2.4 : 1.8
+          }
+        />
+
+        {locked && (
+          <span className="absolute right-0.5 top-0.5 grid h-4 w-4 place-items-center rounded-full border border-[#D4A017]/40 bg-[#07120D] text-[#D4A017]">
+            <Lock size={9} />
+          </span>
+        )}
+
+        <span className="pointer-events-none absolute left-full z-[70] ml-3 hidden whitespace-nowrap rounded-lg border border-[#DDEAE0] bg-white px-3 py-2 text-[11px] font-bold text-[#173324] opacity-0 shadow-xl transition group-hover:opacity-100 lg:block">
+          {item.label}
         </span>
       </Link>
     );
@@ -429,7 +557,8 @@ export function AppShell({
           </p>
 
           <p className="mt-1 text-xs text-[#789083]">
-            Redirecting to login if needed.
+            Redirecting to login if
+            needed.
           </p>
         </div>
       </div>
@@ -450,17 +579,28 @@ export function AppShell({
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-[264px] flex-col bg-[#07120D] text-[#F6FFF8] shadow-2xl transition-transform duration-200 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-[264px] flex-col overflow-visible bg-[#07120D] text-[#F6FFF8] shadow-2xl transition-[width,transform] duration-300 ${
           sidebarOpen
             ? "translate-x-0"
             : "-translate-x-full"
         } ${
-          desktopSidebarCollapsed
+          hiddenDesktop
             ? "lg:-translate-x-full"
             : "lg:translate-x-0"
+        } ${
+          compactDesktop
+            ? "lg:w-20"
+            : "lg:w-[264px]"
         }`}
       >
-        <div className="flex h-[76px] items-center justify-between border-b border-white/8 px-5">
+        {/* Expanded desktop and mobile header */}
+        <div
+          className={`flex h-[76px] items-center justify-between border-b border-white/8 px-5 ${
+            expandedDesktop
+              ? ""
+              : "lg:hidden"
+          }`}
+        >
           <Link
             href="/dashboard"
             className="flex items-center gap-3"
@@ -493,7 +633,28 @@ export function AppShell({
           </button>
         </div>
 
-        <div className="mx-4 mt-4 rounded-xl border border-white/8 bg-[#0E2418] p-3">
+        {/* Compact desktop logo */}
+        {compactDesktop && (
+          <div className="hidden h-[76px] items-center justify-center border-b border-white/8 lg:flex">
+            <Link
+              href="/dashboard"
+              aria-label="LeadsStacks POS dashboard"
+              title="Dashboard"
+              className="grid h-11 w-11 place-items-center rounded-2xl bg-[#16A34A] text-sm font-black text-white shadow-lg shadow-[#16A34A]/20"
+            >
+              LS
+            </Link>
+          </div>
+        )}
+
+        {/* Expanded branch card */}
+        <div
+          className={`mx-4 mt-4 rounded-xl border border-white/8 bg-[#0E2418] p-3 ${
+            expandedDesktop
+              ? ""
+              : "lg:hidden"
+          }`}
+        >
           <div className="mb-2 flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.16em] text-[#B8C7BD]">
             <span>Main branch</span>
 
@@ -510,8 +671,35 @@ export function AppShell({
           </p>
         </div>
 
+        {/* Compact branch icon */}
+        {compactDesktop && (
+          <div className="hidden justify-center pt-4 lg:flex">
+            <div
+              title={
+                businessSession?.branchName ??
+                session?.demoUserBranch ??
+                "Main Branch"
+              }
+              className="group relative grid h-11 w-11 place-items-center rounded-xl border border-white/8 bg-[#0E2418] text-[#22C55E]"
+            >
+              <Store size={18} />
+
+              <span className="pointer-events-none absolute left-full z-[70] ml-3 whitespace-nowrap rounded-lg border border-[#DDEAE0] bg-white px-3 py-2 text-[11px] font-bold text-[#173324] opacity-0 shadow-xl transition group-hover:opacity-100">
+                {businessSession?.branchName ??
+                  session?.demoUserBranch ??
+                  "Main Branch"}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Expanded navigation */}
         <nav
-          className="sidebar-scroll mt-4 flex-1 overflow-y-auto px-3 pb-5"
+          className={`sidebar-scroll mt-4 flex-1 overflow-y-auto px-3 pb-5 ${
+            expandedDesktop
+              ? ""
+              : "lg:hidden"
+          }`}
           aria-label="Main navigation"
         >
           {visibleDashboardItem &&
@@ -587,7 +775,47 @@ export function AppShell({
           </div>
         </nav>
 
-        <div className="border-t border-white/8 p-4">
+        {/* Compact navigation */}
+        {compactDesktop && (
+          <nav
+            className="sidebar-scroll hidden flex-1 flex-col items-center overflow-y-auto px-3 py-4 lg:flex"
+            aria-label="Compact main navigation"
+          >
+            {visibleDashboardItem &&
+              renderCompactSidebarLink(
+                visibleDashboardItem
+              )}
+
+            {visibleSidebarGroups.map(
+              (group) => (
+                <div
+                  key={group.label}
+                  className="flex w-full flex-col items-center"
+                >
+                  <div className="my-3 h-px w-9 bg-white/10" />
+
+                  <div className="space-y-2">
+                    {group.items.map(
+                      (item) =>
+                        renderCompactSidebarLink(
+                          item
+                        )
+                    )}
+                  </div>
+                </div>
+              )
+            )}
+          </nav>
+        )}
+
+        {/* Expanded account panel */}
+        <div
+          className={`border-t border-white/8 p-4 ${
+            expandedDesktop
+              ? ""
+              : "lg:hidden"
+          }`}
+        >
           <div className="rounded-xl bg-[#0E2418] p-3">
             <div className="flex items-center gap-3">
               <span className="grid h-8 w-8 place-items-center rounded-lg bg-[#D4A017]/15 text-[#D4A017]">
@@ -614,25 +842,66 @@ export function AppShell({
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="px-4 pb-4">
           <button
             type="button"
             onClick={logout}
-            className="flex w-full items-center justify-center gap-2 rounded-lg border border-[#D4A017]/30 bg-[#D4A017]/10 px-3 py-2.5 text-[11px] font-black text-[#D4A017] hover:bg-[#D4A017]/15"
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-[#D4A017]/30 bg-[#D4A017]/10 px-3 py-2.5 text-[11px] font-black text-[#D4A017] hover:bg-[#D4A017]/15"
           >
             <LogOut size={14} />
             Logout
           </button>
         </div>
+
+        {/* Compact account controls */}
+        {compactDesktop && (
+          <div className="hidden flex-col items-center gap-3 border-t border-white/8 px-3 py-4 lg:flex">
+            <div
+              title={
+                businessSession?.userName ??
+                session?.demoUserName ??
+                "Business User"
+              }
+              className="group relative grid h-11 w-11 place-items-center rounded-xl bg-[#D4A017]/15 text-xs font-black text-[#D4A017]"
+            >
+              {(businessSession?.userName ??
+                session?.demoUserName)
+                ?.split(" ")
+                .map(
+                  (part) => part[0]
+                )
+                .slice(0, 2)
+                .join("")
+                .toUpperCase() ??
+                "LS"}
+
+              <span className="pointer-events-none absolute left-full z-[70] ml-3 whitespace-nowrap rounded-lg border border-[#DDEAE0] bg-white px-3 py-2 text-[11px] font-bold text-[#173324] opacity-0 shadow-xl transition group-hover:opacity-100">
+                {businessSession?.userName ??
+                  session?.demoUserName ??
+                  "Business User"}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={logout}
+              aria-label="Logout"
+              title="Logout"
+              className="grid h-11 w-11 place-items-center rounded-xl border border-[#D4A017]/30 bg-[#D4A017]/10 text-[#D4A017] transition hover:bg-[#D4A017]/15"
+            >
+              <LogOut size={17} />
+            </button>
+          </div>
+        )}
       </aside>
 
       <div
-        className={`transition-[padding] duration-200 ${
-          desktopSidebarCollapsed
-            ? "lg:pl-0"
-            : "lg:pl-[264px]"
+        className={`transition-[padding] duration-300 ${
+          expandedDesktop
+            ? "lg:pl-[264px]"
+            : compactDesktop
+              ? "lg:pl-20"
+              : "lg:pl-0"
         }`}
       >
         <header className="sticky top-0 z-30 flex h-[76px] items-center justify-between border-b border-[#DDEAE0] bg-white/95 px-4 backdrop-blur md:px-7">
@@ -643,34 +912,38 @@ export function AppShell({
               onClick={() =>
                 setSidebarOpen(true)
               }
-              className="grid h-10 w-10 place-items-center rounded-xl border border-[#DDEAE0] text-[#173324] lg:hidden"
+              className="grid h-10 w-10 place-items-center rounded-xl border border-[#DDEAE0] text-[#173324] transition hover:border-[#16A34A] hover:bg-[#F5FAF6] lg:hidden"
             >
               <Menu size={19} />
             </button>
 
             <button
               type="button"
+              onClick={
+                cycleDesktopSidebar
+              }
               aria-label={
-                desktopSidebarCollapsed
-                  ? "Show sidebar"
-                  : "Hide sidebar"
+                getSidebarModeLabel(
+                  desktopSidebarMode
+                )
               }
               title={
-                desktopSidebarCollapsed
-                  ? "Show sidebar"
-                  : "Hide sidebar"
-              }
-              onClick={() =>
-                setDesktopSidebarCollapsed(
-                  (current) => !current
+                getSidebarModeLabel(
+                  desktopSidebarMode
                 )
               }
               className="hidden h-10 w-10 place-items-center rounded-xl border border-[#DDEAE0] text-[#173324] transition hover:border-[#16A34A] hover:bg-[#F5FAF6] lg:grid"
             >
-              {desktopSidebarCollapsed ? (
-                <PanelLeftOpen size={19} />
+              {expandedDesktop ? (
+                <PanelLeftClose
+                  size={19}
+                />
+              ) : hiddenDesktop ? (
+                <PanelLeftOpen
+                  size={19}
+                />
               ) : (
-                <PanelLeftClose size={19} />
+                <Menu size={19} />
               )}
             </button>
 
@@ -722,7 +995,7 @@ export function AppShell({
               aria-label="Notifications"
               disabled
               title="Notifications coming soon"
-              className="relative grid h-10 w-10 place-items-center rounded-xl border border-[#DDEAE0] text-[#60766B] hover:bg-[#F5FAF6]"
+              className="relative grid h-10 w-10 place-items-center rounded-xl border border-[#DDEAE0] text-[#60766B]"
             >
               <Bell size={18} />
 
@@ -768,7 +1041,10 @@ export function AppShell({
               className="flex items-center gap-2 rounded-xl border border-[#D4A017]/35 bg-[#FFF9E8] px-2.5 py-2.5 text-[11px] font-black text-[#8A670C] hover:bg-[#FFF2C9] sm:px-3 sm:text-xs"
             >
               <LogOut size={15} />
-              Logout
+
+              <span className="hidden sm:inline">
+                Logout
+              </span>
             </button>
           </div>
         </header>
@@ -798,6 +1074,20 @@ export function AppShell({
       </div>
     </div>
   );
+}
+
+function getSidebarModeLabel(
+  mode: DesktopSidebarMode
+) {
+  if (mode === "expanded") {
+    return "Use compact sidebar";
+  }
+
+  if (mode === "compact") {
+    return "Use full-screen workspace";
+  }
+
+  return "Show expanded sidebar";
 }
 
 function isRouteActive(
@@ -856,7 +1146,8 @@ function LockedFeaturePage({
         </p>
 
         <h2 className="mt-2 text-2xl font-black tracking-tight text-[#173324]">
-          {featureLabels[feature]} is locked
+          {featureLabels[feature]} is
+          locked
         </h2>
 
         <p className="mt-3 text-sm leading-6 text-[#789083]">
