@@ -2,6 +2,41 @@
 
 import { useEffect, useState } from "react";
 
+const LEADSSTACKS_CACHE_PREFIXES = ["leadsstacks-", "leadsstacks-pos-shell-"];
+
+/** Runs globally so an old localhost worker cannot survive into a dev session. */
+export function PwaServiceWorker() {
+  useEffect(() => {
+    if (process.env.NODE_ENV === "production") {
+      if (!("serviceWorker" in navigator)) return;
+
+      const register = () => navigator.serviceWorker.register("/sw.js").catch(() => undefined);
+      if (document.readyState === "complete") void register();
+      else window.addEventListener("load", register, { once: true });
+
+      return () => window.removeEventListener("load", register);
+    }
+
+    if (!("serviceWorker" in navigator)) return;
+
+    void navigator.serviceWorker.getRegistrations().then((registrations) =>
+      Promise.all(registrations.map((registration) => registration.unregister())),
+    );
+
+    if ("caches" in window) {
+      void caches.keys().then((keys) =>
+        Promise.all(
+          keys
+            .filter((key) => LEADSSTACKS_CACHE_PREFIXES.some((prefix) => key.startsWith(prefix)))
+            .map((key) => caches.delete(key)),
+        ),
+      );
+    }
+  }, []);
+
+  return null;
+}
+
 export function PwaControls() {
   const [online, setOnline] = useState(true);
 
@@ -16,19 +51,9 @@ export function PwaControls() {
       setOnline(navigator.onLine);
     }, 0);
 
-    const registerServiceWorker = () => navigator.serviceWorker.register("/sw.js").catch(() => undefined);
-    if ("serviceWorker" in navigator) {
-      if (document.readyState === "complete") {
-        void registerServiceWorker();
-      } else {
-        window.addEventListener("load", registerServiceWorker);
-      }
-    }
-
     return () => {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
-      window.removeEventListener("load", registerServiceWorker);
       window.clearTimeout(onlineTimer);
     };
   }, []);

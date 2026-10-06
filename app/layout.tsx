@@ -1,10 +1,19 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import { AppShell } from "@/components/app-shell";
+import { RouteShell } from "@/components/route-shell";
+import { PwaServiceWorker } from "@/components/pwa-controls";
 
 export const metadata: Metadata = {
-  title: "LeadsStacks POS",
+  metadataBase: new URL("https://leadsstacks.com"),
+  title: { default: "LeadsStacks | POS & Business Management Software Kenya", template: "%s" },
   description: "Cloud POS system for sales, stock, customers, debtors, reports and business control.",
+  openGraph: {
+    type: "website",
+    siteName: "LeadsStacks",
+    locale: "en_KE",
+    images: [{ url: "/images/product/leadsstacks-dashboard.png", width: 1600, height: 1000, alt: "LeadsStacks product interface mockup" }],
+  },
+  twitter: { card: "summary_large_image" },
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
@@ -25,7 +34,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <AppShell>{children}</AppShell>
+        <PwaServiceWorker />
+        <RouteShell>{children}</RouteShell>
       </body>
     </html>
   );

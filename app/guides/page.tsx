@@ -1,0 +1,6 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { articles } from "@/lib/marketing/site";
+import { PublicPage, SectionTitle } from "@/components/marketing/blocks";
+export const metadata:Metadata={title:"Business Guides for Kenyan SMEs | LeadsStacks",description:"Practical business guides on POS, inventory, customer records and business operations for Kenyan SMEs.",alternates:{canonical:"/guides"}};
+export default function GuidesPage(){return <PublicPage><section className="bg-emerald-950 px-4 py-20 text-white sm:px-6"><div className="mx-auto max-w-7xl"><p className="marketing-eyebrow">Business guides</p><h1 className="mt-4 text-4xl font-black sm:text-5xl">Practical guides for clearer business decisions.</h1></div></section><section className="px-4 py-20 sm:px-6"><div className="mx-auto max-w-7xl"><SectionTitle title="Explore practical operating guides"/><div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">{articles.map(a=><Link key={a.slug} href={`/blog/${a.slug}`} className="marketing-card p-6"><p className="text-xs font-bold text-emerald-700">{a.category}</p><h2 className="mt-3 font-black text-emerald-950">{a.title}</h2><p className="mt-3 text-sm text-slate-600">{a.excerpt}</p></Link>)}</div></div></section></PublicPage>}

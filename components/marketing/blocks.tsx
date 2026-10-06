@@ -1,0 +1,24 @@
+import Image from "next/image";
+import Link from "next/link";
+import { ArrowRight, BarChart3, Boxes, Building2, Check, ClipboardList, FileText, HandCoins, Package, ShoppingCart, Users } from "lucide-react";
+import { CONTACT, industries } from "@/lib/marketing/site";
+import { MarketingLayout } from "./site-shell";
+
+export const featureList = [
+  { title: "Sales & POS", description: "Record sales and keep daily checkout activity organized.", icon: ShoppingCart },
+  { title: "Inventory", description: "Manage products, stock adjustments and stock movement.", icon: Boxes },
+  { title: "Customers & Debtors", description: "Keep customer records, balances and payments together.", icon: HandCoins },
+  { title: "Suppliers & Purchases", description: "Track suppliers and purchase records alongside your stock.", icon: Package },
+  { title: "Finance & Expenses", description: "Record expenses and review business finances in context.", icon: ClipboardList },
+  { title: "Reports & Analytics", description: "Review sales, products, stock, purchases, expenses and branches.", icon: BarChart3 },
+  { title: "Staff Management", description: "Manage staff and business roles with the HRM module.", icon: Users },
+  { title: "Multi-Branch Control", description: "Set up branches and review branch-level activity.", icon: Building2 },
+  { title: "Fleet Management", description: "Manage drivers, vehicles, trips, fuel and maintenance records.", icon: FileText },
+];
+
+export function SectionTitle({eyebrow,title,copy,center=false}:{eyebrow?:string;title:string;copy?:string;center?:boolean}) { return <div className={center?"mx-auto max-w-3xl text-center":"max-w-3xl"}>{eyebrow && <p className="marketing-eyebrow">{eyebrow}</p>}<h2 className="mt-3 text-3xl font-black tracking-tight text-[#092A20] sm:text-4xl">{title}</h2>{copy && <p className="mt-4 text-[17px] leading-7 text-[#52635D]">{copy}</p>}</div> }
+export function PrimaryCta({children="Start Free Trial",href="/signup"}:{children?:React.ReactNode;href?:string}) { return <Link href={href} className="marketing-button-primary gap-2 shadow-lg shadow-emerald-900/10">{children}<ArrowRight size={16}/></Link> }
+export function DashboardPreview({label="LeadsStacks product screen"}:{label?:string}) { return <figure className="overflow-hidden rounded-2xl border border-emerald-950/10 bg-white shadow-2xl shadow-emerald-950/15"><Image src="/images/product/leadsstacks-dashboard.png" alt="LeadsStacks application dashboard showing the product interface" width={1600} height={1000} className="h-auto w-full" sizes="(max-width: 1024px) 100vw, 55vw"/><figcaption className="border-t border-slate-100 px-4 py-2.5 text-xs font-medium text-slate-600">{label} — application interface screenshot; figures shown are sample interface data.</figcaption></figure> }
+export function IndustryGrid() { return <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">{industries.map((industry)=><Link key={industry.slug} href={`/solutions/${industry.slug}`} className="group overflow-hidden rounded-2xl border border-emerald-950/10 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"><div className="relative h-36 overflow-hidden bg-emerald-900"><Image src={`/images/industries/${industry.image}`} alt={industry.alt} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 20vw" className="object-cover transition duration-500 group-hover:scale-105"/><div className="absolute inset-0 bg-gradient-to-t from-emerald-950/80 via-transparent to-transparent"/><p className="absolute bottom-3 left-3 text-xs font-bold uppercase tracking-wider text-white">{industry.name}</p></div><div className="p-4"><p className="text-sm font-bold text-emerald-950">{industry.keyword}</p><p className="mt-2 text-xs leading-5 text-slate-600">{industry.problem}</p><span className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-emerald-700">Explore solution <ArrowRight size={13}/></span></div></Link>)}</div> }
+export function FinalCta({title="Ready to Take Control of Your Business?"}:{title?:string}) { return <section className="bg-[#062E22] py-20 text-white sm:py-24"><div className="marketing-container flex flex-col items-start justify-between gap-8 md:flex-row md:items-center"><div><h2 className="text-3xl font-black tracking-tight text-white sm:text-4xl">{title}</h2><p className="mt-4 max-w-2xl text-[17px] leading-7 text-[#DCE9E3]">Start with POS and build a connected picture of your business as you grow.</p></div><div className="flex flex-wrap gap-3"><PrimaryCta/><a href={CONTACT.whatsapp} className="marketing-button-dark">WhatsApp Us</a><Link href="/contact" className="marketing-button-dark">Book a Demo</Link></div></div></section> }
+export function PublicPage({children}:{children:React.ReactNode}) { return <MarketingLayout>{children}</MarketingLayout> }

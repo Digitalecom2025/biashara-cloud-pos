@@ -158,9 +158,8 @@ export function AppShell({
     pathname === "/" ||
     pathname === "/login" ||
     pathname === "/signup" ||
-    pathname.startsWith(
-      "/super-admin"
-    );
+    pathname.startsWith("/super-admin") ||
+    ["/features", "/pricing", "/solutions", "/blog", "/about", "/contact", "/privacy", "/terms"].some((route) => pathname === route || pathname.startsWith(`${route}/`));
 
   const protectedRoute =
     isProtectedClientRoute(pathname);

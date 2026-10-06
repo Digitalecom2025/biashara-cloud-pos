@@ -63,3 +63,32 @@ a {
     linear-gradient(90deg, rgba(22, 163, 74, 0.06) 1px, transparent 1px);
   background-size: 28px 28px;
 }
+
+/* Standalone marketing design system: deliberately independent from the POS UI. */
+.marketing-container { width: 100%; max-width: 1280px; margin-inline: auto; padding-inline: 1.25rem; }
+.marketing-hero-light { background: #eaf6ef; color: #092a20; }
+.marketing-hero-dark { background: #062e22; color: #fff; }
+.marketing-eyebrow { color: #059669; font-size: .78rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+.marketing-hero-dark .marketing-eyebrow { color: #6ee7b7; }
+.marketing-title { color: #092a20; font-size: clamp(2.35rem, 5vw, 4rem); font-weight: 900; letter-spacing: -.045em; line-height: 1.08; }
+.marketing-hero-dark .marketing-title { color: #fff; }
+.marketing-copy { color: #52635d; font-size: 1.0625rem; line-height: 1.7; }
+.marketing-hero-dark .marketing-copy { color: #dce9e3; }
+.marketing-card { border: 1px solid rgba(11,61,46,.10); border-radius: 1.25rem; background: #fff; box-shadow: 0 10px 30px rgba(6,46,34,.06); }
+.marketing-button-primary { display: inline-flex; min-height: 48px; align-items: center; justify-content: center; border-radius: .75rem; background: #059669; padding: .75rem 1.25rem; color: #fff !important; font-size: .9375rem; font-weight: 700; }
+.marketing-button-primary:hover { background: #047857; }
+.marketing-button-secondary { display: inline-flex; min-height: 48px; align-items: center; justify-content: center; border: 1px solid rgba(9,42,32,.25); border-radius: .75rem; background: #fff; padding: .75rem 1.25rem; color: #092a20 !important; font-size: .9375rem; font-weight: 700; }
+.marketing-button-dark { display: inline-flex; min-height: 48px; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,.35); border-radius: .75rem; padding: .75rem 1.25rem; color: #fff !important; font-size: .9375rem; font-weight: 700; }
+@media (min-width: 640px) { .marketing-container { padding-inline: 1.5rem; } }
+@media (min-width: 1024px) { .marketing-container { padding-inline: 2rem; } }
+
+/* Explicit hero contrast guard: public heroes always render dark foreground on light
+   surfaces and white foreground only on the forest surface. */
+main > section.bg-emerald-950 { background-color: #062e22 !important; color: #fff !important; }
+main > section.bg-emerald-950 h1, main > section.bg-emerald-950 h2 { color: #fff !important; }
+main > section.bg-emerald-950 p:not(.marketing-eyebrow) { color: #dce9e3 !important; }
+main > section.bg-emerald-50 { background-color: #eaf6ef !important; }
+
+/* Marketing header/footer use generous SaaS-site spacing without affecting fixed POS chrome. */
+header.sticky > nav { min-height: 76px; max-width: 1280px !important; padding-inline: 1.25rem !important; }
+footer.bg-emerald-950 { background-color: #031f17 !important; }
